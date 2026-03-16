@@ -8,6 +8,9 @@ import { emitGoalExplosion, emitPushSpark, emitCombo, emitWinBurst } from './par
 import { generateLevel } from './generator';
 import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModal } from './share';
 import { SolverVisualizer } from './visualizer';
+import { saveReplay, TimelineUI } from './timeline';
+import { analyzePlayer, getNextRecommended } from './adaptive';
+import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
 
 const solverViz = new SolverVisualizer();
 
@@ -29,6 +32,7 @@ function getTileScreenPos(x: number, y: number): { sx: number; sy: number } {
 // ─── 初始化 ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initDomRefs();
+  injectAchievementStyles();
 
   // ─── 游戏事件监听 ───────────────────────────────────────────────────────
   gameEvents.addEventListener('update', () => {
@@ -73,6 +77,27 @@ document.addEventListener('DOMContentLoaded', () => {
     ghostRecorder.save(state.moves);
     ghostPlayer.stop();
     audioSystem.playSfx('win');
+    // 检查成就
+    // 检查成就
+    const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
+    const stars3 = Object.values(state.records).filter((r: any) => r?.bestRank === '★★★').length;
+    const achStats = {
+      cleared,
+      stars3,
+      ta_cleared: state.stats.taPlayed ? 1 : 0,
+      no_hint_clears: state.stats.hintCount === 0 ? cleared : 0,
+      max_combo: state.stats.maxCombo,
+      beat_ghost: 0,
+      shared: 0,
+    };
+    const newAchievements = checkAchievements(achStats);
+    newAchievements.forEach(a => showAchievementUnlock(a));
+    // 自适应推荐
+    const profile = analyzePlayer(state.records);
+    const next = getNextRecommended(state.records, state.levelIndex);
+    if (next >= 0 && next !== state.levelIndex) {
+      setTimeout(() => setMessage(`推荐下一关：L${next + 1} ${LEVELS[next].name}`, 'info'), 2000);
+    }
   });
 
   // ─── 键盘事件 ────────────────────────────────────────────────────────────
