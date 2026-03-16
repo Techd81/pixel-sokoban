@@ -1,5 +1,5 @@
 import { LEVELS } from './levels';
-import { state, loadLevel, tryMove, undo, restartLevel, gameEvents } from './game';
+import { state, loadLevel, tryMove, undo, restartLevel, gameEvents, getLevelConfig } from './game';
 import { initDomRefs, render, renderProgress, setMessage } from './ui';
 import { audioSystem } from './audio';
 import { solveAsync } from './solver';
@@ -8,18 +8,18 @@ import { emitGoalExplosion, emitPushSpark, emitCombo, emitWinBurst } from './par
 import { generateLevel } from './generator';
 import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModal } from './share';
 import { SolverVisualizer } from './visualizer';
-import { saveReplay, TimelineUI } from './timeline';
+import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
 import { MacroRecorder } from './macro';
 import { RaceMode } from './race';
 import { renderStatsHeatmap } from './heatmap';
+import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
 
 const macroRecorder = new MacroRecorder();
 const raceMode = new RaceMode();
 const _timelineUI = new TimelineUI(); // 备用
-void saveReplay; void renderStatsHeatmap;
 
 const solverViz = new SolverVisualizer();
 
@@ -107,6 +107,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const next = getNextRecommended(state.records, state.levelIndex);
     if (next >= 0 && next !== state.levelIndex) {
       setTimeout(() => setMessage(`推荐下一关：L${next + 1} ${LEVELS[next].name}`, 'info'), 2000);
+    }
+    // 保存回放
+    saveReplay({
+      levelIndex: state.levelIndex,
+      levelName: getLevelConfig(state.levelIndex).name,
+      steps: state.recording.map((r, i) => ({ ...r, isPush: false, timestamp: i * 300 })),
+      totalMoves: state.moves,
+      totalTimeMs: state.timer.elapsedMs,
+      recordedAt: Date.now(),
+    });
+    // 渲染热力图（若容器存在）
+    const heatmapCanvas = document.getElementById('heatmapCanvas') as HTMLCanvasElement | null;
+    if (heatmapCanvas) {
+      renderStatsHeatmap(heatmapCanvas, state.records);
     }
   });
 
@@ -205,6 +219,45 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.clipboard.writeText(text)
       .then(() => setMessage('成绩已复制！', 'win'))
       .catch(() => setMessage('复制失败', 'error'));
+  });
+
+  // ─── 分享卡片按钮 ────────────────────────────────────────────────────────
+  document.getElementById('shareCardBtn')?.addEventListener('click', () => {
+    const cfg = getLevelConfig(state.levelIndex);
+    const rec = state.records?.[state.levelIndex];
+    const card = generateShareCard({
+      levelName: cfg.name,
+      levelIndex: state.levelIndex,
+      moves: state.moves,
+      timeMs: state.timer.elapsedMs,
+      rank: rec?.bestRank ?? '',
+      par: cfg.parMoves,
+      map: cfg.map,
+    });
+    downloadShareCard({ levelName: cfg.name, levelIndex: state.levelIndex, moves: state.moves, timeMs: state.timer.elapsedMs, rank: rec?.bestRank ?? '', par: cfg.parMoves, map: cfg.map });
+    void card;
+  });
+
+  // ─── 回放查看器按钮（statsModal 中的时间线按钮）────────────────────────
+  document.getElementById('timelineBtn')?.addEventListener('click', () => {
+    const replayData = loadReplay(state.levelIndex);
+    if (!replayData) { setMessage('暂无回放记录', 'info'); return; }
+    _timelineUI.create(document.body, replayData, (step) => { console.log('seek', step); });
+  });
+
+  // ─── 热力图按钮 ──────────────────────────────────────────────────────────
+  document.getElementById('heatmapBtn')?.addEventListener('click', () => {
+    let canvas = document.getElementById('heatmapCanvas') as HTMLCanvasElement | null;
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.id = 'heatmapCanvas';
+      canvas.width = 400;
+      canvas.height = 200;
+      canvas.style.cssText = 'display:block;margin:8px auto;border-radius:6px;';
+      const statsChart = document.getElementById('statsChart');
+      if (statsChart) statsChart.appendChild(canvas);
+    }
+    renderStatsHeatmap(canvas, state.records);
   });
 
   // ─── URL 关卡解析 ────────────────────────────────────────────────────────
