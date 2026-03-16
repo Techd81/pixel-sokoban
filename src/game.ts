@@ -31,6 +31,7 @@ let undoUsed = 0;
 // eslint-disable-next-line prefer-const
 let undoLimit = -1;
 let timerRafId: number | null = null;
+let goalsSet = new Set<string>();
 
 // --- 历史快照
 interface HistorySnap {
@@ -122,7 +123,7 @@ state.records = loadRecords();
 
 // --- 关卡 / 记录辅助
 export function getLevelConfig(index: number = state.levelIndex): Level {
-  return LEVELS[index];
+  return LEVELS[Math.max(0, Math.min(index, LEVELS.length - 1))];
 }
 
 export function getRecord(index: number = state.levelIndex): LevelRecord | null {
@@ -142,7 +143,7 @@ export function formatBest(record: LevelRecord | null): string {
 }
 
 export function formatMs(ms: number): string {
-  if (!ms) return "--";
+  if (ms == null || ms < 0) return "--";
   const s = Math.floor(ms / 1000), m = Math.floor(s / 60);
   return m > 0 ? m + "分" + String(s % 60).padStart(2, "0") + "秒" : s + "秒";
 }
@@ -154,7 +155,7 @@ export function updateRecord(
   const shouldReplace = !existing || result.moves < existing.bestMoves;
   const bestMoves  = shouldReplace ? result.moves : existing!.bestMoves;
   const bestRank   = shouldReplace ? result.rank  : existing!.bestRank;
-  const timeMs = result.timeMs || null;
+  const timeMs = result.timeMs != null ? result.timeMs : null;
   const shouldReplaceTime = timeMs !== null && (!existing || !existing.bestTimeMs || timeMs < existing.bestTimeMs);
   const bestTimeMs = shouldReplaceTime ? timeMs! : existing?.bestTimeMs ?? 0;
   const prevCompletedAt = existing?.completedAt;
@@ -171,7 +172,7 @@ export function updateRecord(
 }
 // --- 网格辅助
 export function isGoal(x: number, y: number): boolean {
-  return state.goals.some(g => g.x === x && g.y === y);
+  return goalsSet.has(`${x},${y}`);
 }
 
 export function getCell(x: number, y: number): TileChar {
@@ -223,6 +224,7 @@ export function loadLevel(index: number): void {
       }
     }
   }
+  goalsSet = new Set<string>(state.goals.map(g => `${g.x},${g.y}`));
   emit("levelLoaded", { index });
 }
 
@@ -409,6 +411,7 @@ export function startTimer(): void {
     state.timer.elapsedMs = getElapsedTimeMs();
     if (state.timer.running) timerRafId = requestAnimationFrame(tick);
   };
+  cancelAnimationFrame(timerRafId!);
   timerRafId = requestAnimationFrame(tick);
 }
 

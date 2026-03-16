@@ -153,7 +153,7 @@ export function render(): void {
 
 export function renderProgress(): void {
   const total   = LEVELS.length;
-  const cleared = LEVELS.filter((_: unknown, i: number) => !!getRecord(i)).length;
+  const cleared = LEVELS.filter((_: unknown, i: number) => (getRecord(i)?.bestMoves ?? 0) > 0).length;
   const pct     = total > 0 ? Math.round((cleared / total) * 100) : 0;
 
   if (els.progressText) {
@@ -257,6 +257,7 @@ export function autoScaleBoard(): void {
 
 let _confettiAnimId: number | null = null;
 let _confettiCanvas: HTMLCanvasElement | null = null;
+let _confettiResize: (() => void) | null = null;
 
 interface Particle {
   x: number; y: number;
@@ -289,6 +290,7 @@ export function startConfetti(rank: string | null, challenge: boolean): void {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
   };
+  _confettiResize = resize;
   resize();
   window.addEventListener('resize', resize);
 
@@ -351,6 +353,10 @@ export function stopConfetti(): void {
   if (_confettiAnimId !== null) {
     cancelAnimationFrame(_confettiAnimId);
     _confettiAnimId = null;
+  }
+  if (_confettiResize !== null) {
+    window.removeEventListener('resize', _confettiResize);
+    _confettiResize = null;
   }
   if (_confettiCanvas) {
     _confettiCanvas.remove();
