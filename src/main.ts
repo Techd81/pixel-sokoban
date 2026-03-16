@@ -6,6 +6,10 @@ import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
 import { emitGoalExplosion, emitPushSpark, emitCombo, emitWinBurst } from './particles';
 import { generateLevel } from './generator';
+import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModal } from './share';
+import { SolverVisualizer } from './visualizer';
+
+const solverViz = new SolverVisualizer();
 
 // ─── 获取棋盘格大小 ──────────────────────────────────────────────────────────
 function getTileSize(): number {
@@ -149,6 +153,31 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('nextBtn')?.addEventListener('click',
     () => loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)));
   document.getElementById('generateBtn')?.addEventListener('click', () => handleGenerate());
+
+  // ─── 分享按钮 ────────────────────────────────────────────────────────────
+  document.getElementById('shareBtn')?.addEventListener('click', () => {
+    showShareModal(LEVELS[state.levelIndex], state.levelIndex);
+  });
+
+  document.getElementById('editorShareBtn')?.addEventListener('click', () => {
+    showShareModal(LEVELS[state.levelIndex], state.levelIndex);
+  });
+
+  document.getElementById('shareResultBtn')?.addEventListener('click', () => {
+    const level = LEVELS[state.levelIndex];
+    const rec = state.records?.[state.levelIndex];
+    const text = `我在「像素推箱子」第${state.levelIndex + 1}关「${level.name}」用了${rec?.bestMoves ?? state.moves}步！${window.location.href}`;
+    navigator.clipboard.writeText(text)
+      .then(() => setMessage('成绩已复制！', 'win'))
+      .catch(() => setMessage('复制失败', 'error'));
+  });
+
+  // ─── URL 关卡解析 ────────────────────────────────────────────────────────
+  const customLevel = checkUrlLevelParam();
+  if (customLevel) {
+    LEVELS.push(customLevel);
+    setMessage(`加载分享关卡：${customLevel.name}`, 'win');
+  }
 
   // ─── BGM 切换 ────────────────────────────────────────────────────────────
   document.getElementById('bgmBtn')?.addEventListener('click', () => {
