@@ -11,6 +11,14 @@ import { SolverVisualizer } from './visualizer';
 import { saveReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
+import { MacroRecorder } from './macro';
+import { RaceMode } from './race';
+import { renderStatsHeatmap } from './heatmap';
+
+const macroRecorder = new MacroRecorder();
+const raceMode = new RaceMode();
+const _timelineUI = new TimelineUI(); // 备用
+void saveReplay; void renderStatsHeatmap;
 
 const solverViz = new SolverVisualizer();
 
