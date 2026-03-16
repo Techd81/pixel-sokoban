@@ -1,0 +1,3202 @@
+:root {
+  --tile-size: 48px;
+  --bg: #17121f;
+  --panel: #261d34;
+  --panel-2: #312544;
+  --panel-3: #1e1629;
+  --line: #56406f;
+  --text: #f6f1ff;
+  --muted: #d6c8ef;
+  --accent: #8be9fd;
+  --accent-2: #ff79c6;
+  --goal: #ffd166;
+  --goal-deep: #d18e24;
+  --wall: #5c4b73;
+  --wall-deep: #31283e;
+  --floor: #3c3150;
+  --floor-deep: #271d36;
+  --crate: #c98f52;
+  --crate-top: #efbb77;
+  --crate-deep: #8c5a2d;
+  --player: #7ee081;
+  --player-top: #c9ffc7;
+  --player-accent: #15323a;
+  --player-deep: #34743a;
+  --sprite-outline: #0d0813;
+  --crate-metal: #f6e2a6;
+  --danger: #ff6b6b;
+  --shadow: rgba(0, 0, 0, 0.28);
+  --scanline: rgba(255, 255, 255, 0.03);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(139, 233, 253, 0.08) 0%, transparent 30%),
+    radial-gradient(circle at 85% 15%, rgba(255, 121, 198, 0.12) 0%, transparent 20%),
+    radial-gradient(circle at top, #2d2140 0%, #17121f 45%),
+    linear-gradient(180deg, #17121f 0%, #120e18 100%);
+  color: var(--text);
+}
+
+button {
+  border: 3px solid #000;
+  background:
+    linear-gradient(180deg, #aef4ff 0 16%, transparent 16% 100%),
+    linear-gradient(180deg, #78d9f2 0%, #56a7d0 100%);
+  color: #111;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #000, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+}
+
+button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 #000, inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  filter: saturate(1.06);
+}
+
+button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+.panel,
+.game-shell,
+.modal-card {
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.025) 0 2px,
+      rgba(0, 0, 0, 0.02) 2px 4px
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 22%),
+    var(--panel);
+  border: 4px solid #000;
+  box-shadow: 8px 8px 0 #000, inset 0 0 0 3px rgba(139, 233, 253, 0.08);
+}
+
+.panel::before,
+.game-shell::before,
+.modal-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 30%);
+}
+
+.panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(139, 233, 253, 0.35);
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.progress {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background:
+    repeating-linear-gradient(180deg, var(--scanline) 0 2px, transparent 2px 4px),
+    var(--panel-2);
+  border: 3px solid #000;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.progress-text {
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(139, 233, 253, 0.22);
+}
+
+.progress-track {
+  position: relative;
+  height: 12px;
+  border: 3px solid #000;
+  background: var(--panel-3);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0 40%, transparent 40% 100%),
+    linear-gradient(90deg, var(--goal) 0%, var(--accent-2) 100%);
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.22);
+  transition: width 0.4s ease;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.score-panel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+#timeDisplay {
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card,
+.score-item,
+.win-item {
+  position: relative;
+  background:
+    repeating-linear-gradient(180deg, var(--scanline) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 32%),
+    var(--panel-2);
+  border: 3px solid #000;
+  padding: 12px;
+  text-align: center;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.score-item.wide {
+  grid-column: span 1;
+}
+
+.stat-card span,
+.score-item span,
+.win-item span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.stat-card strong,
+.score-item strong,
+.win-item strong {
+  font-size: 20px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.controls.center {
+  justify-content: center;
+}
+
+.tips {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  background:
+    repeating-linear-gradient(180deg, var(--scanline) 0 2px, transparent 2px 4px),
+    var(--panel-2);
+  border: 3px solid #000;
+}
+
+.tips span {
+  color: var(--goal);
+  margin-right: 8px;
+}
+
+.game-shell {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  overflow: hidden;
+  position: relative;
+}
+
+.message {
+  min-height: 32px;
+  padding: 8px 14px;
+  background:
+    repeating-linear-gradient(180deg, var(--scanline) 0 2px, transparent 2px 4px),
+    var(--panel-2);
+  border: 3px solid #000;
+  color: var(--goal);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.message.is-info {
+  color: var(--accent);
+}
+
+.message.is-warn {
+  color: #ffb86c;
+}
+
+.message.is-win {
+  color: var(--goal);
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.3);
+}
+
+.board {
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 18%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 16px),
+    radial-gradient(circle at center, rgba(139, 233, 253, 0.08), transparent 52%),
+    #120d19;
+  border: 4px solid #000;
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 3px rgba(139, 233, 253, 0.06),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.22),
+    0 0 30px rgba(139, 233, 253, 0.08);
+  image-rendering: pixelated;
+  touch-action: manipulation;
+}
+
+.board.is-won {
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 3px rgba(255, 209, 102, 0.18),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.22),
+    0 0 36px rgba(255, 209, 102, 0.2);
+}
+
+.tile {
+  position: relative;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  overflow: visible;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 18%, transparent 18% 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 8%, transparent 8% 92%, rgba(0, 0, 0, 0.1) 92% 100%),
+    linear-gradient(180deg, var(--floor) 0%, var(--floor-deep) 100%);
+}
+
+.tile::before,
+.tile::after {
+  image-rendering: pixelated;
+}
+
+.tile.wall {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0 16%, transparent 16% 100%),
+    linear-gradient(180deg, transparent 0 45%, rgba(0, 0, 0, 0.18) 45% 52%, transparent 52% 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 10%, transparent 10% 90%, rgba(0, 0, 0, 0.2) 90% 100%),
+    repeating-linear-gradient(90deg, transparent 0 16px, rgba(0, 0, 0, 0.18) 16px 18px, transparent 18px 32px),
+    linear-gradient(180deg, var(--wall) 0%, var(--wall-deep) 100%);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.22);
+}
+
+.tile.goal::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  background:
+    linear-gradient(180deg, #ffe6a8 0 14%, transparent 14% 100%),
+    linear-gradient(90deg, transparent 0 30%, rgba(0, 0, 0, 0.18) 30% 34%, transparent 34% 66%, rgba(0, 0, 0, 0.18) 66% 70%, transparent 70% 100%),
+    linear-gradient(180deg, var(--goal) 0%, var(--goal-deep) 100%);
+  border: 3px solid #000;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.18),
+    0 0 0 4px rgba(0, 0, 0, 0.18),
+    0 0 12px rgba(255, 209, 102, 0.3);
+  animation: pulse-goal 1.6s steps(2) infinite;
+}
+
+.tile.flash {
+  animation: goalFlash 0.35s ease-out;
+  z-index: 2;
+}
+
+.tile.crate.pulse::after {
+  transform-origin: 50% 50%;
+  animation: cratePulse 0.18s ease-out;
+}
+
+.tile.player,
+.tile.crate {
+  will-change: transform;
+  z-index: 1;
+}
+
+.tile.player.moving {
+  z-index: 2;
+  animation: playerBob 0.15s ease-out forwards;
+}
+
+.tile.player.moving::after {
+  animation: none;
+}
+
+.tile.crate::after,
+.tile.player::after {
+  content: "";
+  position: absolute;
+}
+
+.tile.crate::after {
+  inset: 7px;
+  width: 4px;
+  height: 4px;
+  background: var(--sprite-outline);
+  box-shadow:
+    0px 0px 0 var(--sprite-outline),
+    4px 0px 0 var(--sprite-outline),
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    24px 0px 0 var(--sprite-outline),
+    28px 0px 0 var(--sprite-outline),
+    0px 4px 0 var(--sprite-outline),
+    4px 4px 0 var(--crate-top),
+    8px 4px 0 var(--crate-top),
+    12px 4px 0 var(--crate-top),
+    16px 4px 0 var(--crate-top),
+    20px 4px 0 var(--crate-top),
+    24px 4px 0 var(--crate-top),
+    28px 4px 0 var(--sprite-outline),
+    0px 8px 0 var(--sprite-outline),
+    4px 8px 0 var(--crate-top),
+    8px 8px 0 var(--crate),
+    12px 8px 0 var(--crate-metal),
+    16px 8px 0 var(--crate-metal),
+    20px 8px 0 var(--crate),
+    24px 8px 0 var(--crate-top),
+    28px 8px 0 var(--sprite-outline),
+    0px 12px 0 var(--sprite-outline),
+    4px 12px 0 var(--crate),
+    8px 12px 0 var(--crate),
+    12px 12px 0 var(--crate),
+    16px 12px 0 var(--crate),
+    20px 12px 0 var(--crate),
+    24px 12px 0 var(--crate),
+    28px 12px 0 var(--sprite-outline),
+    0px 16px 0 var(--sprite-outline),
+    4px 16px 0 var(--crate),
+    8px 16px 0 var(--crate-metal),
+    12px 16px 0 var(--crate),
+    16px 16px 0 var(--crate),
+    20px 16px 0 var(--crate-metal),
+    24px 16px 0 var(--crate),
+    28px 16px 0 var(--sprite-outline),
+    0px 20px 0 var(--sprite-outline),
+    4px 20px 0 var(--crate),
+    8px 20px 0 var(--crate),
+    12px 20px 0 var(--crate),
+    16px 20px 0 var(--crate),
+    20px 20px 0 var(--crate),
+    24px 20px 0 var(--crate),
+    28px 20px 0 var(--sprite-outline),
+    0px 24px 0 var(--sprite-outline),
+    4px 24px 0 var(--crate-deep),
+    8px 24px 0 var(--crate-deep),
+    12px 24px 0 var(--crate-deep),
+    16px 24px 0 var(--crate-deep),
+    20px 24px 0 var(--crate-deep),
+    24px 24px 0 var(--crate-deep),
+    28px 24px 0 var(--sprite-outline),
+    0px 28px 0 var(--sprite-outline),
+    4px 28px 0 var(--sprite-outline),
+    8px 28px 0 var(--sprite-outline),
+    12px 28px 0 var(--sprite-outline),
+    16px 28px 0 var(--sprite-outline),
+    20px 28px 0 var(--sprite-outline),
+    24px 28px 0 var(--sprite-outline),
+    28px 28px 0 var(--sprite-outline),
+    2px 34px 0 rgba(0, 0, 0, 0.16),
+    6px 34px 0 rgba(0, 0, 0, 0.16),
+    10px 34px 0 rgba(0, 0, 0, 0.16),
+    14px 34px 0 rgba(0, 0, 0, 0.16),
+    18px 34px 0 rgba(0, 0, 0, 0.16),
+    22px 34px 0 rgba(0, 0, 0, 0.16),
+    26px 34px 0 rgba(0, 0, 0, 0.16);
+}
+
+.tile.player::after {
+  inset: 8px;
+  width: 4px;
+  height: 4px;
+  background: transparent;
+  filter: drop-shadow(0 0 8px rgba(126, 224, 129, 0.12));
+  animation: none;
+}
+
+.tile.player[data-facing='down'][data-step='0']::after {
+  box-shadow:
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    4px 4px 0 var(--sprite-outline),
+    8px 4px 0 var(--player-top),
+    12px 4px 0 var(--player-top),
+    16px 4px 0 var(--player-top),
+    20px 4px 0 var(--player-top),
+    24px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player-accent),
+    16px 8px 0 var(--player-accent),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player-top),
+    12px 12px 0 var(--player-top),
+    16px 12px 0 var(--player-top),
+    20px 12px 0 var(--player-top),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player),
+    12px 16px 0 var(--player),
+    16px 16px 0 var(--player),
+    20px 16px 0 var(--player),
+    24px 16px 0 var(--sprite-outline),
+    4px 20px 0 var(--sprite-outline),
+    8px 20px 0 var(--player),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--player),
+    24px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--player),
+    16px 24px 0 var(--player),
+    20px 24px 0 var(--sprite-outline),
+    8px 28px 0 var(--sprite-outline),
+    20px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    12px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14);
+}
+
+.tile.player[data-facing='down'][data-step='1']::after {
+  box-shadow:
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    4px 4px 0 var(--sprite-outline),
+    8px 4px 0 var(--player-top),
+    12px 4px 0 var(--player-top),
+    16px 4px 0 var(--player-top),
+    20px 4px 0 var(--player-top),
+    24px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player-accent),
+    16px 8px 0 var(--player-accent),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player-top),
+    12px 12px 0 var(--player-top),
+    16px 12px 0 var(--player-top),
+    20px 12px 0 var(--player-top),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player),
+    12px 16px 0 var(--player),
+    16px 16px 0 var(--player),
+    20px 16px 0 var(--player),
+    24px 16px 0 var(--sprite-outline),
+    4px 20px 0 var(--sprite-outline),
+    8px 20px 0 var(--player),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--player),
+    24px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--player),
+    16px 24px 0 var(--player),
+    20px 24px 0 var(--sprite-outline),
+    4px 28px 0 var(--sprite-outline),
+    8px 28px 0 var(--player),
+    20px 28px 0 var(--player),
+    24px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14),
+    20px 34px 0 rgba(0, 0, 0, 0.14);
+  transform: translateY(1px);
+}
+
+.tile.player[data-facing='up'][data-step='0']::after {
+  box-shadow:
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    4px 4px 0 var(--sprite-outline),
+    8px 4px 0 var(--player-top),
+    12px 4px 0 var(--player-top),
+    16px 4px 0 var(--player-top),
+    20px 4px 0 var(--player-top),
+    24px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player),
+    16px 8px 0 var(--player),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player),
+    12px 12px 0 var(--player),
+    16px 12px 0 var(--player),
+    20px 12px 0 var(--player),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player),
+    12px 16px 0 var(--player-deep),
+    16px 16px 0 var(--player-deep),
+    20px 16px 0 var(--player),
+    24px 16px 0 var(--sprite-outline),
+    4px 20px 0 var(--sprite-outline),
+    8px 20px 0 var(--player-deep),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--player-deep),
+    24px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--player),
+    16px 24px 0 var(--player),
+    20px 24px 0 var(--sprite-outline),
+    8px 28px 0 var(--sprite-outline),
+    20px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    12px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14);
+}
+
+.tile.player[data-facing='up'][data-step='1']::after {
+  box-shadow:
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    4px 4px 0 var(--sprite-outline),
+    8px 4px 0 var(--player-top),
+    12px 4px 0 var(--player-top),
+    16px 4px 0 var(--player-top),
+    20px 4px 0 var(--player-top),
+    24px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player),
+    16px 8px 0 var(--player),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player),
+    12px 12px 0 var(--player),
+    16px 12px 0 var(--player),
+    20px 12px 0 var(--player),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player),
+    12px 16px 0 var(--player-deep),
+    16px 16px 0 var(--player-deep),
+    20px 16px 0 var(--player),
+    24px 16px 0 var(--sprite-outline),
+    4px 20px 0 var(--sprite-outline),
+    8px 20px 0 var(--player-deep),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--player-deep),
+    24px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--player),
+    16px 24px 0 var(--player),
+    20px 24px 0 var(--sprite-outline),
+    4px 28px 0 var(--sprite-outline),
+    8px 28px 0 var(--player-deep),
+    20px 28px 0 var(--player-deep),
+    24px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14),
+    20px 34px 0 rgba(0, 0, 0, 0.14);
+  transform: translateY(1px);
+}
+
+.tile.player[data-facing='left'][data-step='0']::after {
+  box-shadow:
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    4px 4px 0 var(--sprite-outline),
+    8px 4px 0 var(--player-top),
+    12px 4px 0 var(--player-top),
+    16px 4px 0 var(--sprite-outline),
+    20px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player-accent),
+    16px 8px 0 var(--player),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player-top),
+    12px 12px 0 var(--player),
+    16px 12px 0 var(--player),
+    20px 12px 0 var(--player),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player),
+    12px 16px 0 var(--player),
+    16px 16px 0 var(--player-deep),
+    20px 16px 0 var(--player-deep),
+    24px 16px 0 var(--sprite-outline),
+    4px 20px 0 var(--sprite-outline),
+    8px 20px 0 var(--player),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--sprite-outline),
+    16px 24px 0 var(--player),
+    20px 24px 0 var(--sprite-outline),
+    12px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    12px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14);
+}
+
+.tile.player[data-facing='left'][data-step='1']::after {
+  box-shadow:
+    8px 0px 0 var(--sprite-outline),
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    4px 4px 0 var(--sprite-outline),
+    8px 4px 0 var(--player-top),
+    12px 4px 0 var(--player-top),
+    16px 4px 0 var(--sprite-outline),
+    20px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player-accent),
+    16px 8px 0 var(--player),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player-top),
+    12px 12px 0 var(--player),
+    16px 12px 0 var(--player),
+    20px 12px 0 var(--player),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player),
+    12px 16px 0 var(--player),
+    16px 16px 0 var(--player-deep),
+    20px 16px 0 var(--player-deep),
+    24px 16px 0 var(--sprite-outline),
+    4px 20px 0 var(--sprite-outline),
+    8px 20px 0 var(--player),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--sprite-outline),
+    16px 24px 0 var(--player),
+    20px 24px 0 var(--sprite-outline),
+    12px 28px 0 var(--sprite-outline),
+    2px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    14px 34px 0 rgba(0, 0, 0, 0.14),
+    20px 34px 0 rgba(0, 0, 0, 0.14);
+  transform: translateY(1px);
+}
+
+.tile.player[data-facing='right'][data-step='0']::after {
+  box-shadow:
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    8px 4px 0 var(--sprite-outline),
+    12px 4px 0 var(--sprite-outline),
+    16px 4px 0 var(--player-top),
+    20px 4px 0 var(--player-top),
+    24px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player),
+    16px 8px 0 var(--player-accent),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player),
+    12px 12px 0 var(--player),
+    16px 12px 0 var(--player),
+    20px 12px 0 var(--player-top),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player-deep),
+    12px 16px 0 var(--player-deep),
+    16px 16px 0 var(--player),
+    20px 16px 0 var(--player),
+    24px 16px 0 var(--sprite-outline),
+    8px 20px 0 var(--sprite-outline),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--player),
+    24px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--player),
+    16px 24px 0 var(--sprite-outline),
+    20px 24px 0 var(--sprite-outline),
+    16px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    8px 34px 0 rgba(0, 0, 0, 0.14),
+    12px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14);
+}
+
+.tile.player[data-facing='right'][data-step='1']::after {
+  box-shadow:
+    12px 0px 0 var(--sprite-outline),
+    16px 0px 0 var(--sprite-outline),
+    20px 0px 0 var(--sprite-outline),
+    8px 4px 0 var(--sprite-outline),
+    12px 4px 0 var(--sprite-outline),
+    16px 4px 0 var(--player-top),
+    20px 4px 0 var(--player-top),
+    24px 4px 0 var(--sprite-outline),
+    4px 8px 0 var(--sprite-outline),
+    8px 8px 0 var(--player-top),
+    12px 8px 0 var(--player),
+    16px 8px 0 var(--player-accent),
+    20px 8px 0 var(--player-top),
+    24px 8px 0 var(--sprite-outline),
+    4px 12px 0 var(--sprite-outline),
+    8px 12px 0 var(--player),
+    12px 12px 0 var(--player),
+    16px 12px 0 var(--player),
+    20px 12px 0 var(--player-top),
+    24px 12px 0 var(--sprite-outline),
+    4px 16px 0 var(--sprite-outline),
+    8px 16px 0 var(--player-deep),
+    12px 16px 0 var(--player-deep),
+    16px 16px 0 var(--player),
+    20px 16px 0 var(--player),
+    24px 16px 0 var(--sprite-outline),
+    8px 20px 0 var(--sprite-outline),
+    12px 20px 0 var(--player-deep),
+    16px 20px 0 var(--player-deep),
+    20px 20px 0 var(--player),
+    24px 20px 0 var(--sprite-outline),
+    8px 24px 0 var(--sprite-outline),
+    12px 24px 0 var(--player),
+    16px 24px 0 var(--sprite-outline),
+    20px 24px 0 var(--sprite-outline),
+    16px 28px 0 var(--sprite-outline),
+    4px 34px 0 rgba(0, 0, 0, 0.14),
+    10px 34px 0 rgba(0, 0, 0, 0.14),
+    16px 34px 0 rgba(0, 0, 0, 0.14),
+    22px 34px 0 rgba(0, 0, 0, 0.14);
+  transform: translateY(1px);
+}
+
+.tile.crate.goal::after {
+  box-shadow:
+    inset -4px -4px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 3px rgba(255, 209, 102, 0.34),
+    0 0 12px rgba(255, 209, 102, 0.24);
+  animation: crate-glow 1.1s steps(2) infinite;
+}
+
+.dpad {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.dpad > button,
+.dpad-middle > button {
+  min-width: 64px;
+  background:
+    linear-gradient(180deg, #ffe59f 0 18%, transparent 18% 100%),
+    linear-gradient(180deg, #f2c14e 0%, #c68b19 100%);
+}
+
+.dpad-middle {
+  display: flex;
+  gap: 10px;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 5, 10, 0.74);
+  padding: 20px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-card {
+  padding: 24px;
+  width: min(460px, 100%);
+  text-align: center;
+}
+
+.level-select-card {
+  width: min(880px, 100%);
+  max-height: min(720px, 90vh);
+  overflow-y: auto;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 14px;
+}
+
+.level-card {
+  border: 3px solid #000;
+  background:
+    repeating-linear-gradient(180deg, var(--scanline) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 32%),
+    var(--panel-2);
+  color: var(--text);
+  padding: 12px;
+  text-align: left;
+  box-shadow: 6px 6px 0 #000, inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.level-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 7px 7px 0 #000, inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+  filter: saturate(1.05);
+}
+
+.level-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 4px 4px 0 #000, inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.level-card:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.level-card.is-cleared {
+  border-color: var(--goal);
+  box-shadow:
+    6px 6px 0 #000,
+    0 0 0 3px rgba(255, 209, 102, 0.14),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.level-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.level-card-title {
+  display: grid;
+  gap: 2px;
+}
+
+.level-index {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.level-stars {
+  color: var(--goal);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 209, 102, 0.22);
+  white-space: nowrap;
+}
+
+.level-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border: 2px solid #000;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0 45%, transparent 45% 100%),
+    linear-gradient(180deg, var(--goal) 0%, var(--goal-deep) 100%);
+  color: #111;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+#confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.win-summary {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 18px;
+}
+
+.win-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@keyframes pulse-goal {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes player-idle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes crate-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes goalFlash {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  55% {
+    transform: scale(1.06);
+    filter: brightness(1.18);
+    box-shadow:
+      0 0 0 3px rgba(0, 0, 0, 0.18),
+      0 0 22px rgba(255, 209, 102, 0.55);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes cratePulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12, 0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes playerBob {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  55% {
+    transform: translateY(-3px) scale(1.04);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes boardShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-3px); }
+  30% { transform: translateX(3px); }
+  45% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+}
+
+.board.shake {
+  animation: boardShake 0.25s ease-out;
+}
+
+@keyframes wallShimmer {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.04); }
+}
+
+.tile.wall {
+  animation: wallShimmer 4s ease-in-out infinite;
+}
+
+@keyframes modalEntry {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal:not(.hidden) .modal-card {
+  animation: modalEntry 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes crateLand {
+  0% { transform: scale(1, 1); }
+  30% { transform: scale(1.15, 0.85); }
+  50% { transform: scale(0.95, 1.05); }
+  70% { transform: scale(1.03, 0.97); }
+  100% { transform: scale(1, 1); }
+}
+
+.tile.crate.goal.flash::after {
+  animation: crateLand 0.3s ease-out;
+}
+
+@media (max-width: 920px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .board {
+    max-width: 100%;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .tile {
+    width: 38px;
+    height: 38px;
+  }
+
+  .stats,
+  .score-panel,
+  .win-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  .level-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ─── 提示箭头 & AI演示 ─────────────────────────────────────────────────── */
+
+/* 提示方向箭头覆盖层 */
+.hint-arrow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  z-index: 10;
+  pointer-events: none;
+  animation: hintPulse 0.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px #fff700);
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* AI演示模式：棋盘边框发光 */
+.board.ai-demo {
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 0 24px rgba(139, 233, 253, 0.45),
+    0 0 48px rgba(139, 233, 253, 0.2);
+  animation: aiDemoGlow 1.2s ease-in-out infinite;
+}
+
+@keyframes aiDemoGlow {
+  0%, 100% { box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(139,233,253,0.45); }
+  50% { box-shadow: 0 0 0 3px var(--accent-2), 0 0 32px rgba(255,121,198,0.55); }
+}
+
+/* 求解中旋转动画 */
+.board.ai-solving {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* AI演示按钮激活态 */
+#aiDemoBtn.active {
+  background: var(--accent);
+  color: #17121f;
+  font-weight: 700;
+}
+
+/* 提示按钮激活态 */
+#hintBtn.active {
+  background: var(--goal);
+  color: #17121f;
+  font-weight: 700;
+}
+
+/* 求解中状态文字 */
+.message.solving {
+  animation: solvingBlink 0.6s linear infinite;
+}
+
+@keyframes solvingBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* 移动端按钮适配 */
+@media (max-width: 560px) {
+  #hintBtn, #aiDemoBtn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* ─── Combo 连击特效 ─────────────────────────────────────────────────────── */
+
+.combo-fx {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  z-index: 100;
+  text-shadow: 0 0 12px currentColor;
+  animation: comboAnim 1.2s ease-out forwards;
+}
+
+.combo-2 { color: var(--accent); }
+.combo-3 { color: var(--goal); font-size: 1.6rem; }
+.combo-4 { color: var(--accent-2); font-size: 1.8rem; }
+.combo-5 { color: #ff5555; font-size: 2rem; }
+
+@keyframes comboAnim {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(0.6); }
+  20%  { opacity: 1; transform: translateX(-50%) translateY(-8px) scale(1.2); }
+  60%  { opacity: 1; transform: translateX(-50%) translateY(-18px) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-36px) scale(0.9); }
+}
+
+/* ─── 主题切换栏 ─────────────────────────────────────────────────────────── */
+
+.theme-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.theme-btn {
+  padding: 5px 12px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.theme-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.theme-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #17121f;
+  font-weight: 700;
+}
+
+/* ─── 移动端增强 ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .dpad > button,
+  .dpad-middle > button {
+    min-width: 56px;
+    min-height: 56px;
+    font-size: 1.2rem;
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .controls button {
+    font-size: 0.75rem;
+    padding: 7px 4px;
+  }
+
+  .theme-bar {
+    justify-content: center;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .game-shell {
+    padding: 10px;
+    gap: 10px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  /* 触屏设备：放大可点击区域 */
+  .dpad > button,
+  .dpad-middle > button {
+    min-width: 60px;
+    min-height: 60px;
+  }
+
+  .level-card {
+    padding: 14px 10px;
+  }
+}
+
+
+/* ─── 关卡编辑器 ─────────────────────────────────────────────────────────── */
+
+.editor-card {
+  width: min(700px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.editor-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.editor-tool {
+  padding: 5px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.editor-tool:hover {
+  border-color: var(--accent);
+}
+
+.editor-tool.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #17121f;
+  font-weight: 700;
+}
+
+.editor-size {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.editor-size input {
+  width: 48px;
+  padding: 3px 6px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.editor-size button {
+  padding: 4px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.editor-size button:hover {
+  border-color: var(--accent-2);
+  color: var(--text);
+}
+
+#editorBoard {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 12px;
+  user-select: none;
+  cursor: crosshair;
+}
+
+.editor-cell {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  background: var(--floor);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.08s;
+}
+
+.editor-cell:hover {
+  filter: brightness(1.3);
+}
+
+.editor-cell.ec-wall {
+  background: var(--wall);
+  border-color: var(--wall-deep);
+}
+
+.editor-cell.ec-goal {
+  background: var(--goal-deep);
+  border-color: var(--goal);
+}
+
+.editor-cell.ec-box {
+  background: var(--crate);
+  border-color: var(--crate-deep);
+}
+
+.editor-cell.ec-player {
+  background: var(--player-deep);
+  border-color: var(--player);
+}
+
+.editor-status {
+  margin-bottom: 10px;
+  font-size: 0.88rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+}
+
+.editor-status.ok {
+  border-color: var(--player);
+  color: var(--player);
+}
+
+.editor-status.err {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.editor-export {
+  margin-top: 10px;
+}
+
+.editor-export textarea {
+  width: 100%;
+  min-height: 80px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 0.78rem;
+  padding: 8px;
+  resize: vertical;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.editor-actions button {
+  flex: 1;
+  min-width: 100px;
+}
+
+
+/* ─── 统计面板 ──────────────────────────────────────────────────────────────── */
+
+.stats-card {
+  width: min(640px, 96vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.stats-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.stats-kpi {
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.stats-kpi span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stats-kpi strong {
+  display: block;
+  font-size: 1.3rem;
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.stats-progress-wrap {
+  margin-bottom: 18px;
+}
+
+.stats-progress-wrap h3 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stats-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 0.78rem;
+}
+
+.stats-bar-name {
+  width: 80px;
+  flex-shrink: 0;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-bar-track {
+  flex: 1;
+  height: 14px;
+  background: var(--panel-3);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.stats-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  background: var(--accent);
+}
+
+.stats-bar-fill.rank-3 { background: var(--goal); }
+.stats-bar-fill.rank-2 { background: var(--accent); }
+.stats-bar-fill.rank-1 { background: var(--muted); }
+.stats-bar-fill.rank-0 { background: var(--panel-2); width: 8px !important; }
+
+.stats-bar-val {
+  width: 48px;
+  text-align: right;
+  color: var(--text);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .stats-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stats-bar-name {
+    width: 60px;
+  }
+}
+
+
+/* ─── PWA 安装按钮 & 离线指示 ───────────────────────────────────────────────── */
+
+#pwaInstallBtn {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: #17121f;
+  font-weight: 700;
+  border-color: transparent;
+  animation: pwaGlow 2s ease-in-out infinite;
+}
+
+#pwaInstallBtn:hover {
+  filter: brightness(1.15);
+}
+
+@keyframes pwaGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(139,233,253,0.4); }
+  50% { box-shadow: 0 0 18px rgba(255,121,198,0.6); }
+}
+
+.offline-badge {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  padding: 6px 14px;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  z-index: 9999;
+  display: none;
+  animation: fadeInUp 0.3s ease;
+}
+
+.offline-badge.show {
+  display: block;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ─── 编辑器导入框 ───────────────────────────────────────────────────────────── */
+
+.editor-import-box {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+}
+
+.editor-import-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.editor-import-box textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 0.82rem;
+  padding: 8px;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.editor-import-box textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+
+/* ─── 玩家名 & 排行榜 ──────────────────────────────────────────────────────── */
+
+.stats-player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.stats-player-row strong {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.lb-overlay-card {
+  background: var(--panel);
+  border: 3px solid #000;
+  border-radius: 12px;
+  padding: 24px;
+  width: min(560px, 96vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin: 12px 0;
+}
+
+.lb-table th {
+  color: var(--muted);
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 2px solid var(--line);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lb-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--panel-3);
+  color: var(--text);
+}
+
+.lb-table tr.lb-mine td {
+  color: var(--accent);
+  font-weight: 700;
+  background: rgba(139,233,253,0.06);
+}
+
+.lb-table tr:first-child td {
+  color: var(--goal);
+}
+
+
+/* ─── 速通挑战 HUD ───────────────────────────────────────────────────────────── */
+
+.ta-hud {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: var(--panel-3);
+  border: 2px solid var(--accent-2);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  animation: taHudPulse 1s ease-in-out infinite;
+}
+
+.ta-hud.urgent {
+  border-color: var(--danger);
+  color: var(--danger);
+  animation: taHudPulse 0.4s ease-in-out infinite;
+}
+
+.ta-hud .ta-time { font-size: 1.2rem; color: var(--accent); }
+.ta-hud.urgent .ta-time { color: var(--danger); }
+.ta-hud .ta-score { color: var(--goal); }
+.ta-hud .ta-cleared { color: var(--accent-2); }
+
+@keyframes taHudPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,121,198,0.3); }
+  50% { box-shadow: 0 0 16px rgba(255,121,198,0.6); }
+}
+
+#timeAttackBtn {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+}
+
+#timeAttackBtn:hover {
+  background: var(--accent-2);
+  color: #17121f;
+}
+
+
+/* ─── 关卡预览缩略图 & 排行榜按钮 ─────────────────────────────────────────── */
+
+.level-preview {
+  display: block;
+  width: 100%;
+  height: 52px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  image-rendering: pixelated;
+  border: 1px solid var(--line);
+  background: #17121f;
+}
+
+.level-lb-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  border: 1px solid var(--line);
+  background: var(--panel-3);
+  color: var(--goal);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.level-lb-btn:hover {
+  opacity: 1;
+  border-color: var(--goal);
+}
+
+.level-card {
+  position: relative;
+}
+
+
+/* ─── 录像回放 ───────────────────────────────────────────────────────────────── */
+
+.replay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 12px 0;
+}
+
+.replay-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+}
+
+.replay-name {
+  flex: 1;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.replay-info {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.replay-play-btn {
+  padding: 4px 12px;
+  background: var(--accent);
+  color: #17121f;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.replay-play-btn:hover {
+  filter: brightness(1.15);
+}
+
+#replayBtn.active {
+  background: var(--accent-2);
+  color: #17121f;
+  font-weight: 700;
+}
+
+
+/* ─── 死角检测高亮 ───────────────────────────────────────────────────────────── */
+
+.tile.crate.deadlock {
+  animation: deadlockPulse 0.6s ease-in-out infinite;
+}
+
+.tile.crate.deadlock::after {
+  outline: 3px solid var(--danger);
+  outline-offset: -3px;
+  border-radius: 3px;
+}
+
+@keyframes deadlockPulse {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 4px rgba(255,107,107,0.6)); }
+  50% { filter: brightness(1.3) drop-shadow(0 0 10px rgba(255,107,107,0.9)); }
+}
+
+
+/* ─── 关卡笔记 ───────────────────────────────────────────────────────────────── */
+
+.win-note-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+  text-align: left;
+}
+
+.win-note-area textarea {
+  width: 100%;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 7px 10px;
+  resize: vertical;
+}
+
+.win-note-area textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.stats-notes-section {
+  margin-top: 20px;
+}
+
+.stats-notes-section h3 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+}
+
+.stats-note-item {
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.note-level {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.note-text {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0 0 4px;
+  white-space: pre-wrap;
+}
+
+.note-date {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+
+/* ─── 三星/挑战胜利特效 ─────────────────────────────────────────────────────── */
+
+.modal-card.rank-triple {
+  animation: tripleStarEntry 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes tripleStarEntry {
+  0%   { transform: scale(0.5) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.08) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.modal-card.challenge-flash {
+  animation: challengeFlash 0.6s ease;
+}
+
+@keyframes challengeFlash {
+  0%,100% { box-shadow: inset 0 0 0 3px transparent; }
+  25%,75% { box-shadow: inset 0 0 0 3px var(--goal), 0 0 30px var(--goal); }
+  50%     { box-shadow: inset 0 0 0 5px var(--accent), 0 0 50px var(--accent); }
+}
+
+
+/* ─── 帮助面板 & 音量控件 ───────────────────────────────────────────────────── */
+
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.volume-row input[type=range] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.help-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin: 14px 0;
+}
+
+.help-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.83rem;
+}
+
+.help-row kbd {
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-family: monospace;
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: center;
+}
+
+.help-row span {
+  color: var(--muted);
+}
+
+
+/* ─── 速度按钮 & 难度标签 ───────────────────────────────────────────────────── */
+
+.speed-btn {
+  padding: 3px 8px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.speed-btn.active,
+.speed-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.difficulty-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 3px;
+}
+
+
+/* ─── 成就系统 ───────────────────────────────────────────────────────────────── */
+
+.achiev-toast {
+  position: fixed;
+  bottom: 60px;
+  right: 16px;
+  background: var(--panel);
+  border: 2px solid var(--goal);
+  border-radius: 10px;
+  padding: 10px 16px;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 0 20px rgba(255,209,102,0.4);
+  animation: achievSlide 0.4s ease;
+  max-width: 260px;
+}
+
+.achiev-toast.show {
+  display: flex;
+}
+
+.achiev-toast span { font-weight: 700; color: var(--goal); }
+.achiev-toast small { color: var(--muted); font-size: 0.78rem; }
+
+@keyframes achievSlide {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+.stats-achiev-section { margin-top: 20px; }
+.stats-achiev-section h3 {
+  font-size: 0.85rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px;
+}
+
+.achiev-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.achiev-item {
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  opacity: 0.45;
+  transition: all 0.2s;
+}
+
+.achiev-item.unlocked {
+  opacity: 1;
+  border-color: var(--goal);
+  box-shadow: 0 0 8px rgba(255,209,102,0.25);
+}
+
+.achiev-icon { font-size: 1.4rem; display: block; }
+.achiev-name { font-size: 0.75rem; font-weight: 700; color: var(--text); display: block; margin-top: 3px; }
+.achiev-desc { font-size: 0.65rem; color: var(--muted); display: block; }
+
+
+/* ─── 评分飞入动画 ───────────────────────────────────────────────────────────── */
+
+.score-float {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 50;
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-shadow: 0 0 20px currentColor;
+  white-space: nowrap;
+}
+
+.sf-rank {
+  display: inline-block;
+  letter-spacing: 0.1em;
+}
+
+.sf-challenge {
+  font-size: 1rem;
+  color: var(--goal);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+@keyframes scoreFlyIn {
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.3) translateY(40px); }
+  25%  { opacity: 1; transform: translateX(-50%) scale(1.3) translateY(-10px); }
+  55%  { opacity: 1; transform: translateX(-50%) scale(1) translateY(-30px); }
+  85%  { opacity: 1; transform: translateX(-50%) scale(0.95) translateY(-50px); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.8) translateY(-70px); }
+}
+
+
+/* ─── 教程气泡 ───────────────────────────────────────────────────────────────── */
+
+.tutorial-bubble {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--goal);
+  color: #17121f;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: 10px;
+  white-space: nowrap;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(255,209,102,0.4);
+  animation: tutorialPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+
+.tutorial-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: var(--goal);
+}
+
+@keyframes tutorialPop {
+  from { opacity:0; transform: translateX(-50%) scale(0.7) translateY(10px); }
+  to   { opacity:1; transform: translateX(-50%) scale(1) translateY(0); }
+}
+
+
+/* ─── 星星落下特效 ───────────────────────────────────────────────────────────── */
+
+.star-drop {
+  position: absolute;
+  font-size: 1.6rem;
+  pointer-events: none;
+  z-index: 100;
+  top: -20px;
+  animation: starFall linear forwards;
+  text-shadow: 0 0 8px currentColor;
+}
+
+@keyframes starFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+}
+
+
+/* ─── 通知系统 ──────────────────────────────────────────────────────────────── */
+
+.notify-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 16px;
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  max-width: 280px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
+  transform: translateX(120%);
+}
+
+.notify-toast.show {
+  display: flex;
+  transform: translateX(0);
+  animation: notifySlide 0.3s ease;
+}
+
+.nt-icon { font-size: 1.3rem; }
+.nt-msg { font-size: 0.82rem; color: var(--text); }
+
+@keyframes notifySlide {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+
+/* ─── 关卡评分 ───────────────────────────────────────────────────────────────── */
+
+.card-rating {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 0.7rem;
+  color: var(--goal);
+  letter-spacing: -1px;
+}
+
+.win-rating {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.win-rating .star-btn {
+  font-size: 1.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--line);
+  transition: color 0.15s, transform 0.1s;
+  padding: 2px;
+}
+
+.win-rating .star-btn:hover,
+.win-rating .star-btn.selected {
+  color: var(--goal);
+  transform: scale(1.2);
+}
+
+
+/* ─── 浮动快捷键卡片 ─────────────────────────────────────────────────────────── */
+
+.hotkeys-float {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  z-index: 500;
+  min-width: 200px;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display: none;
+}
+
+.hotkeys-float.show { display: block; animation: notifySlide 0.3s ease; }
+
+.hk-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.hk-title button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 4px;
+}
+
+.hk-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.78rem;
+}
+
+.hk-row kbd {
+  background: var(--panel-3);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  min-width: 50px;
+  text-align: center;
+}
+
+.hk-row span { color: var(--muted); }
+
+
+/* ─── 玩家等级卡片 ──────────────────────────────────────────────────────────── */
+
+.player-level-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, var(--panel-2), var(--panel-3));
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+}
+
+.plv-icon { font-size: 1.6rem; }
+.plv-name { font-weight: 700; color: var(--text); flex: 1; }
+.plv-rank { color: var(--accent); font-size: 0.78rem; }
+.plv-score { color: var(--goal); font-weight: 700; font-size: 0.85rem; }
+
+
+/* ─── 关卡搜索框 ─────────────────────────────────────────────────────────────── */
+
+.level-search-input {
+  width: 100%;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.level-search-input:focus {
+  border-color: var(--accent);
+}
+
+.level-search-input::placeholder {
+  color: var(--muted);
+}
+
+
+/* ─── 录像回放进度条 ─────────────────────────────────────────────────────────── */
+
+.replay-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--panel-3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.rp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 3px;
+  transition: width 0.15s;
+}
+
+
+/* ─── 收藏按钮 ───────────────────────────────────────────────────────────────── */
+
+.level-fav-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--accent-2);
+  padding: 2px;
+  z-index: 2;
+  transition: transform 0.15s;
+}
+
+.level-fav-btn:hover {
+  transform: scale(1.3);
+}
+
+
+/* ─── 玩家粒子拖尾 ──────────────────────────────────────────────────────────── */
+
+.player-trail {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--player);
+  pointer-events: none;
+  z-index: 200;
+  transform: translate(-50%, -50%);
+  animation: trailFade 0.5s ease-out forwards;
+}
+
+@keyframes trailFade {
+  0%   { opacity: 0.7; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(0.2); }
+}
+
+
+/* ─── 暂停遮罩 ───────────────────────────────────────────────────────────────── */
+
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7,5,10,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  cursor: pointer;
+}
+
+.pause-overlay.hidden { display: none; }
+
+.pause-content {
+  text-align: center;
+  animation: modalEntry 0.3s ease;
+}
+
+.pause-content h2 {
+  font-size: 3rem;
+  color: var(--accent);
+  margin: 0 0 12px;
+  text-shadow: 0 0 30px var(--accent);
+}
+
+.pause-content p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+
+/* ─── BGM 节拍脉冲 ───────────────────────────────────────────────────────────── */
+
+.board.beat-pulse {
+  transition: box-shadow 0.12s ease;
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 3px rgba(139, 233, 253, 0.15),
+    0 0 20px rgba(139, 233, 253, 0.18);
+}
+
+
+/* ─── 关卡选择分页 ───────────────────────────────────────────────────────────── */
+
+.level-page-ctrl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.level-page-ctrl button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1.2rem;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.level-page-ctrl button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.level-page-ctrl button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+/* ─── 完成时间线 ─────────────────────────────────────────────────────────────── */
+
+.timeline {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.tl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.tl-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.tl-info strong {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.tl-info span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+
+/* ─── 音效试听按钮 ───────────────────────────────────────────────────────────── */
+
+.sfx-preview-btn {
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.sfx-preview-btn:hover {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.sfx-preview-btn:active {
+  transform: scale(0.95);
+}
+
+
+/* ─── 关卡统计网格 ───────────────────────────────────────────────────────────── */
+
+.level-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.lsg-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 3px;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  cursor: default;
+  transition: transform 0.1s;
+}
+
+.lsg-item:hover { transform: scale(1.1); z-index: 2; }
+
+.lsg-num {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.lsg-moves {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+
+/* ─── 关卡过滤按钮 ───────────────────────────────────────────────────────────── */
+
+.level-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.filter-btn {
+  padding: 4px 12px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active { border-color: var(--accent); background: var(--accent); color: #17121f; font-weight: 700; }
+
+
+/* ─── 进度环 ────────────────────────────────────────────────────────────────── */
+
+.rings-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.ring-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ring-item span {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+
+/* ─── 悬浮全屏 D-Pad ─────────────────────────────────────────────────────────── */
+
+.float-dpad {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 0;
+  z-index: 800;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(10,5,15,0.85), transparent);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.float-dpad.hidden { display: none; }
+
+.fdpad-btn {
+  pointer-events: all;
+  background: rgba(139,233,253,0.12);
+  border: 2px solid rgba(139,233,253,0.3);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.8);
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fdpad-btn:active {
+  background: rgba(139,233,253,0.35);
+  transform: scale(0.92);
+}
+
+.fdpad-up    { grid-column: 2; grid-row: 1; }
+.fdpad-left  { grid-column: 1; grid-row: 2; }
+.fdpad-center { grid-column: 2; grid-row: 2; background: transparent; border: none; pointer-events: none; }
+.fdpad-right { grid-column: 3; grid-row: 2; }
+.fdpad-down  { grid-column: 2; grid-row: 3; }
+
+/* Toggle button */
+.float-dpad-toggle {
+  position: fixed;
+  bottom: 230px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(139,233,253,0.2);
+  border: 2px solid rgba(139,233,253,0.5);
+  color: var(--accent);
+  font-size: 1.2rem;
+  z-index: 801;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.float-dpad-toggle.hidden { display: none; }
+
+/* On mobile: show toggle and possibly float dpad */
+@media (hover: none) and (pointer: coarse) {
+  .float-dpad-toggle { display: flex; align-items: center; justify-content: center; }
+}
+
+
+/* ─── 像素按钮按压效果 ───────────────────────────────────────────────────────── */
+
+button:not(.fdpad-btn):not(.star-btn):not(.level-card):not(.filter-btn) {
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+button:not(.fdpad-btn):not(.star-btn):not(.level-card):active {
+  transform: translateY(2px);
+  box-shadow: none !important;
+}
+
+/* ─── 移动端游戏区域优化 ─────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .game-shell {
+    padding-bottom: 240px;
+  }
+
+  .float-dpad {
+    height: 240px;
+  }
+
+  .dpad {
+    display: none;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .controls button {
+    font-size: 0.72rem;
+    padding: 8px 4px;
+    min-height: 40px;
+  }
+}
+
+
+/* ─── 步数对比飞入 ───────────────────────────────────────────────────────────── */
+
+.step-compare-float {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 60;
+  white-space: nowrap;
+  text-shadow: 0 0 12px currentColor;
+}
+
+.scf-rank {
+  font-size: 1.2rem;
+  margin-left: 8px;
+}
+
+@keyframes stepCompareFly {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.5); }
+  20%  { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.2); }
+  70%  { opacity: 1; transform: translateX(-50%) translateY(-60px) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-100px) scale(0.8); }
+}
+
+
+/* ─── 箱子归位涟漪 ───────────────────────────────────────────────────────────── */
+
+.goal-ripple {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid var(--goal);
+  pointer-events: none;
+  z-index: 300;
+  transform: translate(-50%, -50%);
+  animation: goalRipple 0.7s ease-out forwards;
+}
+
+@keyframes goalRipple {
+  0%   { width: 20px; height: 20px; opacity: 1; }
+  100% { width: 80px; height: 80px; opacity: 0; border-width: 1px; }
+}
+
+
+/* ─── 笔记图标 & 编辑器撤销信息 ─────────────────────────────────────────────── */
+
+.card-note-icon {
+  position: absolute;
+  bottom: 6px;
+  left: 28px;
+  font-size: 0.8rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+
+/* ─── 步数柱状图 ─────────────────────────────────────────────────────────────── */
+
+.steps-chart-wrap {
+  margin-top: 16px;
+}
+
+.steps-chart-wrap h3 {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+/* ─── 编辑器坐标显示 ─────────────────────────────────────────────────────────── */
+
+.editor-coord {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--accent);
+  min-height: 18px;
+  padding: 2px 0;
+  letter-spacing: 0.05em;
+}
+
+
+/* ─── 关卡卡片淡入动画 ──────────────────────────────────────────────────────── */
+
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.level-card {
+  animation: cardReveal 0.3s ease both;
+}
+
+/* Stagger via nth-child (first 15 visible cards) */
+.level-card:nth-child(1)  { animation-delay: 0.02s; }
+.level-card:nth-child(2)  { animation-delay: 0.04s; }
+.level-card:nth-child(3)  { animation-delay: 0.06s; }
+.level-card:nth-child(4)  { animation-delay: 0.08s; }
+.level-card:nth-child(5)  { animation-delay: 0.10s; }
+.level-card:nth-child(6)  { animation-delay: 0.12s; }
+.level-card:nth-child(7)  { animation-delay: 0.14s; }
+.level-card:nth-child(8)  { animation-delay: 0.16s; }
+.level-card:nth-child(9)  { animation-delay: 0.18s; }
+.level-card:nth-child(10) { animation-delay: 0.20s; }
+.level-card:nth-child(11) { animation-delay: 0.22s; }
+.level-card:nth-child(12) { animation-delay: 0.24s; }
+.level-card:nth-child(13) { animation-delay: 0.26s; }
+.level-card:nth-child(14) { animation-delay: 0.28s; }
+.level-card:nth-child(15) { animation-delay: 0.30s; }
+
+
+/* ─── 棋盘进入展开动画 ───────────────────────────────────────────────────────── */
+
+@keyframes boardReveal {
+  from { opacity: 0.3; transform: scale(0.92); filter: blur(4px); }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+.board.board-reveal {
+  animation: boardReveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+
+/* ─── 胜利庆祝目标点闪光 ────────────────────────────────────────────────────── */
+
+@keyframes winFlash {
+  0%   { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+  40%  { filter: brightness(2.5) drop-shadow(0 0 12px var(--goal)); }
+  70%  { filter: brightness(1.8) drop-shadow(0 0 8px var(--goal)); }
+  100% { filter: brightness(1); }
+}
+
+.tile.win-flash::before,
+.tile.win-flash::after {
+  animation: winFlash 0.3s ease-out;
+}
+
+.tile.win-flash {
+  animation: winFlash 0.3s ease-out;
+}
+
+
+/* ─── 游玩日历 ──────────────────────────────────────────────────────────────── */
+
+.activity-calendar {
+  margin-top: 16px;
+}
+
+.activity-calendar h3 {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+  max-width: 100%;
+}
+
+@media (min-width: 400px) {
+  .cal-grid {
+    grid-template-columns: repeat(28, 1fr);
+  }
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  background: var(--panel-3);
+  border-radius: 2px;
+  border: 1px solid var(--line);
+  transition: background 0.2s;
+}
+
+.cal-cell.active {
+  background: var(--accent);
+  border-color: transparent;
+  box-shadow: 0 0 4px rgba(139,233,253,0.4);
+}
+
+.cal-legend {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
+
+/* ─── 像素粒子爆炸 ───────────────────────────────────────────────────────────── */
+
+.pixel-burst {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 300;
+  transform: translate(-50%, -50%);
+  animation: pixelBurstFly 0.7s ease-out forwards;
+}
+
+@keyframes pixelBurstFly {
+  0%   { opacity: 1; transform: translate(-50%,-50%) translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-50%) translate(var(--tx),var(--ty)) scale(0); }
+}
+
+
+/* ─── 提示箱子高亮 ───────────────────────────────────────────────────────────── */
+
+.tile.crate.hint-box {
+  animation: hintBoxPulse 0.6s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes hintBoxPulse {
+  0%, 100% {
+    filter: brightness(1.5) drop-shadow(0 0 6px #fff700);
+    transform: scale(1.02);
+  }
+  50% {
+    filter: brightness(2.2) drop-shadow(0 0 14px #fff700);
+    transform: scale(1.06);
+  }
+}
+
+
+/* ─── 横屏提醒 ───────────────────────────────────────────────────────────────── */
+
+.orient-warn {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10,5,15,0.9);
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 8px;
+  z-index: 10000;
+  border-top: 1px solid var(--line);
+}
+
+@media (orientation: landscape) {
+  .orient-warn { display: none; }
+}
+
+
+/* ─── 轻量模式（减少特效） ──────────────────────────────────────────────────── */
+
+.low-fx .player-trail,
+.low-fx .pixel-burst,
+.low-fx .goal-ripple,
+.low-fx .star-drop,
+.low-fx .combo-fx,
+.low-fx .score-float,
+.low-fx .step-compare-float,
+.low-fx .tutorial-bubble,
+.low-fx #confetti {
+  display: none !important;
+}
+
+.low-fx .tile {
+  transition: none !important;
+  animation: none !important;
+}
+
+.low-fx .board.board-reveal {
+  animation: none;
+}
+
+
+/* ─── 关卡卡片状态颜色编码 ───────────────────────────────────────────────────── */
+
+.level-card.is-cleared[data-rank3] {
+  border-color: var(--goal);
+  box-shadow: 0 0 8px rgba(255,209,102,0.3);
+}
+
+.level-card.is-cleared[data-rank2] {
+  border-color: var(--accent);
+}
+
+.level-card.is-challenged {
+  border-color: #ff9933;
+  box-shadow: 0 0 8px rgba(255,153,51,0.25);
+}
+
+
+/* ─── 主题切换过渡 ───────────────────────────────────────────────────────────── */
+
+:root {
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+.app,
+.panel,
+.game-shell,
+.board,
+.stat-card,
+.score-item,
+.modal-card,
+.level-card,
+.lb-overlay-card {
+  transition:
+    background-color 0.4s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.tile {
+  transition:
+    background-color 0.3s ease,
+    transform 0.12s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+
+/* Speed up theme switch if low-fx */
+.low-fx .app,
+.low-fx .panel,
+.low-fx .tile {
+  transition: none !important;
+}
+
+
+/* ─── 关卡分组标题 ───────────────────────────────────────────────────────────── */
+
+.level-group-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 2px;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.8;
+  margin-top: 6px;
+}
+
+
+/* ─── D-Pad 按下增强反馈 ─────────────────────────────────────────────────────── */
+
+.dpad > button:active,
+.dpad-middle > button:active,
+.fdpad-btn:active {
+  background: rgba(139,233,253,0.5) !important;
+  transform: scale(0.88);
+  box-shadow: 0 0 12px rgba(139,233,253,0.6);
+}
+
+/* Editor live preview */
+.editor-live-preview {
+  display: block;
+  width: 100%;
+  max-height: 120px;
+  border-radius: 6px;
+  border: 2px solid var(--line);
+  margin-bottom: 8px;
+  image-rendering: pixelated;
+  background: #17121f;
+}

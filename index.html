@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>像素推箱子</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#8be9fd" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="推箱子" />
+  </head>
+  <body>
+    <div id="offlineBadge" class="offline-badge">离线模式</div>
+    <main class="app">
+      <section class="panel">
+        <div>
+          <p class="eyebrow">PIXEL SOKOBAN</p>
+          <h1>像素推箱子</h1>
+          <p class="subtitle">把所有木箱推进发光目标点，支持键盘与触屏操作。</p>
+        </div>
+
+        <div class="theme-bar">
+          <button class="theme-btn" data-theme="dark" title="暗色主题">🌙 暗色</button>
+          <button class="theme-btn" data-theme="light" title="亮色主题">☀️ 亮色</button>
+          <button class="theme-btn" data-theme="rainbow" title="彩虹主题">🌈 彩虹</button>
+          <button class="theme-btn" data-theme="cyber" title="赛博朋克">💜 赛博</button>
+          <button class="theme-btn" data-theme="forest" title="森林">🌲 森林</button>
+          <button class="theme-btn" data-theme="ocean" title="海洋">🌊 海洋</button>
+          <button class="theme-btn" data-theme="desert" title="沙漠">🏜 沙漠</button>
+          <button class="theme-btn" data-theme="arctic" title="极地">❄️ 极地</button>
+        </div>
+
+        <div id="progressBar" class="progress">
+          <div id="progressText" class="progress-text">已通关 0/9 · 挑战 0/9 · ★ 0</div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card">
+            <span>关卡</span>
+            <strong id="levelLabel">1 / 9</strong>
+          </div>
+          <div class="stat-card">
+            <span>步数</span>
+            <strong id="moveCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>推进</span>
+            <strong id="pushCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>计时</span>
+            <strong id="timeDisplay">00:00.0</strong>
+          </div>
+        </div>
+
+        <div class="score-panel">
+          <div class="score-item">
+            <span>目标步数</span>
+            <strong id="parMoves">--</strong>
+          </div>
+          <div class="score-item">
+            <span>最佳步数</span>
+            <strong id="bestMoves">--</strong>
+          </div>
+          <div class="score-item wide">
+            <span>最佳评级</span>
+            <strong id="bestRank">未通关</strong>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="restartBtn" type="button">重开本关</button>
+          <button id="undoBtn" type="button">撤销一步</button>
+          <button id="undoLimitBtn" type="button" title="撤销次数限制: 点击切换">🔄 标准</button>
+          <button id="pauseBtn" type="button">⏸ P</button>
+          <button id="pushOnlyBtn" type="button" title="纯推笱模式">📦 纯推</button>
+          <button id="randomChalBtn" type="button" title="随机挑战">🎲 随机</button>
+          <button id="hintBtn" type="button">提示 H</button>
+          <button id="aiDemoBtn" type="button">AI演示</button>
+          <button id="editorBtn" type="button">编辑器 E</button>
+          <button id="statsBtn" type="button">统计 S</button>
+          <button id="pwaInstallBtn" type="button" class="hidden">📲 安装</button>
+          <button id="dailyStepBtn" type="button">🎯 步数挑战</button>
+          <button id="shareBtn" type="button">分享关卡</button>
+          <button id="timeAttackBtn" type="button">⏱ 速通</button>
+          <button id="replayBtn" type="button">录像回放</button>
+          <button id="bgmBtn" type="button">🎵 BGM</button>
+          <button id="fullscreenBtn" type="button">⛶ 全屏</button>
+          <button id="lockModeBtn" type="button">🔓 自由模式</button>
+          <span style="font-size:0.78rem;color:var(--muted)">演示速度：</span>
+          <button class="speed-btn" data-speed="800" type="button">慢</button>
+          <button class="speed-btn active" data-speed="350" type="button">正常</button>
+          <button class="speed-btn" data-speed="150" type="button">快</button>
+          <button class="speed-btn" data-speed="60" type="button">极速</button>
+          <button id="nextBtn" type="button">下一关</button>
+          <button id="levelSelectBtn" type="button">选关</button>
+        </div>
+
+        <div class="tips">
+          <div class="volume-row">
+            <span>🔊</span>
+            <span>🎵</span>
+            <input id="bgmSlider" type="range" min="0" max="1" step="0.05" value="0.22" title="BGM音量" />
+            <span>📢</span>
+            <input id="sfxSlider" type="range" min="0" max="1" step="0.05" value="1" title="音效音量" />
+            <button id="helpBtn" type="button">? 帮助</button>
+            <button id="solutionBtn" type="button">🔍 解法</button>
+            <button id="heatmapBtn" type="button">🌡 热力图</button>
+            <button id="langBtn" type="button">EN/中</button>
+            <button id="lowFxBtn" type="button" title="关闭部分特效">🔎 轻量</button>
+            <button id="sfxPreviewBtn" type="button">🔊 音效</button>
+            <button id="compareBtn" type="button">📊 对比</button>
+            <span style="font-size:0.78rem;color:var(--muted)">字体：</span>
+            <button onclick="setFontSize(13)" type="button">S</button>
+            <button onclick="setFontSize(15)" type="button">M</button>
+            <button onclick="setFontSize(17)" type="button">L</button>
+          </div>
+          <p><span>操作</span> WASD / 方向键移动</p>
+          <p><span>目标</span> 全部箱子压在目标点上</p>
+          <p><span>技巧</span> 先想退路，别把箱子推进死角</p>
+          <p><span>快捷</span> R 重开 · Z 撤销 · L 选关 · H 提示 · E 编辑 · S 统计</p>
+        </div>
+      </section>
+
+      <section class="game-shell">
+        <div id="taHud" class="ta-hud hidden"></div>
+        <div id="message" class="message">准备开始</div>
+        <div id="board" class="board" aria-label="推箱子棋盘"></div>
+
+        <div class="dpad" aria-label="方向控制器">
+          <button data-dir="up" aria-label="上">▲</button>
+          <div class="dpad-middle">
+            <button data-dir="left" aria-label="左">◀</button>
+            <button data-dir="down" aria-label="下">▼</button>
+            <button data-dir="right" aria-label="右">▶</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+      <div class="modal-card">
+        <p class="eyebrow">STAGE CLEAR</p>
+        <h2 id="winTitle">过关啦！</h2>
+        <div class="win-summary">
+          <p id="winText">你完成了这一关。</p>
+          <div class="win-grid">
+            <div class="win-item">
+              <span>评级</span>
+              <strong id="winRank">-</strong>
+            </div>
+            <div class="win-item">
+              <span>挑战</span>
+              <strong id="winChallenge">-</strong>
+            </div>
+            <div class="win-item">
+              <span>最佳步数</span>
+              <strong id="winBest">-</strong>
+            </div>
+          </div>
+        </div>
+        <div class="controls center">
+          <div class="win-rating">
+            <span>给本关打分：</span>
+<button class="star-btn" data-star="1">☆</button>
+<button class="star-btn" data-star="2">☆</button>
+<button class="star-btn" data-star="3">☆</button>
+<button class="star-btn" data-star="4">☆</button>
+<button class="star-btn" data-star="5">☆</button>
+          </div>
+          <div class="win-note-area">
+            <textarea id="winNoteInput" placeholder="留下笔记（策略、心得...）最多200字" maxlength="200" rows="2"></textarea>
+            <button id="winNoteSaveBtn" type="button">💾 保存笔记</button>
+          </div>
+          <button id="shareResultBtn" type="button">📋 分享成绩</button>
+          <button id="shareCardBtn" type="button">🖼 成绩卡</button>
+          <button id="pathVizBtn" type="button">🗺 路径</button>
+          <button id="modalRestartBtn" type="button">再来一次</button>
+          <button id="modalNextBtn" type="button">继续下一关</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="levelSelect" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="levelSelectTitle">
+      <div class="modal-card level-select-card">
+        <p class="eyebrow">SELECT STAGE</p>
+        <h2 id="levelSelectTitle">选择关卡</h2>
+        <p class="subtitle">点击关卡进入。按 L 打开，Esc 关闭。</p>
+
+        <input id="levelSearch" type="search" placeholder="搜索关卡名..." class="level-search-input" autocomplete="off"/>
+        <div class="level-filter-bar">
+          <button class="filter-btn active" data-filter="all" onclick="setLevelFilter('all')">全部</button>
+          <button class="filter-btn" data-filter="cleared" onclick="setLevelFilter('cleared')">已通关</button>
+          <button class="filter-btn" data-filter="uncleared" onclick="setLevelFilter('uncleared')">未通关</button>
+          <button class="filter-btn" data-filter="favorites" onclick="setLevelFilter('favorites')">收藏</button>
+        </div>
+        <div id="levelSelectGrid" class="level-grid" role="list"></div>
+
+        <div class="controls center">
+          <button id="levelSelectCloseBtn" type="button">返回游戏</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="editorModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+      <div class="modal-card editor-card">
+        <p class="eyebrow">LEVEL EDITOR</p>
+        <h2 id="editorTitle">关卡编辑器</h2>
+        <div class="editor-toolbar">
+          <span class="editor-label">画笔：</span>
+          <button class="editor-tool active" data-tile="#" title="墙">🧱 墙</button>
+          <button class="editor-tool" data-tile=" " title="地板">⬜ 地板</button>
+          <button class="editor-tool" data-tile="." title="目标">🟡 目标</button>
+          <button class="editor-tool" data-tile="$" title="箱子">📦 箱子</button>
+          <button class="editor-tool" data-tile="@" title="玩家">🧑 玩家</button>
+          <button class="editor-tool" data-tile="E" title="橡皮">🧹 橡皮</button>
+        </div>
+        <div id="editorSizePresets" class="editor-size" style="margin-bottom:4px"></div>
+        <div class="editor-size">
+          <label>宽 <input id="editorW" type="number" min="5" max="16" value="8"></label>
+          <label>高 <input id="editorH" type="number" min="5" max="14" value="7"></label>
+          <button id="editorResizeBtn" type="button">调整大小</button>
+          <button id="editorFillWallBtn" type="button">边框填墙</button>
+          <button id="editorClearBtn" type="button">清空</button>
+          <button id="editorSymBtn" type="button">对称 OFF</button>
+          <button id="editorFlipHBtn" type="button">⇔ 水平</button>
+          <button id="editorFlipVBtn" type="button">⇕ 垂直</button>
+          <button id="editorRotBtn" type="button">↻ 90°</button>
+          <button id="editorLineBtn" type="button" title="线条绘制，点击两次画线">╱ 线条</button>
+          <button id="editorRectBtn" type="button" title="矩形填充，点击两次确定">□ 矩形</button>
+          <button id="editorFillBtn" type="button" title="洪汛填充，点击格子填充连通区域">🖌 填充</button>
+          <button id="editorUndoBtn" type="button">↩ 撤销</button>
+          <button id="editorRedoBtn" type="button">↪ 重做</button>
+          <button id="editorRandomBtn" type="button">🎲 随机生成</button>
+          <select id="editorTemplateSelect"><option value="">📋 模板...</option></select>
+        </div>
+        <div id="editorBoard" class="editor-board"></div>
+        <div id="editorCoord" class="editor-coord"></div>
+        <div id="editorStatus" class="editor-status">请放置玩家和等量的箱子与目标</div>
+        <div id="editorImportBox" class="editor-import-box hidden">
+          <p class="editor-import-hint">粘贴关卡地图文本（每行为字符串，#墙 空格地板 .目标 $箱子 @玩家）</p>
+          <textarea id="editorImportText" rows="8" placeholder="########"></textarea>
+          <div class="controls" style="margin-top:8px">
+            <button id="editorImportConfirmBtn" type="button">确认导入</button>
+            <button id="editorImportCancelBtn" type="button">取消</button>
+          </div>
+        </div>
+        <div class="controls center">
+          <button id="editorTestBtn" type="button">▶ 试玩</button>
+          <button id="editorAiBtn" type="button">🤖 AI验证</button>
+          <button id="batchTestBtn" type="button">🧪 批量测试</button>
+          <button id="editorExportBtn" type="button">📋 复制代码</button>
+          <button id="editorShareBtn" type="button">🔗 分享链接</button>
+          <button id="editorExportFileBtn" type="button">💾 导出文件</button>
+          <button id="editorImportBtn" type="button">📥 导入地图</button>
+          <button id="editorClipBtn" type="button">📋 剪贴板</button>
+          <button id="packImportBtn" type="button">📦 导入关卡包</button>
+          <button id="editorCloseBtn" type="button">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="statsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+      <div class="modal-card stats-card">
+        <p class="eyebrow">STATISTICS</p>
+        <h2 id="statsTitle">游戏统计</h2>
+        <div class="stats-player-row">
+          <span>玩家：</span>
+          <strong id="playerNameDisplay">玩家1</strong>
+          <button id="changeNameBtn" type="button">改名</button>
+        </div>
+        <div id="statsSummary" class="stats-summary"></div>
+        <div id="statsChart" class="stats-chart"></div>
+        <div class="controls center" style="margin-top:16px">
+          <button id="exportSaveBtn" type="button">💾 导出存档</button>
+          <button id="exportReportBtn" type="button">📄 成绩单</button>
+          <button id="screenshotBtn" type="button">📷 截图</button>
+          <button id="speedRankBtn" type="button">⚡ 最速</button>
+          <button id="globalRecBtn" type="button">📊 全记录</button>
+          <button id="timelineBtn" type="button">📅 时间线</button>
+          <button id="recentBtn" type="button">🕒 最近</button>
+          <button id="diffAnalBtn" type="button">📈 难度</button>
+          <button id="effRankBtn" type="button">🎯 效率</button>
+          <button id="recommendBtn" type="button">🎯 推荐</button>
+          <button id="printBtn" type="button">🖨 打印</button>
+          <button id="settingsBtn" type="button">⚙️ 设置</button>
+          <button id="achievWallBtn" type="button">🏅 勋章</button>
+          <button id="progressRingBtn" type="button">📊 进度</button>
+          <button id="importSaveBtn" type="button">📂 导入存档</button>
+          <input id="importSaveInput" type="file" accept=".json" style="display:none"/>
+          <button id="nextAchievBtn" type="button">🎯 下一成就</button>
+          <button id="adaptiveBtn" type="button">💡 建议</button>
+          <button id="statsResetBtn" type="button">清除记录</button>
+          <button id="statsCloseBtn" type="button">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card" style="max-width:480px;text-align:left">
+        <p class="eyebrow">HELP</p><h2>快捷键说明</h2>
+        <div id="helpContent" class="help-content"></div>
+        <div class="controls center" style="margin-top:14px">
+          <button id="helpCloseBtn">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./game.js"></script>
+    <script>
+      // 离线检测
+      function updateOnlineStatus() {
+        const b = document.getElementById("offlineBadge");
+        if (b) b.classList.toggle("show", !navigator.onLine);
+      }
+      window.addEventListener("online", updateOnlineStatus);
+      window.addEventListener("offline", updateOnlineStatus);
+      updateOnlineStatus();
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").then(() => console.log("SW registered")).catch(e => console.warn("SW fail", e));
+      }
+    </script>
+      <div id="floatDpad" class="float-dpad hidden" aria-label="悬浮方向控制器">
+      <button class="fdpad-btn fdpad-up" data-dir="up" aria-label="上">&#9650;</button>
+      <button class="fdpad-btn fdpad-left" data-dir="left" aria-label="左">&#9668;</button>
+      <button class="fdpad-btn fdpad-center" id="fdpadCenter" aria-label="中"></button>
+      <button class="fdpad-btn fdpad-right" data-dir="right" aria-label="右">&#9658;</button>
+      <button class="fdpad-btn fdpad-down" data-dir="down" aria-label="下">&#9660;</button>
+    </div>
+    <button id="floatDpadToggle" class="float-dpad-toggle hidden" aria-label="切换悬浮摇杆">&#128269;</button>
+</body>
+</html>
