@@ -1,2 +1,4 @@
 .claude/
 *.lock
+node_modules/
+dist/
