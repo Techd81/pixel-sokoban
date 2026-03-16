@@ -14,6 +14,7 @@ import { checkAchievements, showAchievementUnlock, injectAchievementStyles } fro
 import { MacroRecorder } from './macro';
 import { RaceMode } from './race';
 import { renderStatsHeatmap } from './heatmap';
+import { sendWinDanmaku } from './danmaku';
 
 const macroRecorder = new MacroRecorder();
 const raceMode = new RaceMode();
@@ -81,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameEvents.addEventListener('won', () => {
     emitWinBurst();
+    sendWinDanmaku(state.records?.[state.levelIndex]?.bestRank ?? '');
     ghostRecorder.stop();
     ghostRecorder.save(state.moves);
     ghostPlayer.stop();
