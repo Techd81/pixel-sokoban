@@ -21,6 +21,12 @@ import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
 import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
+import { initThemeButtons } from './themes';
+import { showKeyboardHelp } from './shortcuts';
+import { captureBoard, showScreenshotPreview } from './screenshot';
+import { exportRecords, importRecordsFromJSON } from './export';
+import { saveRecords, loadPlayerName, savePlayerName } from './storage';
+import { getDailyChallenge } from './daily';
 
 
 const macroRecorder = new MacroRecorder();
@@ -48,6 +54,30 @@ function getTileScreenPos(x: number, y: number): { sx: number; sy: number } {
 document.addEventListener('DOMContentLoaded', () => {
   initDomRefs();
   injectAchievementStyles();
+  initThemeButtons();
+
+  const playerNameEl = document.getElementById('playerNameDisplay');
+  if (playerNameEl) playerNameEl.textContent = loadPlayerName();
+
+  const bgmSlider = document.getElementById('bgmSlider') as HTMLInputElement | null;
+  const sfxSlider = document.getElementById('sfxSlider') as HTMLInputElement | null;
+  const loadVolume = (key: 'bgm' | 'sfx', fallback: number): number => {
+    const raw = localStorage.getItem('pixelSokobanVolume_' + key);
+    const val = raw ? Number(raw) : fallback;
+    return Number.isFinite(val) ? Math.max(0, Math.min(1, val)) : fallback;
+  };
+  if (bgmSlider) {
+    const val = loadVolume('bgm', Number(bgmSlider.value) || 0.22);
+    bgmSlider.value = String(val);
+    audioSystem.setVolume('bgm', val);
+    bgmSlider.addEventListener('input', () => audioSystem.setVolume('bgm', Number(bgmSlider.value)));
+  }
+  if (sfxSlider) {
+    const val = loadVolume('sfx', Number(sfxSlider.value) || 1);
+    sfxSlider.value = String(val);
+    audioSystem.setVolume('sfx', val);
+    sfxSlider.addEventListener('input', () => audioSystem.setVolume('sfx', Number(sfxSlider.value)));
+  }
 
   // ─── 游戏事件监听 ───────────────────────────────────────────────────────
   gameEvents.addEventListener('update', () => {
@@ -178,17 +208,21 @@ document.addEventListener('DOMContentLoaded', () => {
     else tryMove(0, dy > 0 ? 1 : -1, dy > 0 ? 'down' : 'up');
   }, { passive: true });
 
-  // ─── 浮动方向键 ──────────────────────────────────────────────────────────
-  document.querySelectorAll<HTMLButtonElement>('.fdpad-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      audioSystem.unlock();
-      const dir = btn.dataset.dir;
-      if (dir === 'up')    tryMove(0, -1, 'up');
-      if (dir === 'down')  tryMove(0,  1, 'down');
-      if (dir === 'left')  tryMove(-1, 0, 'left');
-      if (dir === 'right') tryMove(1,  0, 'right');
+  // ─── 方向键按钮（浮动 + 面板）───────────────────────────────────────────
+  const bindDirButtons = (selector: string) => {
+    document.querySelectorAll<HTMLButtonElement>(selector).forEach(btn => {
+      btn.addEventListener('click', () => {
+        audioSystem.unlock();
+        const dir = btn.dataset.dir;
+        if (dir === 'up')    tryMove(0, -1, 'up');
+        if (dir === 'down')  tryMove(0,  1, 'down');
+        if (dir === 'left')  tryMove(-1, 0, 'left');
+        if (dir === 'right') tryMove(1,  0, 'right');
+      });
     });
-  });
+  };
+  bindDirButtons('.fdpad-btn');
+  bindDirButtons('.dpad button[data-dir]');
 
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
   async function handleHint(): Promise<void> {
@@ -223,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('nextBtn')?.addEventListener('click',
     () => loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)));
   document.getElementById('generateBtn')?.addEventListener('click', () => handleGenerate());
+  document.getElementById('randomChalBtn')?.addEventListener('click', () => handleGenerate());
 
   // ─── 分享按钮 ────────────────────────────────────────────────────────────
   document.getElementById('shareBtn')?.addEventListener('click', () => {
@@ -286,6 +321,21 @@ document.addEventListener('DOMContentLoaded', () => {
     createStatsPanel(document.body, state.records, state.heatmap, state.stats);
   });
 
+  document.getElementById('helpBtn')?.addEventListener('click', () => showKeyboardHelp());
+
+  document.getElementById('sfxPreviewBtn')?.addEventListener('click', () => {
+    audioSystem.unlock();
+    audioSystem.playSfx('push');
+  });
+
+  document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
   // ─── 速通模式按钮 ────────────────────────────────────────────────────────
   document.getElementById('timeAttackBtn')?.addEventListener('click', () => {
     if (speedrunTimer.isActive()) {
@@ -316,6 +366,65 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('levelSelect')?.classList.add('hidden');
   });
 
+  document.getElementById('dailyStepBtn')?.addEventListener('click', () => {
+    const dc = getDailyChallenge();
+    loadLevel(dc.levelIndex);
+    setMessage(`今日挑战：第${dc.levelIndex + 1}关 ${dc.level.name}`, 'info');
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const speed = Number(btn.dataset.speed);
+      if (!Number.isFinite(speed)) return;
+      state.ai.speed = speed;
+      document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setMessage(`演示速度：${speed}ms`, 'info');
+    });
+  });
+
+  document.getElementById('screenshotBtn')?.addEventListener('click', () => {
+    const canvas = captureBoard();
+    if (!canvas) { setMessage('截图失败', 'error'); return; }
+    showScreenshotPreview(canvas);
+  });
+
+  document.getElementById('exportSaveBtn')?.addEventListener('click', () => {
+    exportRecords(state.records, 'json');
+  });
+  document.getElementById('exportReportBtn')?.addEventListener('click', () => {
+    exportRecords(state.records, 'markdown');
+  });
+  document.getElementById('importSaveBtn')?.addEventListener('click', () => {
+    (document.getElementById('importSaveInput') as HTMLInputElement | null)?.click();
+  });
+  document.getElementById('importSaveInput')?.addEventListener('change', (e) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      const records = importRecordsFromJSON(text);
+      if (!records) { setMessage('导入失败', 'error'); return; }
+      state.records = records;
+      saveRecords(records);
+      render();
+      renderProgress();
+      setMessage('导入成功', 'win');
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('changeNameBtn')?.addEventListener('click', () => {
+    const current = loadPlayerName();
+    const name = window.prompt('输入玩家昵称', current);
+    if (!name) return;
+    savePlayerName(name.trim() || current);
+    const display = document.getElementById('playerNameDisplay');
+    if (display) display.textContent = loadPlayerName();
+  });
+
   // ─── URL 关卡解析 ────────────────────────────────────────────────────────
   const customLevel = checkUrlLevelParam();
   if (customLevel) {
@@ -332,12 +441,20 @@ document.addEventListener('DOMContentLoaded', () => {
     setMessage(`BGM：${names[next]}`, 'info');
   });
 
-  // ─── Service Worker ──────────────────────────────────────────────────────
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('SW registered'))
-      .catch(e => console.warn('SW fail', e));
-  }
+  // 未接入功能的按钮给出提示，避免“无响应”错觉
+  const implementedButtons = new Set([
+    'undoBtn', 'restartBtn', 'hintBtn', 'prevBtn', 'nextBtn', 'generateBtn',
+    'shareBtn', 'editorShareBtn', 'shareResultBtn', 'shareCardBtn',
+    'timelineBtn', 'heatmapBtn', 'statsBtn', 'timeAttackBtn',
+    'levelSelectBtn', 'levelSelectCloseBtn', 'bgmBtn', 'randomChalBtn',
+    'dailyStepBtn', 'helpBtn', 'fullscreenBtn', 'sfxPreviewBtn',
+    'screenshotBtn', 'exportSaveBtn', 'exportReportBtn', 'importSaveBtn',
+    'changeNameBtn',
+  ]);
+  document.querySelectorAll<HTMLButtonElement>('button[id]').forEach(btn => {
+    if (implementedButtons.has(btn.id)) return;
+    btn.addEventListener('click', () => setMessage('该功能暂未接入', 'info'));
+  });
 
   // ─── 关卡选择渲染 ────────────────────────────────────────────────────────
   let currentDiffFilter: string = 'all';

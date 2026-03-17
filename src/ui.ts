@@ -20,17 +20,24 @@ export const els = {
 };
 
 export function initDomRefs(): void {
+  const byId = (...ids: string[]): HTMLElement | null => {
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) return el;
+    }
+    return null;
+  };
   els.board        = document.getElementById('board');
-  els.moveCount    = document.getElementById('move-count');
-  els.pushCount    = document.getElementById('push-count');
-  els.parMoves     = document.getElementById('par-moves');
-  els.bestMoves    = document.getElementById('best-moves');
-  els.bestRank     = document.getElementById('best-rank');
-  els.levelLabel   = document.getElementById('level-label');
+  els.moveCount    = byId('moveCount', 'move-count');
+  els.pushCount    = byId('pushCount', 'push-count');
+  els.parMoves     = byId('parMoves', 'par-moves');
+  els.bestMoves    = byId('bestMoves', 'best-moves');
+  els.bestRank     = byId('bestRank', 'best-rank');
+  els.levelLabel   = byId('levelLabel', 'level-label');
   els.message      = document.getElementById('message');
-  els.timeDisplay  = document.getElementById('time-display');
-  els.progressText = document.getElementById('progress-text');
-  els.progressFill = document.getElementById('progress-fill');
+  els.timeDisplay  = byId('timeDisplay', 'time-display');
+  els.progressText = byId('progressText', 'progress-text');
+  els.progressFill = byId('progressFill', 'progress-fill');
 }
 
 // ─── 主渲染 ────────────────────────────────────────────────────────────────────
@@ -45,8 +52,8 @@ export function render(): void {
   if (rows === 0 || cols === 0) return;
 
   // grid 布局尺寸
-  board.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
-  board.style.gridTemplateRows    = `repeat(${rows}, var(--cell))`;
+  board.style.gridTemplateColumns = `repeat(${cols}, var(--tile-size))`;
+  board.style.gridTemplateRows    = `repeat(${rows}, var(--tile-size))`;
 
   // 复用 DOM 节点
   const needed = rows * cols;
@@ -62,9 +69,6 @@ export function render(): void {
   const deadlockSet = new Set(
     (state.effects.deadlocks ?? []).map((p: Pos) => `${p.x},${p.y}`)
   );
-  const prevBoxSet = new Set(
-    (state.effects.prevBoxes ?? []).map(b => `${b.from.x},${b.from.y}`)
-  );
 
   let idx = 0;
   for (let y = 0; y < rows; y++) {
@@ -75,53 +79,60 @@ export function render(): void {
         tile === TILE.PLAYER || tile === TILE.PLAYER_ON_GOAL ||
         (px === x && py === y);
 
-      cell.className = 'cell';
+      cell.className = 'tile';
+      cell.removeAttribute('data-facing');
+      cell.removeAttribute('data-step');
 
       switch (tile) {
-        case TILE.WALL:           cell.classList.add('wall');            break;
-        case TILE.FLOOR:          cell.classList.add('floor');           break;
-        case TILE.GOAL:           cell.classList.add('goal');            break;
-        case TILE.PLAYER_ON_GOAL: cell.classList.add('goal');            break;
-        case TILE.BOX:            cell.classList.add('box');             break;
-        case TILE.BOX_ON_GOAL:    cell.classList.add('box', 'on-goal'); break;
-        default:                  cell.classList.add('empty');           break;
+        case TILE.WALL:           cell.classList.add('wall'); break;
+        case TILE.GOAL:           cell.classList.add('goal'); break;
+        case TILE.BOX:            cell.classList.add('crate'); break;
+        case TILE.BOX_ON_GOAL:    cell.classList.add('crate', 'goal'); break;
+        case TILE.PLAYER_ON_GOAL: cell.classList.add('goal'); break;
+        default: break;
       }
 
       if (isPlayer) {
         cell.classList.add('player');
-        if (state.facing) cell.classList.add(`dir-${state.facing}`);
-        if (state.playerMoved && state.stepFrame === 1) cell.classList.add('step1');
+        cell.dataset.facing = state.facing || 'down';
+        cell.dataset.step = String(state.stepFrame ?? 0);
+        if (state.playerMoved) cell.classList.add('moving');
       }
 
       // 特效
-      if (state.effects.shake && isPlayer) cell.classList.add('shake');
       if (
         state.effects.goalFlash &&
         state.effects.goalFlash.x === x &&
         state.effects.goalFlash.y === y
       ) {
-        cell.classList.add('goal-flash');
+        cell.classList.add('flash');
       }
       if (
         state.effects.cratePulse &&
         state.effects.cratePulse.x === x &&
         state.effects.cratePulse.y === y
       ) {
-        cell.classList.add('crate-pulse');
+        cell.classList.add('pulse');
       }
       if (deadlockSet.has(`${x},${y}`)) cell.classList.add('deadlock');
-      if (prevBoxSet.has(`${x},${y}`))  cell.classList.add('box-moved');
 
       // AI 提示箭头
       if (
-        state.ai.hintArrow &&
         state.ai.hintBox &&
         state.ai.hintBox.x === x &&
-        state.ai.hintBox.y === y
+        state.ai.hintBox.y === y &&
+        cell.classList.contains('crate')
       ) {
-        cell.classList.add('hint-box', `hint-${state.ai.hintArrow}`);
+        cell.classList.add('hint-box');
       }
     }
+  }
+
+  board.classList.toggle('is-won', state.won);
+  if (state.effects.shake) {
+    board.classList.remove('shake');
+    void board.offsetWidth; // 重启动画
+    board.classList.add('shake');
   }
 
   // 统计数值
@@ -147,6 +158,12 @@ export function render(): void {
 
   renderProgress();
   autoScaleBoard();
+
+  // 一次性特效：渲染后清除，便于下次触发
+  state.playerMoved = false;
+  state.effects.shake = false;
+  state.effects.goalFlash = null;
+  state.effects.cratePulse = null;
 }
 
 // ─── 进度条 ────────────────────────────────────────────────────────────────────
@@ -250,7 +267,7 @@ export function autoScaleBoard(): void {
   const cellByH = Math.floor(maxH / rows);
   const cell    = Math.max(16, Math.min(cellByW, cellByH, 64));
 
-  document.documentElement.style.setProperty('--cell', `${cell}px`);
+  document.documentElement.style.setProperty('--tile-size', `${cell}px`);
 }
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────

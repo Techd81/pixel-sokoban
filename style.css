@@ -225,6 +225,64 @@ p {
   justify-content: center;
 }
 
+.controls--sidebar {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+
+.controls--sidebar .controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.controls--sidebar .controls-speed {
+  display: grid;
+  gap: 10px;
+}
+
+.controls--sidebar .controls-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.controls--sidebar .speed-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.controls--sidebar .controls-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.controls--sidebar button {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.05;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.controls--sidebar .control-wide {
+  width: 100%;
+}
+
 .tips {
   display: grid;
   gap: 10px;
@@ -238,6 +296,122 @@ p {
 .tips span {
   color: var(--goal);
   margin-right: 8px;
+}
+
+/* ─── Tips Layout (Volume/Actions/Text) ───────────────────────────────────── */
+
+.tips-volume {
+  display: grid;
+  gap: 10px;
+}
+
+.tips-vol {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.tips-vol span {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.tips-vol input[type=range] {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.tips-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+
+.tips-actions button {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 6px;
+  font-size: 0.72rem;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 3px 3px 0 #000, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+}
+
+.tips-actions button:hover {
+  transform: none;
+  filter: saturate(1.06);
+  box-shadow: 3px 3px 0 #000, inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+
+.tips-font {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  border-radius: 8px;
+}
+
+.tips-font-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tips-font-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+
+.tips-font-grid button {
+  min-height: 34px;
+  padding: 6px 6px;
+  font-size: 0.8rem;
+}
+
+.tips-text {
+  display: grid;
+  gap: 8px;
+}
+
+.tips-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 10px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.tips-k {
+  margin: 0;
+  color: var(--goal);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tips-v {
+  margin: 0;
+  color: var(--text);
+  min-width: 0;
+}
+
+@media (min-width: 380px) {
+  .tips-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .game-shell {
@@ -1229,12 +1403,7 @@ p {
 }
 
 /* 移动端按钮适配 */
-@media (max-width: 560px) {
-  #hintBtn, #aiDemoBtn {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-}
+/* 统一按钮高度对齐：不再对单个按钮做尺寸特化 */
 
 /* ─── Combo 连击特效 ─────────────────────────────────────────────────────── */
 
@@ -1307,15 +1476,32 @@ p {
     font-size: 1.2rem;
   }
 
-  .controls {
+  .controls:not(.controls--sidebar) {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+    grid-auto-rows: 44px;
   }
 
-  .controls button {
+  .controls:not(.controls--sidebar) > span {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .controls:not(.controls--sidebar) button {
+    width: 100%;
     font-size: 0.75rem;
-    padding: 7px 4px;
+    padding: 8px 6px;
+    min-height: 44px;
+    line-height: 1.05;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .theme-bar {
@@ -2819,16 +3005,40 @@ button:not(.fdpad-btn):not(.star-btn):not(.level-card):active {
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .controls {
+  .controls:not(.controls--sidebar) {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 5px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+    grid-auto-rows: 44px;
   }
 
-  .controls button {
+  .controls:not(.controls--sidebar) > span {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .controls:not(.controls--sidebar) button {
     font-size: 0.72rem;
-    padding: 8px 4px;
-    min-height: 40px;
+    padding: 8px 6px;
+    min-height: 44px;
+    width: 100%;
+    line-height: 1.05;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Smaller shadow prevents "misaligned" look in tight grids */
+    box-shadow: 3px 3px 0 #000, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .controls:not(.controls--sidebar) button:hover {
+    transform: none;
+    filter: saturate(1.06);
+    box-shadow: 3px 3px 0 #000, inset 0 2px 0 rgba(255, 255, 255, 0.35);
   }
 }
 

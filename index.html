@@ -73,41 +73,63 @@
           </div>
         </div>
 
-        <div class="controls">
-          <button id="restartBtn" type="button">重开本关</button>
-          <button id="undoBtn" type="button">撤销一步</button>
-          <button id="undoLimitBtn" type="button" title="撤销次数限制: 点击切换">🔄 标准</button>
-          <button id="pauseBtn" type="button">⏸ P</button>
-          <button id="pushOnlyBtn" type="button" title="纯推笱模式">📦 纯推</button>
-          <button id="randomChalBtn" type="button" title="随机挑战">🎲 随机</button>
-          <button id="hintBtn" type="button">提示 H</button>
-          <button id="aiDemoBtn" type="button">AI演示</button>
-          <button id="editorBtn" type="button">编辑器 E</button>
-          <button id="statsBtn" type="button">统计 S</button>
-          <button id="pwaInstallBtn" type="button" class="hidden">📲 安装</button>
-          <button id="dailyStepBtn" type="button">🎯 步数挑战</button>
-          <button id="shareBtn" type="button">分享关卡</button>
-          <button id="timeAttackBtn" type="button">⏱ 速通</button>
-          <button id="replayBtn" type="button">录像回放</button>
-          <button id="bgmBtn" type="button">🎵 BGM</button>
-          <button id="fullscreenBtn" type="button">⛶ 全屏</button>
-          <button id="lockModeBtn" type="button">🔓 自由模式</button>
-          <span style="font-size:0.78rem;color:var(--muted)">演示速度：</span>
-          <button class="speed-btn" data-speed="800" type="button">慢</button>
-          <button class="speed-btn active" data-speed="350" type="button">正常</button>
-          <button class="speed-btn" data-speed="150" type="button">快</button>
-          <button class="speed-btn" data-speed="60" type="button">极速</button>
-          <button id="nextBtn" type="button">下一关</button>
-          <button id="levelSelectBtn" type="button">选关</button>
+        <div class="controls controls--sidebar">
+          <div class="controls-grid">
+            <button id="restartBtn" type="button">重开本关</button>
+            <button id="undoBtn" type="button">撤销一步</button>
+            <button id="undoLimitBtn" type="button" title="撤销次数限制: 点击切换">🔄 标准</button>
+
+            <button id="pauseBtn" type="button">⏸ P</button>
+            <button id="pushOnlyBtn" type="button" title="纯推笱模式">📦 纯推</button>
+            <button id="randomChalBtn" type="button" title="随机挑战">🎲 随机</button>
+
+            <button id="hintBtn" type="button">提示 H</button>
+            <button id="aiDemoBtn" type="button">AI演示</button>
+            <button id="editorBtn" type="button">编辑器 E</button>
+
+            <button id="statsBtn" type="button">统计 S</button>
+            <button id="pwaInstallBtn" type="button" class="hidden">📲 安装</button>
+            <button id="dailyStepBtn" type="button">🎯 步数挑战</button>
+
+            <button id="shareBtn" type="button">分享关卡</button>
+            <button id="timeAttackBtn" type="button">⏱ 速通</button>
+            <button id="replayBtn" type="button">录像回放</button>
+
+            <button id="bgmBtn" type="button">🎵 BGM</button>
+            <button id="fullscreenBtn" type="button">⛶ 全屏</button>
+          </div>
+
+          <button id="lockModeBtn" class="control-wide" type="button">🔓 自由模式</button>
+
+          <div class="controls-speed">
+            <div class="controls-label">演示速度</div>
+            <div class="speed-grid" role="group" aria-label="演示速度">
+              <button class="speed-btn" data-speed="800" type="button">慢</button>
+              <button class="speed-btn active" data-speed="350" type="button">正常</button>
+              <button class="speed-btn" data-speed="150" type="button">快</button>
+              <button class="speed-btn" data-speed="60" type="button">极速</button>
+            </div>
+          </div>
+
+          <div class="controls-nav" role="group" aria-label="关卡导航">
+            <button id="nextBtn" type="button">下一关</button>
+            <button id="levelSelectBtn" type="button">选关</button>
+          </div>
         </div>
 
         <div class="tips">
-          <div class="volume-row">
-            <span>🔊</span>
-            <span>🎵</span>
-            <input id="bgmSlider" type="range" min="0" max="1" step="0.05" value="0.22" title="BGM音量" />
-            <span>📢</span>
-            <input id="sfxSlider" type="range" min="0" max="1" step="0.05" value="1" title="音效音量" />
+          <div class="tips-volume" aria-label="音量">
+            <div class="tips-vol">
+              <span aria-hidden="true">🎵</span>
+              <input id="bgmSlider" type="range" min="0" max="1" step="0.05" value="0.22" title="BGM音量" />
+            </div>
+            <div class="tips-vol">
+              <span aria-hidden="true">📢</span>
+              <input id="sfxSlider" type="range" min="0" max="1" step="0.05" value="1" title="音效音量" />
+            </div>
+          </div>
+
+          <div class="tips-actions" aria-label="工具">
             <button id="helpBtn" type="button">? 帮助</button>
             <button id="solutionBtn" type="button">🔍 解法</button>
             <button id="heatmapBtn" type="button">🌡 热力图</button>
@@ -115,15 +137,23 @@
             <button id="lowFxBtn" type="button" title="关闭部分特效">🔎 轻量</button>
             <button id="sfxPreviewBtn" type="button">🔊 音效</button>
             <button id="compareBtn" type="button">📊 对比</button>
-            <span style="font-size:0.78rem;color:var(--muted)">字体：</span>
-            <button onclick="setFontSize(13)" type="button">S</button>
-            <button onclick="setFontSize(15)" type="button">M</button>
-            <button onclick="setFontSize(17)" type="button">L</button>
+
+            <div class="tips-font" aria-label="字体大小">
+              <div class="tips-font-label">字体</div>
+              <div class="tips-font-grid">
+                <button onclick="setFontSize(13)" type="button">S</button>
+                <button onclick="setFontSize(15)" type="button">M</button>
+                <button onclick="setFontSize(17)" type="button">L</button>
+              </div>
+            </div>
           </div>
-          <p><span>操作</span> WASD / 方向键移动</p>
-          <p><span>目标</span> 全部箱子压在目标点上</p>
-          <p><span>技巧</span> 先想退路，别把箱子推进死角</p>
-          <p><span>快捷</span> R 重开 · Z 撤销 · L 选关 · H 提示 · E 编辑 · S 统计</p>
+
+          <div class="tips-text" aria-label="提示">
+            <div class="tips-row"><span class="tips-k">操作</span><span class="tips-v">WASD / 方向键移动</span></div>
+            <div class="tips-row"><span class="tips-k">目标</span><span class="tips-v">全部箱子压在目标点上</span></div>
+            <div class="tips-row"><span class="tips-k">技巧</span><span class="tips-v">先想退路，别把箱子推进死角</span></div>
+            <div class="tips-row"><span class="tips-k">快捷</span><span class="tips-v">R 重开 · Z 撤销 · L 选关 · H 提示 · E 编辑 · S 统计</span></div>
+          </div>
         </div>
       </section>
 
@@ -206,7 +236,7 @@
           <button class="diff-filter-btn" data-diff="简单" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">简单</button>
           <button class="diff-filter-btn" data-diff="中等" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">中等</button>
           <button class="diff-filter-btn" data-diff="困难" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">困难</button>
-          <button class="diff-filter-btn" data-diff="专家" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">专家</button>
+          <button class="diff-filter-btn" data-diff="极难" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">极难</button>
         </div>
         <div id="levelSelectGrid" class="level-grid" role="list"></div>
 
@@ -330,8 +360,19 @@
       window.addEventListener("online", updateOnlineStatus);
       window.addEventListener("offline", updateOnlineStatus);
       updateOnlineStatus();
+      const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./sw.js").then(() => console.log("SW registered")).catch(e => console.warn("SW fail", e));
+        if (isLocalhost) {
+          navigator.serviceWorker.getRegistrations()
+            .then(regs => Promise.all(regs.map(reg => reg.unregister())))
+            .then(() => caches?.keys?.().then(keys => Promise.all(keys.map(key => caches.delete(key)))))
+            .then(() => console.log("SW disabled on localhost"))
+            .catch(() => {});
+        } else {
+          navigator.serviceWorker.register("./sw.js")
+            .then(() => console.log("SW registered"))
+            .catch(e => console.warn("SW fail", e));
+        }
       }
     </script>
       <div id="floatDpad" class="float-dpad hidden" aria-label="悬浮方向控制器">
