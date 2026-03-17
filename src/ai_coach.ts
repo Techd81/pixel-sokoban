@@ -54,7 +54,16 @@ export function renderCoachPanel(container: HTMLElement, advices: CoachAdvice[])
       <div style="border-left:3px solid ${typeColor[a.type]};padding:8px 12px;margin:6px 0;background:#1e1a2e;border-radius:4px">
         <b style="color:${typeColor[a.type]}">${typeIcon[a.type]} ${a.title}</b>
         <p style="margin:4px 0;font-size:0.85em;color:#ccc">${a.message}</p>
-        ${a.action ? `<button onclick="" style="font-size:0.8em;padding:2px 8px;background:${typeColor[a.type]};color:#000;border:none;border-radius:3px;cursor:pointer">${a.action}</button>` : ''}
+        ${a.action ? `<button data-action="challenge" style="font-size:0.8em;padding:2px 8px;background:${typeColor[a.type]};color:#000;border:none;border-radius:3px;cursor:pointer">${a.action}</button>` : ''}
       </div>
     `).join('');
+  // 绑定 data-action 按钮事件（替代 onclick 字符串）
+  container.querySelectorAll<HTMLElement>('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      if (action === 'challenge') {
+        document.dispatchEvent(new CustomEvent('coach-action', { detail: { action } }));
+      }
+    });
+  });
 }

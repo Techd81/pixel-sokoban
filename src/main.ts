@@ -16,6 +16,11 @@ import { RaceMode } from './race';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
+import { createStatsPanel, destroyStatsPanel } from './stats_panel';
+import { speedrunTimer } from './speedrun';
+import { predictDifficulty } from './difficulty';
+import { getCoachAdvice, renderCoachPanel } from './ai_coach';
+
 
 const macroRecorder = new MacroRecorder();
 const raceMode = new RaceMode();
@@ -258,6 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (statsChart) statsChart.appendChild(canvas);
     }
     renderStatsHeatmap(canvas, state.records);
+  });
+
+  // ─── 统计面板按钮 ─────────────────────────────────────────────────────────
+  document.getElementById('statsBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats);
   });
 
   // ─── URL 关卡解析 ────────────────────────────────────────────────────────
