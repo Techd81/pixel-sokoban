@@ -129,6 +129,8 @@
 
       <section class="game-shell">
         <div id="taHud" class="ta-hud hidden"></div>
+        <div id="srHUD" class="sr-hud hidden" style="background:#1a1426;border:1px solid #8be9fd33;border-radius:6px;margin:4px 0;max-height:180px;overflow-y:auto;font-size:0.82em;color:#e0d7f7"></div>
+        <div id="coachPanel" style="background:#1a1426;border:1px solid #ff79c633;border-radius:6px;margin:4px 0;padding:4px;display:none"></div>
         <div id="message" class="message">准备开始</div>
         <div id="board" class="board" aria-label="推箱子棋盘"></div>
 
@@ -198,6 +200,13 @@
           <button class="filter-btn" data-filter="cleared" onclick="setLevelFilter('cleared')">已通关</button>
           <button class="filter-btn" data-filter="uncleared" onclick="setLevelFilter('uncleared')">未通关</button>
           <button class="filter-btn" data-filter="favorites" onclick="setLevelFilter('favorites')">收藏</button>
+        </div>
+        <div class="diff-filter-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">
+          <button class="diff-filter-btn active" data-diff="all" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">全部难度</button>
+          <button class="diff-filter-btn" data-diff="简单" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">简单</button>
+          <button class="diff-filter-btn" data-diff="中等" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">中等</button>
+          <button class="diff-filter-btn" data-diff="困难" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">困难</button>
+          <button class="diff-filter-btn" data-diff="专家" style="padding:3px 10px;border-radius:12px;border:1px solid #56406f;background:#261d34;color:#f6f1ff;cursor:pointer">专家</button>
         </div>
         <div id="levelSelectGrid" class="level-grid" role="list"></div>
 

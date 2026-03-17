@@ -19,6 +19,7 @@ import { sendWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
+import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 
 
@@ -126,6 +127,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const heatmapCanvas = document.getElementById('heatmapCanvas') as HTMLCanvasElement | null;
     if (heatmapCanvas) {
       renderStatsHeatmap(heatmapCanvas, state.records);
+    }
+    // ── 速通：记录本关分段 ──────────────────────────────────────────────
+    if (speedrunTimer.isActive()) {
+      const split = speedrunTimer.split(LEVELS[state.levelIndex], state.levelIndex, state.moves);
+      const srHUD = document.getElementById('srHUD');
+      if (srHUD && split) {
+        const delta = split.delta < 0 ? `<span style="color:#50fa7b">-${Math.abs(split.delta/1000).toFixed(2)}s</span>` : `<span style="color:#ff6b6b">+${(split.delta/1000).toFixed(2)}s</span>`;
+        srHUD.innerHTML += `<div style="font-size:0.8em;padding:2px 8px;border-bottom:1px solid #333">${split.levelName}: ${(split.timeMs/1000).toFixed(2)}s (${state.moves}步) ${delta}</div>`;
+      }
+    }
+    // ── AI 教练建议 ─────────────────────────────────────────────────────
+    const coachPanel = document.getElementById('coachPanel');
+    if (coachPanel) {
+      const advices = getCoachAdvice(state.records, state.levelIndex, []);
+      renderCoachPanel(coachPanel, advices);
     }
   });
 
@@ -270,6 +286,36 @@ document.addEventListener('DOMContentLoaded', () => {
     createStatsPanel(document.body, state.records, state.heatmap, state.stats);
   });
 
+  // ─── 速通模式按钮 ────────────────────────────────────────────────────────
+  document.getElementById('timeAttackBtn')?.addEventListener('click', () => {
+    if (speedrunTimer.isActive()) {
+      const result = speedrunTimer.finish(Object.values(state.records).filter(r => r && r.bestMoves > 0).length);
+      const srHUD = document.getElementById('srHUD');
+      if (srHUD) {
+        srHUD.innerHTML = `<div style="padding:6px 12px;color:#ffd166;font-weight:bold">速通完成！总计: ${(result.totalTimeMs/1000).toFixed(2)}s / ${result.totalMoves}步</div>` + srHUD.innerHTML;
+        srHUD.classList.remove('hidden');
+      }
+      setMessage(`速通完成！${(result.totalTimeMs/1000).toFixed(2)}s`, 'win');
+    } else {
+      speedrunTimer.start();
+      const srHUD = document.getElementById('srHUD');
+      if (srHUD) { srHUD.innerHTML = '<div style="padding:4px 12px;color:#8be9fd;font-weight:bold">速通模式进行中...</div>'; srHUD.classList.remove('hidden'); }
+      setMessage('速通模式已开始！完成关卡记录分段', 'info');
+      loadLevel(0);
+    }
+  });
+
+  // ─── 关卡选择按钮 ────────────────────────────────────────────────────────
+  document.getElementById('levelSelectBtn')?.addEventListener('click', () => {
+    const modal = document.getElementById('levelSelect');
+    if (!modal) return;
+    renderLevelSelectGrid();
+    modal.classList.remove('hidden');
+  });
+  document.getElementById('levelSelectCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('levelSelect')?.classList.add('hidden');
+  });
+
   // ─── URL 关卡解析 ────────────────────────────────────────────────────────
   const customLevel = checkUrlLevelParam();
   if (customLevel) {
@@ -292,6 +338,65 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(() => console.log('SW registered'))
       .catch(e => console.warn('SW fail', e));
   }
+
+  // ─── 关卡选择渲染 ────────────────────────────────────────────────────────
+  let currentDiffFilter: string = 'all';
+  let currentClearFilter: string = 'all';
+
+  function renderLevelSelectGrid(): void {
+    const grid = document.getElementById('levelSelectGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    LEVELS.forEach((lv, idx) => {
+      const diff = predictDifficulty(lv);
+      const rec = state.records?.[idx];
+      const cleared = rec?.bestMoves && rec.bestMoves > 0;
+      // 清通筛选
+      if (currentClearFilter === 'cleared' && !cleared) return;
+      if (currentClearFilter === 'uncleared' && cleared) return;
+      if (currentClearFilter === 'favorites' && !getFavorites().includes(idx)) return;
+      // 难度筛选
+      const diffLabel = diff?.label ?? '';
+      if (currentDiffFilter !== 'all' && diffLabel !== currentDiffFilter) return;
+      const cell = document.createElement('button');
+      cell.className = 'level-cell' + (cleared ? ' cleared' : '') + (idx === state.levelIndex ? ' active' : '');
+      cell.setAttribute('role', 'listitem');
+      cell.innerHTML = `<span class="level-num">${idx + 1}</span><span class="level-name">${lv.name}</span>${diffLabel ? `<span class="level-diff" style="font-size:0.7em;color:#aaa">${diffLabel}</span>` : ''}`;
+      cell.addEventListener('click', () => {
+        loadLevel(idx);
+        document.getElementById('levelSelect')?.classList.add('hidden');
+      });
+      grid.appendChild(cell);
+    });
+  }
+
+  // 通关/收藏筛选（原有 setLevelFilter）
+  (window as any).setLevelFilter = (filter: string) => {
+    currentClearFilter = filter;
+    document.querySelectorAll('.level-filter-bar .filter-btn').forEach(b => {
+      (b as HTMLElement).classList.toggle('active', (b as HTMLElement).dataset.filter === filter);
+    });
+    renderLevelSelectGrid();
+  };
+
+  // 难度筛选按钮事件（任务2）
+  document.querySelectorAll('.diff-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentDiffFilter = (btn as HTMLElement).dataset.diff ?? 'all';
+      document.querySelectorAll('.diff-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderLevelSelectGrid();
+    });
+  });
+
+  // 搜索框
+  document.getElementById('levelSearch')?.addEventListener('input', (e) => {
+    const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
+    document.querySelectorAll<HTMLElement>('.level-cell').forEach(cell => {
+      const name = cell.querySelector('.level-name')?.textContent?.toLowerCase() ?? '';
+      cell.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
   loadLevel(0);
