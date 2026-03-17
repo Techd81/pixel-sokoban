@@ -78,6 +78,35 @@ button:active {
   padding: 24px;
 }
 
+/* ─── Desktop: 3-column fixed layout (no page scroll) ─────────────────────── */
+
+@media (min-width: 921px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .app {
+    height: 100vh;
+    grid-template-columns:
+      minmax(280px, 380px)
+      minmax(0, 1fr)
+      minmax(260px, 360px);
+    grid-template-rows: 1fr;
+  }
+
+  .panel,
+  .game-shell {
+    min-height: 0;
+  }
+
+  .panel {
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 .panel,
 .game-shell,
 .modal-card {
@@ -554,10 +583,11 @@ p {
 }
 
 .tile.crate::after {
-  inset: 7px;
+  inset: var(--sprite-inset-crate, 7px);
   width: 4px;
   height: 4px;
   background: var(--sprite-outline);
+  transform: scale(var(--sprite-scale, 1));
   box-shadow:
     0px 0px 0 var(--sprite-outline),
     4px 0px 0 var(--sprite-outline),
@@ -633,11 +663,12 @@ p {
 }
 
 .tile.player::after {
-  inset: 8px;
+  inset: var(--sprite-inset-player, 8px);
   width: 4px;
   height: 4px;
   background: transparent;
   filter: drop-shadow(0 0 8px rgba(126, 224, 129, 0.12));
+  transform: scale(var(--sprite-scale, 1));
   animation: none;
 }
 
@@ -737,7 +768,7 @@ p {
     8px 34px 0 rgba(0, 0, 0, 0.14),
     16px 34px 0 rgba(0, 0, 0, 0.14),
     20px 34px 0 rgba(0, 0, 0, 0.14);
-  transform: translateY(1px);
+  transform: scale(var(--sprite-scale, 1)) translateY(1px);
 }
 
 .tile.player[data-facing='up'][data-step='0']::after {
@@ -836,7 +867,7 @@ p {
     8px 34px 0 rgba(0, 0, 0, 0.14),
     16px 34px 0 rgba(0, 0, 0, 0.14),
     20px 34px 0 rgba(0, 0, 0, 0.14);
-  transform: translateY(1px);
+  transform: scale(var(--sprite-scale, 1)) translateY(1px);
 }
 
 .tile.player[data-facing='left'][data-step='0']::after {
@@ -925,7 +956,7 @@ p {
     8px 34px 0 rgba(0, 0, 0, 0.14),
     14px 34px 0 rgba(0, 0, 0, 0.14),
     20px 34px 0 rgba(0, 0, 0, 0.14);
-  transform: translateY(1px);
+  transform: scale(var(--sprite-scale, 1)) translateY(1px);
 }
 
 .tile.player[data-facing='right'][data-step='0']::after {
@@ -1014,7 +1045,7 @@ p {
     10px 34px 0 rgba(0, 0, 0, 0.14),
     16px 34px 0 rgba(0, 0, 0, 0.14),
     22px 34px 0 rgba(0, 0, 0, 0.14);
-  transform: translateY(1px);
+  transform: scale(var(--sprite-scale, 1)) translateY(1px);
 }
 
 .tile.crate.goal::after {
@@ -1234,13 +1265,13 @@ p {
 
 @keyframes cratePulse {
   0% {
-    transform: scale(1);
+    transform: scale(var(--sprite-scale, 1)) scale(1);
   }
   40% {
-    transform: scale(1.12, 0.92);
+    transform: scale(var(--sprite-scale, 1)) scale(1.12, 0.92);
   }
   100% {
-    transform: scale(1);
+    transform: scale(var(--sprite-scale, 1)) scale(1);
   }
 }
 
@@ -1294,11 +1325,11 @@ p {
 }
 
 @keyframes crateLand {
-  0% { transform: scale(1, 1); }
-  30% { transform: scale(1.15, 0.85); }
-  50% { transform: scale(0.95, 1.05); }
-  70% { transform: scale(1.03, 0.97); }
-  100% { transform: scale(1, 1); }
+  0% { transform: scale(var(--sprite-scale, 1)) scale(1, 1); }
+  30% { transform: scale(var(--sprite-scale, 1)) scale(1.15, 0.85); }
+  50% { transform: scale(var(--sprite-scale, 1)) scale(0.95, 1.05); }
+  70% { transform: scale(var(--sprite-scale, 1)) scale(1.03, 0.97); }
+  100% { transform: scale(var(--sprite-scale, 1)) scale(1, 1); }
 }
 
 .tile.crate.goal.flash::after {

@@ -50,11 +50,31 @@ function getTileScreenPos(x: number, y: number): { sx: number; sy: number } {
   return { sx: rect.left + x * ts + ts / 2, sy: rect.top + y * ts + ts / 2 };
 }
 
+const FONT_SIZE_KEY = 'pixelSokobanFontSize';
+
+function initFontSizeControls(): void {
+  const apply = (rawSize: number): void => {
+    const size = Math.max(10, Math.min(24, Math.round(rawSize)));
+    document.documentElement.style.fontSize = `${size}px`;
+    localStorage.setItem(FONT_SIZE_KEY, String(size));
+  };
+
+  const saved = Number(localStorage.getItem(FONT_SIZE_KEY));
+  if (Number.isFinite(saved) && saved > 0) apply(saved);
+
+  document.querySelectorAll<HTMLButtonElement>('[data-font-size]').forEach(btn => {
+    const size = Number(btn.dataset.fontSize);
+    if (!Number.isFinite(size) || size <= 0) return;
+    btn.addEventListener('click', () => apply(size));
+  });
+}
+
 // ─── 初始化 ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initDomRefs();
   injectAchievementStyles();
   initThemeButtons();
+  initFontSizeControls();
 
   const playerNameEl = document.getElementById('playerNameDisplay');
   if (playerNameEl) playerNameEl.textContent = loadPlayerName();

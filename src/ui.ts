@@ -260,14 +260,71 @@ export function autoScaleBoard(): void {
   const container = board.parentElement as HTMLElement | null;
   if (!container) return;
 
-  const maxW = container.clientWidth  || window.innerWidth;
-  const maxH = container.clientHeight || window.innerHeight;
+  const px = (raw: string): number => {
+    const n = Number.parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
 
-  const cellByW = Math.floor(maxW / cols);
-  const cellByH = Math.floor(maxH / rows);
-  const cell    = Math.max(16, Math.min(cellByW, cellByH, 64));
+  const containerStyle = getComputedStyle(container);
+  const padX = px(containerStyle.paddingLeft) + px(containerStyle.paddingRight);
+  const padY = px(containerStyle.paddingTop) + px(containerStyle.paddingBottom);
+  const gap = px(containerStyle.gap || '0');
+
+  const containerW = container.clientWidth || window.innerWidth;
+  const containerH = Math.min(container.clientHeight || window.innerHeight, window.innerHeight);
+
+  const contentW = containerW - padX;
+  const contentH = containerH - padY;
+
+  let siblingsH = 0;
+  let visibleSiblings = 0;
+  for (const el of Array.from(container.children)) {
+    if (!(el instanceof HTMLElement)) continue;
+    if (el === board) continue;
+    const s = getComputedStyle(el);
+    if (s.display === 'none') continue;
+    if (s.position === 'absolute' || s.position === 'fixed') continue;
+    siblingsH += el.offsetHeight + px(s.marginTop) + px(s.marginBottom);
+    visibleSiblings++;
+  }
+
+  // container is a vertical flex; gaps exist between each in-flow child
+  const availableH = contentH - siblingsH - gap * visibleSiblings;
+  const availableW = contentW;
+
+  const boardStyle = getComputedStyle(board);
+  const boardExtraW =
+    px(boardStyle.paddingLeft) +
+    px(boardStyle.paddingRight) +
+    px(boardStyle.borderLeftWidth) +
+    px(boardStyle.borderRightWidth);
+  const boardExtraH =
+    px(boardStyle.paddingTop) +
+    px(boardStyle.paddingBottom) +
+    px(boardStyle.borderTopWidth) +
+    px(boardStyle.borderBottomWidth);
+
+  const gridW = availableW - boardExtraW;
+  const gridH = availableH - boardExtraH;
+  if (gridW <= 0 || gridH <= 0) return;
+
+  const cellByW = Math.floor(gridW / cols);
+  const cellByH = Math.floor(gridH / rows);
+
+  // Allow larger tiles on wide screens so the board can better fill the center stage.
+  // The value is still constrained by gridW/gridH, so it won't overflow the container.
+  const maxCell = 120;
+  const cell    = Math.max(16, Math.min(cellByW, cellByH, maxCell));
 
   document.documentElement.style.setProperty('--tile-size', `${cell}px`);
+
+  // Sprite pixel-art is authored at a 48px baseline tile. When tiles grow, scale the
+  // player/crate sprites too (but don't scale down below 1 to keep the original look).
+  const baseTile = 48;
+  const spriteScale = cell > baseTile ? cell / baseTile : 1;
+  document.documentElement.style.setProperty('--sprite-scale', spriteScale.toFixed(4));
+  document.documentElement.style.setProperty('--sprite-inset-crate', `${Math.round(7 * spriteScale)}px`);
+  document.documentElement.style.setProperty('--sprite-inset-player', `${Math.round(8 * spriteScale)}px`);
 }
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────

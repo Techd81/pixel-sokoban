@@ -14,22 +14,11 @@
   <body>
     <div id="offlineBadge" class="offline-badge">离线模式</div>
     <main class="app">
-      <section class="panel">
+      <section class="panel panel--left">
         <div>
           <p class="eyebrow">PIXEL SOKOBAN</p>
           <h1>像素推箱子</h1>
           <p class="subtitle">把所有木箱推进发光目标点，支持键盘与触屏操作。</p>
-        </div>
-
-        <div class="theme-bar">
-          <button class="theme-btn" data-theme="dark" title="暗色主题">🌙 暗色</button>
-          <button class="theme-btn" data-theme="light" title="亮色主题">☀️ 亮色</button>
-          <button class="theme-btn" data-theme="rainbow" title="彩虹主题">🌈 彩虹</button>
-          <button class="theme-btn" data-theme="cyber" title="赛博朋克">💜 赛博</button>
-          <button class="theme-btn" data-theme="forest" title="森林">🌲 森林</button>
-          <button class="theme-btn" data-theme="ocean" title="海洋">🌊 海洋</button>
-          <button class="theme-btn" data-theme="desert" title="沙漠">🏜 沙漠</button>
-          <button class="theme-btn" data-theme="arctic" title="极地">❄️ 极地</button>
         </div>
 
         <div id="progressBar" class="progress">
@@ -88,15 +77,8 @@
             <button id="editorBtn" type="button">编辑器 E</button>
 
             <button id="statsBtn" type="button">统计 S</button>
-            <button id="pwaInstallBtn" type="button" class="hidden">📲 安装</button>
-            <button id="dailyStepBtn" type="button">🎯 步数挑战</button>
-
-            <button id="shareBtn" type="button">分享关卡</button>
-            <button id="timeAttackBtn" type="button">⏱ 速通</button>
-            <button id="replayBtn" type="button">录像回放</button>
-
-            <button id="bgmBtn" type="button">🎵 BGM</button>
-            <button id="fullscreenBtn" type="button">⛶ 全屏</button>
+            <button id="nextBtn" type="button">下一关</button>
+            <button id="levelSelectBtn" type="button">选关</button>
           </div>
 
           <button id="lockModeBtn" class="control-wide" type="button">🔓 自由模式</button>
@@ -110,10 +92,49 @@
               <button class="speed-btn" data-speed="60" type="button">极速</button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div class="controls-nav" role="group" aria-label="关卡导航">
-            <button id="nextBtn" type="button">下一关</button>
-            <button id="levelSelectBtn" type="button">选关</button>
+      <section class="game-shell">
+        <div id="taHud" class="ta-hud hidden"></div>
+        <div id="srHUD" class="sr-hud hidden" style="background:#1a1426;border:1px solid #8be9fd33;border-radius:6px;margin:4px 0;max-height:180px;overflow-y:auto;font-size:0.82em;color:#e0d7f7"></div>
+        <div id="coachPanel" style="background:#1a1426;border:1px solid #ff79c633;border-radius:6px;margin:4px 0;padding:4px;display:none"></div>
+        <div id="message" class="message">准备开始</div>
+        <div id="board" class="board" aria-label="推箱子棋盘"></div>
+
+        <div class="dpad" aria-label="方向控制器">
+          <button data-dir="up" aria-label="上">▲</button>
+          <div class="dpad-middle">
+            <button data-dir="left" aria-label="左">◀</button>
+            <button data-dir="down" aria-label="下">▼</button>
+            <button data-dir="right" aria-label="右">▶</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--right">
+        <div class="theme-bar">
+          <button class="theme-btn" data-theme="dark" title="暗色主题">🌙 暗色</button>
+          <button class="theme-btn" data-theme="light" title="亮色主题">☀️ 亮色</button>
+          <button class="theme-btn" data-theme="rainbow" title="彩虹主题">🌈 彩虹</button>
+          <button class="theme-btn" data-theme="cyber" title="赛博朋克">💜 赛博</button>
+          <button class="theme-btn" data-theme="forest" title="森林">🌲 森林</button>
+          <button class="theme-btn" data-theme="ocean" title="海洋">🌊 海洋</button>
+          <button class="theme-btn" data-theme="desert" title="沙漠">🏜 沙漠</button>
+          <button class="theme-btn" data-theme="arctic" title="极地">❄️ 极地</button>
+        </div>
+
+        <div class="controls controls--sidebar">
+          <div class="controls-grid">
+            <button id="dailyStepBtn" type="button">🎯 步数挑战</button>
+            <button id="shareBtn" type="button">分享关卡</button>
+            <button id="timeAttackBtn" type="button">⏱ 速通</button>
+
+            <button id="replayBtn" type="button">录像回放</button>
+            <button id="bgmBtn" type="button">🎵 BGM</button>
+            <button id="fullscreenBtn" type="button">⛶ 全屏</button>
+
+            <button id="pwaInstallBtn" type="button" class="hidden">📲 安装</button>
           </div>
         </div>
 
@@ -141,9 +162,9 @@
             <div class="tips-font" aria-label="字体大小">
               <div class="tips-font-label">字体</div>
               <div class="tips-font-grid">
-                <button onclick="setFontSize(13)" type="button">S</button>
-                <button onclick="setFontSize(15)" type="button">M</button>
-                <button onclick="setFontSize(17)" type="button">L</button>
+                <button type="button" data-font-size="13">S</button>
+                <button type="button" data-font-size="15">M</button>
+                <button type="button" data-font-size="17">L</button>
               </div>
             </div>
           </div>
@@ -153,23 +174,6 @@
             <div class="tips-row"><span class="tips-k">目标</span><span class="tips-v">全部箱子压在目标点上</span></div>
             <div class="tips-row"><span class="tips-k">技巧</span><span class="tips-v">先想退路，别把箱子推进死角</span></div>
             <div class="tips-row"><span class="tips-k">快捷</span><span class="tips-v">R 重开 · Z 撤销 · L 选关 · H 提示 · E 编辑 · S 统计</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="game-shell">
-        <div id="taHud" class="ta-hud hidden"></div>
-        <div id="srHUD" class="sr-hud hidden" style="background:#1a1426;border:1px solid #8be9fd33;border-radius:6px;margin:4px 0;max-height:180px;overflow-y:auto;font-size:0.82em;color:#e0d7f7"></div>
-        <div id="coachPanel" style="background:#1a1426;border:1px solid #ff79c633;border-radius:6px;margin:4px 0;padding:4px;display:none"></div>
-        <div id="message" class="message">准备开始</div>
-        <div id="board" class="board" aria-label="推箱子棋盘"></div>
-
-        <div class="dpad" aria-label="方向控制器">
-          <button data-dir="up" aria-label="上">▲</button>
-          <div class="dpad-middle">
-            <button data-dir="left" aria-label="左">◀</button>
-            <button data-dir="down" aria-label="下">▼</button>
-            <button data-dir="right" aria-label="右">▶</button>
           </div>
         </div>
       </section>
