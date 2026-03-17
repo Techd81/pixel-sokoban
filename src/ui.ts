@@ -157,7 +157,6 @@ export function render(): void {
   }
 
   renderProgress();
-  autoScaleBoard();
 
   // 一次性特效：渲染后清除，便于下次触发
   state.playerMoved = false;
@@ -237,11 +236,18 @@ export function setMessage(text: string, type: string = 'info'): void {
   }
 
   el.textContent = text;
-  el.className   = `message message--${type} message--visible`;
+  const typeClassMap: Record<string, string> = {
+    info: 'is-info',
+    warn: 'is-warn',
+    win: 'is-win',
+    error: 'is-error',
+  };
+  const cls = typeClassMap[type] ?? 'is-info';
+  el.className = `message ${cls}`;
 
   if (text) {
     _messageTimer = setTimeout(() => {
-      el.classList.remove('message--visible');
+      el.className = 'message';
       _messageTimer = null;
     }, 3000);
   }

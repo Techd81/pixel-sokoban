@@ -48,10 +48,13 @@ interface HistorySnap {
 interface ExtGameState extends Omit<GameState, 'history' | 'recording' | 'facing' | 'stats'> {
   records: Records;
   facing: string;
-  recording: Array<{ dx: number; dy: number; facing: string }>;
+  recording: Array<{ dx: number; dy: number; facing: string; isPush: boolean; timestamp: number }>;
   history: HistorySnap[];
   combo: ComboState;
   levelSelectFocus: number;
+  paused: boolean;
+  pushOnlyMode: boolean;
+  playback: "none" | "demo" | "replay";
   stats: {
     maxCombo: number;
     hintCount: number;
@@ -81,6 +84,9 @@ export const state: ExtGameState = {
   facing: "down",
   stepFrame: 0,
   uiScreen: "game",
+  paused: false,
+  pushOnlyMode: false,
+  playback: "none",
   effects: {
     goalFlash: null,
     cratePulse: null,
@@ -170,6 +176,55 @@ export function updateRecord(
   saveRecords(state.records);
   return { record: state.records[state.levelIndex], isNewBest: shouldReplace };
 }
+
+// --- 模式控制：撤销限制 / 暂停 / 纯推 / 回放 ---------------------------------
+
+export function getUndoLimit(): number { return undoLimit; }
+export function getUndoUsed(): number { return undoUsed; }
+
+export function setUndoLimit(limit: number): void {
+  undoLimit = Number.isFinite(limit) ? Math.trunc(limit) : -1;
+  undoUsed = 0;
+  state.stats.undoUsed = 0;
+  emit("update");
+}
+
+export function isPaused(): boolean { return state.paused; }
+
+export function pauseGame(): void {
+  if (state.paused) return;
+  state.paused = true;
+  stopTimer();
+  emit("update");
+}
+
+export function resumeGame(): void {
+  if (!state.paused) return;
+  state.paused = false;
+  if (state.moves > 0) startTimer();
+  emit("update");
+}
+
+export function togglePause(): void {
+  if (state.paused) resumeGame();
+  else pauseGame();
+}
+
+export function isPushOnlyMode(): boolean { return state.pushOnlyMode; }
+
+export function setPushOnlyMode(on: boolean): void {
+  state.pushOnlyMode = !!on;
+  emit("update");
+}
+
+export function togglePushOnlyMode(): boolean {
+  setPushOnlyMode(!state.pushOnlyMode);
+  return state.pushOnlyMode;
+}
+
+export function getPlaybackMode(): ExtGameState["playback"] { return state.playback; }
+export function setPlaybackMode(mode: ExtGameState["playback"]): void { state.playback = mode; }
+
 // --- 网格辅助
 export function isGoal(x: number, y: number): boolean {
   return goalsSet.has(`${x},${y}`);
@@ -207,11 +262,13 @@ export function loadLevel(index: number): void {
   state.moves = 0; state.pushes = 0;
   state.history = []; state.won = false;
   state.facing = "down"; state.stepFrame = 0;
+  state.paused = false;
   state.effects = { goalFlash: null, cratePulse: null, shake: false, prevPlayer: null, prevBoxes: null, deadlocks: null };
   state.playerMoved = false;
   state.combo.count = 0; state.combo.lastPushMs = 0;
   state.recording = [];
   undoUsed = 0;
+  state.stats.undoUsed = 0;
   resetTimer();
   for (let y = 0; y < state.grid.length; y++) {
     for (let x = 0; x < state.grid[y].length; x++) {
@@ -255,6 +312,7 @@ export function undo(): boolean {
   state.effects = { goalFlash: null, cratePulse: null, shake: false, prevPlayer: null, prevBoxes: null, deadlocks: null };
   state.playerMoved = false;
   undoUsed++;
+  state.stats.undoUsed = undoUsed;
   emit("update");
   return true;
 }
@@ -332,7 +390,7 @@ function checkWin(): boolean {
 
 // --- tryMove
 export function tryMove(dx: number, dy: number, facing: string): void {
-  if (state.won) return;
+  if (state.won || state.paused) return;
   state.facing = facing;
   const nextX = state.player.x + dx;
   const nextY = state.player.y + dy;
@@ -340,6 +398,13 @@ export function tryMove(dx: number, dy: number, facing: string): void {
 
   // 撞墙
   if (nextCell === TILE.WALL) {
+    state.effects.shake = true;
+    emit("update");
+    return;
+  }
+
+  // 纯推模式：每步必须推箱子
+  if (state.pushOnlyMode && nextCell !== TILE.BOX && nextCell !== TILE.BOX_ON_GOAL) {
     state.effects.shake = true;
     emit("update");
     return;
@@ -367,6 +432,13 @@ export function tryMove(dx: number, dy: number, facing: string): void {
     state.effects.cratePulse = { x: bx, y: by };
     if (isGoal(bx, by)) { state.effects.goalFlash = { x: bx, y: by }; }
     if (state.moves === 1) startTimer();
+    if (state.playback === "none") {
+      state.recording.push({
+        dx, dy, facing,
+        isPush: true,
+        timestamp: Math.round(getElapsedTimeMs()),
+      });
+    }
     updateCombo(true);
     state.effects.deadlocks = getDeadlockedBoxes();
     emit("pushed", { from: { x: nextX, y: nextY }, to: { x: bx, y: by } });
@@ -376,8 +448,11 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       const level = getLevelConfig();
       const rank = getRank(state.moves, level.starMoves);
       const challengeCleared = state.moves <= level.parMoves;
-      updateRecord({ moves: state.moves, rank, challengeCleared, timeMs: state.timer.elapsedMs });
-      emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared });
+      const playback = state.playback !== "none";
+      if (!playback) {
+        updateRecord({ moves: state.moves, rank, challengeCleared, timeMs: state.timer.elapsedMs });
+      }
+      emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared, playback, mode: state.playback });
     }
     emit("update");
     return;
@@ -393,6 +468,13 @@ export function tryMove(dx: number, dy: number, facing: string): void {
   state.stepFrame = state.stepFrame === 0 ? 1 : 0;
   state.playerMoved = true;
   if (state.moves === 1) startTimer();
+  if (state.playback === "none") {
+    state.recording.push({
+      dx, dy, facing,
+      isPush: false,
+      timestamp: Math.round(getElapsedTimeMs()),
+    });
+  }
   updateCombo(false);
   emit("moved", { x: nextX, y: nextY });
   emit("update");

@@ -33,6 +33,10 @@
   box-sizing: border-box;
 }
 
+.hidden {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -472,6 +476,10 @@ p {
 
 .message.is-warn {
   color: #ffb86c;
+}
+
+.message.is-error {
+  color: var(--danger);
 }
 
 .message.is-win {
@@ -1144,6 +1152,16 @@ p {
     inset 0 -4px 0 rgba(0, 0, 0, 0.18);
 }
 
+.level-card.is-locked {
+  opacity: 0.45;
+  filter: saturate(0.65);
+}
+
+.level-card.is-current {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
 .level-card-head {
   display: flex;
   justify-content: space-between;
@@ -1398,6 +1416,24 @@ p {
   animation: aiDemoGlow 1.2s ease-in-out infinite;
 }
 
+/* ─── 轻量模式：减少动画/特效 ─────────────────────────────────────────────── */
+
+body.low-fx .board.ai-demo {
+  animation: none !important;
+}
+
+body.low-fx .board.shake {
+  animation: none !important;
+}
+
+body.low-fx .tile.wall,
+body.low-fx .tile.goal::before,
+body.low-fx .tile.flash,
+body.low-fx .tile.crate.deadlock,
+body.low-fx .tile.crate.pulse::after {
+  animation: none !important;
+}
+
 @keyframes aiDemoGlow {
   0%, 100% { box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(139,233,253,0.45); }
   50% { box-shadow: 0 0 0 3px var(--accent-2), 0 0 32px rgba(255,121,198,0.55); }
@@ -1416,9 +1452,23 @@ p {
   font-weight: 700;
 }
 
+/* 纯推按钮激活态 */
+#pushOnlyBtn.active {
+  background: var(--goal);
+  color: #17121f;
+  font-weight: 700;
+}
+
 /* 提示按钮激活态 */
 #hintBtn.active {
   background: var(--goal);
+  color: #17121f;
+  font-weight: 700;
+}
+
+/* 轻量按钮激活态 */
+#lowFxBtn.active {
+  background: var(--accent);
   color: #17121f;
   font-weight: 700;
 }

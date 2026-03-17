@@ -35,7 +35,8 @@ export function createStatsPanel(
   container: HTMLElement,
   records: Records,
   heatmap: number[][],
-  stats: StatsData
+  stats: StatsData,
+  initialTab = 0
 ): void {
   destroyStatsPanel();
 
@@ -67,6 +68,7 @@ export function createStatsPanel(
 
   // tab bar
   const tabLabels = ['总览', '热力图', '图表'];
+  const safeInitial = Math.max(0, Math.min(tabLabels.length - 1, Math.trunc(initialTab)));
   const tabBar = document.createElement('div');
   tabBar.style.cssText = S.tabBar;
 
@@ -77,7 +79,7 @@ export function createStatsPanel(
     const btn = document.createElement('button');
     btn.textContent = label;
     btn.dataset.tab = String(idx);
-    btn.style.cssText = idx === 0 ? S.tabBtnActive : S.tabBtn;
+    btn.style.cssText = idx === safeInitial ? S.tabBtnActive : S.tabBtn;
     btn.addEventListener('click', () => {
       tabBar.querySelectorAll<HTMLButtonElement>('button').forEach(b => {
         b.style.cssText = b === btn ? S.tabBtnActive : S.tabBtn;
@@ -90,7 +92,7 @@ export function createStatsPanel(
   panel.appendChild(tabBar);
   panel.appendChild(tabContent);
 
-  renderTab(0, tabContent, records, heatmap, stats);
+  renderTab(safeInitial, tabContent, records, heatmap, stats);
 
   _overlay.appendChild(panel);
   container.appendChild(_overlay);

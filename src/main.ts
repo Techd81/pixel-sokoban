@@ -1,6 +1,23 @@
 import { LEVELS } from './levels';
-import { state, loadLevel, tryMove, undo, restartLevel, gameEvents, getLevelConfig } from './game';
-import { initDomRefs, render, renderProgress, setMessage } from './ui';
+import {
+  state,
+  loadLevel,
+  tryMove,
+  undo,
+  restartLevel,
+  gameEvents,
+  getLevelConfig,
+  getUndoLimit,
+  getUndoUsed,
+  setUndoLimit,
+  isPaused,
+  togglePause,
+  isPushOnlyMode,
+  togglePushOnlyMode,
+  getPlaybackMode,
+  setPlaybackMode,
+} from './game';
+import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard } from './ui';
 import { audioSystem } from './audio';
 import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
@@ -25,8 +42,11 @@ import { initThemeButtons } from './themes';
 import { showKeyboardHelp } from './shortcuts';
 import { captureBoard, showScreenshotPreview } from './screenshot';
 import { exportRecords, importRecordsFromJSON } from './export';
-import { saveRecords, loadPlayerName, savePlayerName } from './storage';
+import { saveRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK } from './storage';
 import { getDailyChallenge } from './daily';
+import { initI18n, getLocale, setLocale, t } from './i18n';
+import { initEditorModal } from './editor_modal';
+import { initPWA, triggerInstall } from './pwa';
 
 
 const macroRecorder = new MacroRecorder();
@@ -75,6 +95,73 @@ document.addEventListener('DOMContentLoaded', () => {
   injectAchievementStyles();
   initThemeButtons();
   initFontSizeControls();
+  initI18n();
+
+  // 语言切换：先做最小可用（lang 属性 + 标题/副标题）
+  const titleEl = document.querySelector('.panel--left h1') as HTMLElement | null;
+  const subtitleEl = document.querySelector('.panel--left .subtitle') as HTMLElement | null;
+  const zhTitle = titleEl?.textContent ?? '像素推箱子';
+  const zhSubtitle = subtitleEl?.textContent ?? '把所有木箱推进发光目标点，支持键盘与触屏操作。';
+
+  const applyLocaleToStatic = (): void => {
+    const locale = getLocale();
+    document.documentElement.lang = locale;
+    const langBtn = document.getElementById('langBtn');
+    if (locale === 'zh-CN') {
+      if (titleEl) titleEl.textContent = zhTitle;
+      if (subtitleEl) subtitleEl.textContent = zhSubtitle;
+      document.title = zhTitle;
+      if (langBtn) langBtn.textContent = 'EN/中';
+    } else {
+      if (titleEl) titleEl.textContent = t('game.title');
+      if (subtitleEl) subtitleEl.textContent = t('game.subtitle');
+      document.title = t('game.title');
+      if (langBtn) langBtn.textContent = '中/EN';
+    }
+  };
+  applyLocaleToStatic();
+
+  // 轻量特效开关（降低粒子/动画）
+  const LOW_FX_KEY = 'pixelSokobanLowFx';
+  if (localStorage.getItem(LOW_FX_KEY) === '1') {
+    document.body.classList.add('low-fx');
+  }
+
+  // 编辑器（基于 index.html 的 editorModal）
+  const editorModal = initEditorModal();
+
+  // PWA：安装按钮接入（避免重复 id，统一用右侧工具栏的 pwaInstallBtn）
+  initPWA(() => {
+    const btn = document.getElementById('pwaInstallBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.classList.remove('hidden');
+    if (btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', async () => {
+      const ok = await triggerInstall();
+      if (ok) {
+        setMessage('已触发安装提示', 'win');
+        btn.classList.add('hidden');
+      } else {
+        setMessage('当前环境暂不可安装', 'warn');
+      }
+    });
+  });
+
+  // 自动缩放棋盘：仅在布局尺寸变化时重算，避免“移动时忽大忽小”
+  const setupBoardAutoscale = (): void => {
+    const board = document.getElementById('board');
+    const container = board?.parentElement;
+    if (container && 'ResizeObserver' in window) {
+      const ro = new ResizeObserver(() => {
+        requestAnimationFrame(() => autoScaleBoard());
+      });
+      ro.observe(container);
+    } else {
+      window.addEventListener('resize', () => autoScaleBoard());
+    }
+  };
+  setupBoardAutoscale();
 
   const playerNameEl = document.getElementById('playerNameDisplay');
   if (playerNameEl) playerNameEl.textContent = loadPlayerName();
@@ -102,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── 游戏事件监听 ───────────────────────────────────────────────────────
   gameEvents.addEventListener('update', () => {
     render();
-    if (!state.won) {
+    if (!state.won && getPlaybackMode() === 'none') {
       const boxes = state.grid.flatMap((row, y) =>
         row.flatMap((cell, x) =>
           (cell === '$' || cell === '*') ? [{ x, y }] : []
@@ -115,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
   gameEvents.addEventListener('levelLoaded', () => {
     render();
     renderProgress();
+    autoScaleBoard();
     ghostRecorder.start(state.levelIndex);
     if (ghostPlayer.load(state.levelIndex)) {
       ghostPlayer.start((frame, _progress) => {
@@ -136,14 +224,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  gameEvents.addEventListener('won', () => {
+  gameEvents.addEventListener('won', (e: Event) => {
+    const detail = (e as CustomEvent).detail as { playback?: boolean; mode?: string } | undefined;
+    const playback = detail?.playback ?? (getPlaybackMode() !== 'none');
+
     emitWinBurst();
-    sendWinDanmaku(state.records?.[state.levelIndex]?.bestRank ?? '');
-    ghostRecorder.stop();
-    ghostRecorder.save(state.moves);
-    ghostPlayer.stop();
     audioSystem.playSfx('win');
-    // 检查成就
+    ghostRecorder.stop();
+    ghostPlayer.stop();
+
+    // 演示/回放不写入记录、不触发成就/回放保存
+    if (playback) {
+      if (getPlaybackMode() === 'demo') stopAIDemo();
+      if (getPlaybackMode() === 'replay') stopReplay();
+      setMessage('演示/回放完成', 'win');
+      return;
+    }
+
+    sendWinDanmaku(state.records?.[state.levelIndex]?.bestRank ?? '');
+    ghostRecorder.save(state.moves);
+
     // 检查成就
     const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
     const stars3 = Object.values(state.records).filter((r: any) => r?.bestRank === '★★★').length;
@@ -158,26 +258,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const newAchievements = checkAchievements(achStats);
     newAchievements.forEach(a => showAchievementUnlock(a));
+
     // 自适应推荐
-    const profile = analyzePlayer(state.records);
+    void analyzePlayer(state.records);
     const next = getNextRecommended(state.records, state.levelIndex);
     if (next >= 0 && next !== state.levelIndex) {
       setTimeout(() => setMessage(`推荐下一关：L${next + 1} ${LEVELS[next].name}`, 'info'), 2000);
     }
+
     // 保存回放
     saveReplay({
       levelIndex: state.levelIndex,
       levelName: getLevelConfig(state.levelIndex).name,
-      steps: state.recording.map((r, i) => ({ ...r, isPush: false, timestamp: i * 300 })),
+      steps: state.recording.map(s => ({ ...s })),
       totalMoves: state.moves,
       totalTimeMs: state.timer.elapsedMs,
       recordedAt: Date.now(),
     });
-    // 渲染热力图（若容器存在）
-    const heatmapCanvas = document.getElementById('heatmapCanvas') as HTMLCanvasElement | null;
-    if (heatmapCanvas) {
-      renderStatsHeatmap(heatmapCanvas, state.records);
-    }
+
     // ── 速通：记录本关分段 ──────────────────────────────────────────────
     if (speedrunTimer.isActive()) {
       const split = speedrunTimer.split(LEVELS[state.levelIndex], state.levelIndex, state.moves);
@@ -187,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         srHUD.innerHTML += `<div style="font-size:0.8em;padding:2px 8px;border-bottom:1px solid #333">${split.levelName}: ${(split.timeMs/1000).toFixed(2)}s (${state.moves}步) ${delta}</div>`;
       }
     }
+
     // ── AI 教练建议 ─────────────────────────────────────────────────────
     const coachPanel = document.getElementById('coachPanel');
     if (coachPanel) {
@@ -199,17 +298,61 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (ev) => {
     if (ev.repeat) return;
     const key = ev.key;
+    if (key === 'Escape') {
+      document.getElementById('levelSelect')?.classList.add('hidden');
+      if (isPaused()) handleTogglePause();
+      if (getPlaybackMode() === 'demo') stopAIDemo();
+      if (getPlaybackMode() === 'replay') stopReplay();
+      return;
+    }
+
+    if (editorModal.isOpen()) return;
+
+    const canInteractive = getPlaybackMode() === 'none' && !isPaused();
     switch (key) {
-      case 'ArrowUp':    case 'w': case 'W': audioSystem.unlock(); tryMove(0, -1, 'up');    break;
-      case 'ArrowDown':  case 's': case 'S': audioSystem.unlock(); tryMove(0,  1, 'down');  break;
-      case 'ArrowLeft':  case 'a': case 'A': audioSystem.unlock(); tryMove(-1, 0, 'left');  break;
-      case 'ArrowRight': case 'd': case 'D': audioSystem.unlock(); tryMove(1,  0, 'right'); break;
-      case 'z': case 'Z': undo(); break;
-      case 'r': case 'R': restartLevel(); break;
+      case 'ArrowUp':    case 'w': case 'W':
+        if (!canInteractive) break;
+        ev.preventDefault();
+        audioSystem.unlock(); tryMove(0, -1, 'up'); break;
+      case 'ArrowDown':  case 's': case 'S':
+        if (!canInteractive) break;
+        ev.preventDefault();
+        audioSystem.unlock(); tryMove(0,  1, 'down'); break;
+      case 'ArrowLeft':  case 'a': case 'A':
+        if (!canInteractive) break;
+        ev.preventDefault();
+        audioSystem.unlock(); tryMove(-1, 0, 'left'); break;
+      case 'ArrowRight': case 'd': case 'D':
+        if (!canInteractive) break;
+        ev.preventDefault();
+        audioSystem.unlock(); tryMove(1,  0, 'right'); break;
+      case 'z': case 'Z':
+        if (!canInteractive) break;
+        handleUndo(); break;
+      case 'r': case 'R':
+        if (!canInteractive) break;
+        restartLevel(); break;
+      case 'p': case 'P':
+        handleTogglePause(); break;
+      case 'l': case 'L':
+        if (!canInteractive) break;
+        {
+          const modal = document.getElementById('levelSelect');
+          modal?.classList.toggle('hidden');
+          if (!modal?.classList.contains('hidden')) renderLevelSelectGrid();
+        }
+        break;
+      case 'e': case 'E':
+        if (!canInteractive) break;
+        editorModal.open(getLevelConfig(state.levelIndex));
+        break;
       case 'n': loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)); break;
-      case 'p': loadLevel(Math.max(state.levelIndex - 1, 0)); break;
-      case 'h': case 'H': handleHint(); break;
-      case 'g': case 'G': handleGenerate(); break;
+      case 'h': case 'H':
+        if (!canInteractive) break;
+        void handleHint(); break;
+      case 'g': case 'G':
+        if (!canInteractive) break;
+        handleGenerate(); break;
     }
   });
 
@@ -220,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
   document.addEventListener('touchend', (e) => {
     audioSystem.unlock();
+    if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return;
     const dx = e.changedTouches[0].clientX - touchStart.x;
     const dy = e.changedTouches[0].clientY - touchStart.y;
     const adx = Math.abs(dx), ady = Math.abs(dy);
@@ -232,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bindDirButtons = (selector: string) => {
     document.querySelectorAll<HTMLButtonElement>(selector).forEach(btn => {
       btn.addEventListener('click', () => {
+        if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return;
         audioSystem.unlock();
         const dir = btn.dataset.dir;
         if (dir === 'up')    tryMove(0, -1, 'up');
@@ -268,8 +413,204 @@ document.addEventListener('DOMContentLoaded', () => {
     setMessage(`随机关卡已生成 (${level.map[0].length}×${level.map.length})`, 'win');
   }
 
+  // ─── 撤销限制 ─────────────────────────────────────────────────────────────
+  const UNDO_LIMIT_STORAGE_KEY = 'pixelSokobanUndoLimit';
+  const UNDO_LIMIT_CYCLE = [-1, 5, 3, 1, 0];
+
+  const updateUndoLimitBtn = (limit: number): void => {
+    const btn = document.getElementById('undoLimitBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.textContent = limit < 0 ? '🔄 标准' : `🔄 撤销${limit}次`;
+    btn.title = limit < 0 ? '撤销次数限制：无限' : `撤销次数限制：每关最多 ${limit} 次`;
+  };
+
+  const savedUndoLimit = Number(localStorage.getItem(UNDO_LIMIT_STORAGE_KEY));
+  if (Number.isFinite(savedUndoLimit)) setUndoLimit(savedUndoLimit);
+  updateUndoLimitBtn(getUndoLimit());
+
+  const handleUndo = (): void => {
+    if (state.history.length === 0) { setMessage('没有可撤销的操作', 'warn'); return; }
+    const limit = getUndoLimit();
+    const used = getUndoUsed();
+    if (limit >= 0 && used >= limit) {
+      setMessage(`撤销次数已达上限！(${used}/${limit})`, 'warn');
+      return;
+    }
+    undo();
+  };
+
+  // ─── 暂停遮罩 ─────────────────────────────────────────────────────────────
+  let pauseOverlay: HTMLDivElement | null = null;
+
+  const ensurePauseOverlay = (): HTMLDivElement => {
+    if (pauseOverlay) return pauseOverlay;
+    const el = document.createElement('div');
+    el.id = 'pauseOverlay';
+    el.className = 'pause-overlay hidden';
+    el.innerHTML = "<div class='pause-content'><h2>暂停</h2><p>按 P 或点击继续</p></div>";
+    el.addEventListener('click', () => handleTogglePause());
+    document.body.appendChild(el);
+    pauseOverlay = el;
+    return el;
+  };
+
+  const openPauseOverlay = (): void => {
+    ensurePauseOverlay().classList.remove('hidden');
+  };
+
+  const closePauseOverlay = (): void => {
+    ensurePauseOverlay().classList.add('hidden');
+  };
+
+  const handleTogglePause = (): void => {
+    togglePause();
+    if (isPaused()) openPauseOverlay();
+    else closePauseOverlay();
+  };
+
+  // ─── 纯推模式 ─────────────────────────────────────────────────────────────
+  const syncPushOnlyBtn = (): void => {
+    const btn = document.getElementById('pushOnlyBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.classList.toggle('active', isPushOnlyMode());
+  };
+  syncPushOnlyBtn();
+
+  // ─── 演示 / 回放（Playback）───────────────────────────────────────────────
+  let demoIntervalId: ReturnType<typeof setInterval> | null = null;
+  let replayIntervalId: ReturnType<typeof setInterval> | null = null;
+  let replayIndex = 0;
+  let replaySteps: Array<{ dx: number; dy: number; facing: string }> = [];
+
+  const setBoardPlaybackGlow = (on: boolean): void => {
+    document.getElementById('board')?.classList.toggle('ai-demo', on);
+  };
+
+  const stopReplay = (): void => {
+    if (replayIntervalId) { clearInterval(replayIntervalId); replayIntervalId = null; }
+    if (getPlaybackMode() === 'replay') setPlaybackMode('none');
+    setBoardPlaybackGlow(false);
+    const btn = document.getElementById('replayBtn') as HTMLButtonElement | null;
+    if (btn) { btn.classList.remove('active'); btn.textContent = '录像回放'; }
+  };
+
+  const startReplay = (): void => {
+    const data = loadReplay(state.levelIndex);
+    if (!data) { setMessage('暂无回放记录', 'info'); return; }
+    if (!data.steps?.length) { setMessage('回放为空：请重新通关生成录像', 'warn'); return; }
+
+    // 如果正在演示，先停止
+    stopAIDemo();
+
+    setPlaybackMode('replay');
+    setBoardPlaybackGlow(true);
+
+    const btn = document.getElementById('replayBtn') as HTMLButtonElement | null;
+    if (btn) { btn.classList.add('active'); btn.textContent = '停止回放'; }
+
+    // 回放一定从关卡初始状态开始
+    loadLevel(data.levelIndex);
+    replaySteps = data.steps.map(s => ({ dx: s.dx, dy: s.dy, facing: s.facing }));
+    replayIndex = 0;
+
+    replayIntervalId = setInterval(() => {
+      if (getPlaybackMode() !== 'replay') { stopReplay(); return; }
+      if (state.won || replayIndex >= replaySteps.length) { stopReplay(); return; }
+      const s = replaySteps[replayIndex++];
+      tryMove(s.dx, s.dy, s.facing);
+    }, Math.max(30, Math.round(state.ai.speed)));
+  };
+
+  const stopAIDemo = (): void => {
+    if (demoIntervalId) { clearInterval(demoIntervalId); demoIntervalId = null; }
+    state.ai.demo = false;
+    if (getPlaybackMode() === 'demo') setPlaybackMode('none');
+    setBoardPlaybackGlow(false);
+    const btn = document.getElementById('aiDemoBtn') as HTMLButtonElement | null;
+    if (btn) { btn.classList.remove('active'); btn.textContent = 'AI演示'; }
+  };
+
+  const startAIDemo = async (): Promise<void> => {
+    // 如果正在回放，先停止
+    stopReplay();
+
+    const btn = document.getElementById('aiDemoBtn') as HTMLButtonElement | null;
+    const board = document.getElementById('board');
+
+    board?.classList.add('ai-solving');
+    if (btn) { btn.classList.add('active'); btn.textContent = '停止演示'; }
+    setMessage('AI 计算中...', 'info');
+
+    const result = await solveAsync(state.grid as string[][], state.player, state.goals);
+    board?.classList.remove('ai-solving');
+
+    if (!result || result.steps.length === 0) {
+      stopAIDemo();
+      setMessage('该局面超出搜索范围，无法演示。', 'warn');
+      return;
+    }
+
+    setPlaybackMode('demo');
+    state.ai.demo = true;
+    setBoardPlaybackGlow(true);
+    setMessage(`AI演示开始，共 ${result.steps.length} 步`, 'info');
+
+    let i = 0;
+    demoIntervalId = setInterval(() => {
+      if (getPlaybackMode() !== 'demo' || !state.ai.demo) { stopAIDemo(); return; }
+      if (state.won || i >= result.steps.length) { stopAIDemo(); return; }
+      const s = result.steps[i++];
+      tryMove(s.dx, s.dy, s.facing);
+    }, Math.max(30, Math.round(state.ai.speed)));
+  };
+
+  // ─── 解法弹窗 ─────────────────────────────────────────────────────────────
+  let solutionModal: HTMLDivElement | null = null;
+
+  const closeSolutionModal = (): void => {
+    solutionModal?.remove();
+    solutionModal = null;
+  };
+
+  const showSolutionModal = (steps: Array<{ dx: number; dy: number; facing: string }>): void => {
+    closeSolutionModal();
+    const dirs: Record<string, string> = { up: '↑', down: '↓', left: '←', right: '→' };
+    const arrows = steps.map(s => dirs[s.facing] ?? s.facing).join(' ');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'solutionModal';
+    overlay.className = 'modal';
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-width:760px;text-align:left">
+        <p class="eyebrow">SOLUTION</p>
+        <h2>解法（${steps.length}步）</h2>
+        <p class="subtitle" style="margin-top:6px">复制后可粘贴到笔记里保存。</p>
+        <div style="margin-top:12px;padding:12px;border:2px solid #000;background:var(--panel-2);border-radius:8px;font-family:monospace;line-height:1.8;word-break:break-word">${arrows}</div>
+        <div class="controls center" style="margin-top:14px">
+          <button id="solutionCopyBtn" type="button">📋 复制</button>
+          <button id="solutionCloseBtn" type="button">关闭</button>
+        </div>
+      </div>
+    `;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSolutionModal(); });
+    document.body.appendChild(overlay);
+    solutionModal = overlay;
+
+    overlay.querySelector<HTMLButtonElement>('#solutionCloseBtn')?.addEventListener('click', closeSolutionModal);
+    overlay.querySelector<HTMLButtonElement>('#solutionCopyBtn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(arrows)
+        .then(() => setMessage('解法已复制', 'win'))
+        .catch(() => setMessage('复制失败', 'error'));
+    });
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeSolutionModal(); document.removeEventListener('keydown', onKey); }
+    };
+    document.addEventListener('keydown', onKey);
+  };
+
   // ─── 按钮事件绑定 ────────────────────────────────────────────────────────
-  document.getElementById('undoBtn')?.addEventListener('click', () => undo());
+  document.getElementById('undoBtn')?.addEventListener('click', () => handleUndo());
   document.getElementById('restartBtn')?.addEventListener('click', () => restartLevel());
   document.getElementById('hintBtn')?.addEventListener('click', () => handleHint());
   document.getElementById('prevBtn')?.addEventListener('click',
@@ -278,13 +619,35 @@ document.addEventListener('DOMContentLoaded', () => {
     () => loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)));
   document.getElementById('generateBtn')?.addEventListener('click', () => handleGenerate());
   document.getElementById('randomChalBtn')?.addEventListener('click', () => handleGenerate());
+  document.getElementById('undoLimitBtn')?.addEventListener('click', () => {
+    const cur = getUndoLimit();
+    const idx = UNDO_LIMIT_CYCLE.indexOf(cur);
+    const next = UNDO_LIMIT_CYCLE[(idx + 1) % UNDO_LIMIT_CYCLE.length];
+    setUndoLimit(next);
+    localStorage.setItem(UNDO_LIMIT_STORAGE_KEY, String(next));
+    updateUndoLimitBtn(next);
+    setMessage(next < 0 ? '不限撤销次数' : `每关只允许撤销 ${next} 次`, 'info');
+  });
+
+  document.getElementById('pauseBtn')?.addEventListener('click', () => handleTogglePause());
+
+  document.getElementById('pushOnlyBtn')?.addEventListener('click', () => {
+    const on = togglePushOnlyMode();
+    syncPushOnlyBtn();
+    setMessage(on ? '纯推模式：每步必须推箱子！' : '普通模式', 'info');
+  });
+
+  document.getElementById('aiDemoBtn')?.addEventListener('click', () => {
+    if (getPlaybackMode() === 'demo') stopAIDemo();
+    else void startAIDemo();
+  });
+
+  document.getElementById('editorBtn')?.addEventListener('click', () => {
+    editorModal.open(getLevelConfig(state.levelIndex));
+  });
 
   // ─── 分享按钮 ────────────────────────────────────────────────────────────
   document.getElementById('shareBtn')?.addEventListener('click', () => {
-    showShareModal(LEVELS[state.levelIndex], state.levelIndex);
-  });
-
-  document.getElementById('editorShareBtn')?.addEventListener('click', () => {
     showShareModal(LEVELS[state.levelIndex], state.levelIndex);
   });
 
@@ -323,25 +686,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 热力图按钮 ──────────────────────────────────────────────────────────
   document.getElementById('heatmapBtn')?.addEventListener('click', () => {
-    let canvas = document.getElementById('heatmapCanvas') as HTMLCanvasElement | null;
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      canvas.id = 'heatmapCanvas';
-      canvas.width = 400;
-      canvas.height = 200;
-      canvas.style.cssText = 'display:block;margin:8px auto;border-radius:6px;';
-      const statsChart = document.getElementById('statsChart');
-      if (statsChart) statsChart.appendChild(canvas);
-    }
-    renderStatsHeatmap(canvas, state.records);
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 1);
   });
 
   // ─── 统计面板按钮 ─────────────────────────────────────────────────────────
   document.getElementById('statsBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats);
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
   });
 
   document.getElementById('helpBtn')?.addEventListener('click', () => showKeyboardHelp());
+
+  document.getElementById('replayBtn')?.addEventListener('click', () => {
+    if (getPlaybackMode() === 'replay') stopReplay();
+    else startReplay();
+  });
+
+  document.getElementById('solutionBtn')?.addEventListener('click', async () => {
+    if (state.won) { setMessage('已经通关！', 'info'); return; }
+    const board = document.getElementById('board');
+    board?.classList.add('ai-solving');
+    setMessage('AI 计算中...', 'info');
+    const result = await solveAsync(state.grid as string[][], state.player, state.goals);
+    board?.classList.remove('ai-solving');
+    if (!result) { setMessage('无解或超时', 'error'); return; }
+    showSolutionModal(result.steps);
+  });
+
+  document.getElementById('compareBtn')?.addEventListener('click', () => {
+    if (!state.won) { setMessage('先通关当前关卡再比较', 'info'); return; }
+    const cfg = getLevelConfig(state.levelIndex);
+    const opt = cfg.parMoves;
+    const my = state.moves;
+    const pct = opt > 0 ? Math.round((my / opt) * 100) : 0;
+    const ok = opt > 0 && my <= opt;
+    setMessage(
+      `你：${my}步 | 目标：${opt}步 | 效率：${pct}%${ok ? ' 🏆 达成目标！' : ''}`,
+      ok ? 'win' : 'info'
+    );
+  });
+
+  document.getElementById('langBtn')?.addEventListener('click', () => {
+    const next = getLocale() === 'zh-CN' ? 'en-US' : 'zh-CN';
+    setLocale(next);
+    applyLocaleToStatic();
+    setMessage(next === 'en-US' ? 'English mode' : '已切换中文', 'info');
+  });
+
+  const syncLowFxBtn = (): void => {
+    const btn = document.getElementById('lowFxBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.classList.toggle('active', document.body.classList.contains('low-fx'));
+  };
+  syncLowFxBtn();
+  document.getElementById('lowFxBtn')?.addEventListener('click', () => {
+    const on = !document.body.classList.contains('low-fx');
+    document.body.classList.toggle('low-fx', on);
+    localStorage.setItem(LOW_FX_KEY, on ? '1' : '0');
+    // 清理已存在的粒子/彩屑层
+    document.getElementById('particle-canvas')?.remove();
+    document.getElementById('confetti-canvas')?.remove();
+    syncLowFxBtn();
+    setMessage(on ? '轻量模式开启（特效减少）' : '全特效模式开启', 'info');
+  });
 
   document.getElementById('sfxPreviewBtn')?.addEventListener('click', () => {
     audioSystem.unlock();
@@ -364,12 +770,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (srHUD) {
         srHUD.innerHTML = `<div style="padding:6px 12px;color:#ffd166;font-weight:bold">速通完成！总计: ${(result.totalTimeMs/1000).toFixed(2)}s / ${result.totalMoves}步</div>` + srHUD.innerHTML;
         srHUD.classList.remove('hidden');
+        autoScaleBoard();
       }
       setMessage(`速通完成！${(result.totalTimeMs/1000).toFixed(2)}s`, 'win');
     } else {
       speedrunTimer.start();
       const srHUD = document.getElementById('srHUD');
-      if (srHUD) { srHUD.innerHTML = '<div style="padding:4px 12px;color:#8be9fd;font-weight:bold">速通模式进行中...</div>'; srHUD.classList.remove('hidden'); }
+      if (srHUD) {
+        srHUD.innerHTML = '<div style="padding:4px 12px;color:#8be9fd;font-weight:bold">速通模式进行中...</div>';
+        srHUD.classList.remove('hidden');
+        autoScaleBoard();
+      }
       setMessage('速通模式已开始！完成关卡记录分段', 'info');
       loadLevel(0);
     }
@@ -461,24 +872,28 @@ document.addEventListener('DOMContentLoaded', () => {
     setMessage(`BGM：${names[next]}`, 'info');
   });
 
-  // 未接入功能的按钮给出提示，避免“无响应”错觉
-  const implementedButtons = new Set([
-    'undoBtn', 'restartBtn', 'hintBtn', 'prevBtn', 'nextBtn', 'generateBtn',
-    'shareBtn', 'editorShareBtn', 'shareResultBtn', 'shareCardBtn',
-    'timelineBtn', 'heatmapBtn', 'statsBtn', 'timeAttackBtn',
-    'levelSelectBtn', 'levelSelectCloseBtn', 'bgmBtn', 'randomChalBtn',
-    'dailyStepBtn', 'helpBtn', 'fullscreenBtn', 'sfxPreviewBtn',
-    'screenshotBtn', 'exportSaveBtn', 'exportReportBtn', 'importSaveBtn',
-    'changeNameBtn',
-  ]);
-  document.querySelectorAll<HTMLButtonElement>('button[id]').forEach(btn => {
-    if (implementedButtons.has(btn.id)) return;
-    btn.addEventListener('click', () => setMessage('该功能暂未接入', 'info'));
-  });
-
   // ─── 关卡选择渲染 ────────────────────────────────────────────────────────
   let currentDiffFilter: string = 'all';
   let currentClearFilter: string = 'all';
+  let levelLockMode: boolean = localStorage.getItem(STORAGE_KEY_LOCK) === '1';
+
+  const syncLockModeBtn = (): void => {
+    const btn = document.getElementById('lockModeBtn') as HTMLButtonElement | null;
+    if (!btn) return;
+    btn.textContent = levelLockMode ? '🔒 解锁模式' : '🔓 自由模式';
+    btn.title = levelLockMode ? '按顺序解锁关卡：需先通关上一关' : '自由选择任意关卡';
+  };
+  syncLockModeBtn();
+
+  document.getElementById('lockModeBtn')?.addEventListener('click', () => {
+    levelLockMode = !levelLockMode;
+    localStorage.setItem(STORAGE_KEY_LOCK, levelLockMode ? '1' : '0');
+    syncLockModeBtn();
+    setMessage(levelLockMode ? '已开启解锁模式（需通关上一关）' : '已开启自由模式', 'info');
+    if (!document.getElementById('levelSelect')?.classList.contains('hidden')) {
+      renderLevelSelectGrid();
+    }
+  });
 
   function renderLevelSelectGrid(): void {
     const grid = document.getElementById('levelSelectGrid');
@@ -488,6 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const diff = predictDifficulty(lv);
       const rec = state.records?.[idx];
       const cleared = rec?.bestMoves && rec.bestMoves > 0;
+      const locked = levelLockMode && idx > 0 && !(state.records?.[idx - 1]?.bestMoves > 0);
       // 清通筛选
       if (currentClearFilter === 'cleared' && !cleared) return;
       if (currentClearFilter === 'uncleared' && cleared) return;
@@ -496,10 +912,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const diffLabel = diff?.label ?? '';
       if (currentDiffFilter !== 'all' && diffLabel !== currentDiffFilter) return;
       const cell = document.createElement('button');
-      cell.className = 'level-cell' + (cleared ? ' cleared' : '') + (idx === state.levelIndex ? ' active' : '');
+      cell.className =
+        'level-card' +
+        (cleared ? ' is-cleared' : '') +
+        (locked ? ' is-locked' : '') +
+        (idx === state.levelIndex ? ' is-current' : '');
       cell.setAttribute('role', 'listitem');
-      cell.innerHTML = `<span class="level-num">${idx + 1}</span><span class="level-name">${lv.name}</span>${diffLabel ? `<span class="level-diff" style="font-size:0.7em;color:#aaa">${diffLabel}</span>` : ''}`;
+      cell.innerHTML = `
+        <div class="level-card-head">
+          <div class="level-card-title">
+            <div class="level-index">L${idx + 1}</div>
+            <strong class="level-name">${lv.name}</strong>
+          </div>
+          <div class="level-stars">${rec?.bestRank ?? ''}</div>
+        </div>
+        <div class="level-meta">
+          <span>${locked ? '🔒 未解锁' : (cleared ? `${rec!.bestMoves}步` : '未通关')}</span>
+          ${diffLabel ? `<span class="badge">${diffLabel}</span>` : ''}
+        </div>
+      `;
       cell.addEventListener('click', () => {
+        if (locked) { setMessage('先通关上一关！', 'warn'); return; }
         loadLevel(idx);
         document.getElementById('levelSelect')?.classList.add('hidden');
       });
@@ -529,7 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 搜索框
   document.getElementById('levelSearch')?.addEventListener('input', (e) => {
     const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
-    document.querySelectorAll<HTMLElement>('.level-cell').forEach(cell => {
+    document.querySelectorAll<HTMLElement>('.level-card').forEach(cell => {
       const name = cell.querySelector('.level-name')?.textContent?.toLowerCase() ?? '';
       cell.style.display = name.includes(q) ? '' : 'none';
     });

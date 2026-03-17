@@ -52,6 +52,7 @@ function spawnParticles(
   type: Particle['type'],
   speedMult = 1,
 ): void {
+  if (document.body.classList.contains('low-fx')) return;
   ensureCanvas();
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;

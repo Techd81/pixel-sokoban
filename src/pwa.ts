@@ -31,18 +31,31 @@ export function initPWA(onInstallable?: () => void): void {
 
   // SW 更新检测
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => {
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateBanner();
-            }
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (isLocalhost) {
+      navigator.serviceWorker.getRegistrations()
+        .then(regs => Promise.all(regs.map(reg => reg.unregister())))
+        .then(async () => {
+          if (!('caches' in window)) return;
+          const keys = await caches.keys();
+          await Promise.all(keys.map(key => caches.delete(key)));
+        })
+        .then(() => console.log('SW disabled on localhost'))
+        .catch(() => {});
+    } else {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker?.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateBanner();
+              }
+            });
           });
-        });
-      })
-      .catch(e => console.warn('SW fail', e));
+        })
+        .catch(e => console.warn('SW fail', e));
+    }
   }
 }
 
@@ -73,11 +86,11 @@ function showInstallBanner(): void {
   ].join(';');
   banner.innerHTML = `
     <span>📲 安装到主屏幕，随时离线畅玩</span>
-    <button id="pwaInstallBtn" style="background:#50fa7b;color:#17121f;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:bold">安装</button>
+    <button id="pwaInstallBannerBtn" style="background:#50fa7b;color:#17121f;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:bold">安装</button>
     <button id="pwaInstallClose" style="background:none;border:none;color:#888;cursor:pointer;font-size:1.2em">×</button>
   `;
   document.body.appendChild(banner);
-  document.getElementById('pwaInstallBtn')?.addEventListener('click', async () => {
+  document.getElementById('pwaInstallBannerBtn')?.addEventListener('click', async () => {
     const ok = await triggerInstall();
     if (ok) hideInstallBanner();
   });
