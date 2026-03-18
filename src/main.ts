@@ -1195,7 +1195,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderWorldMap(worldMapDiv, state.records, (levelIdx) => {
       overlay.remove();
       loadLevel(levelIdx);
-    });?.addEventListener('click', () => {
+    });
+  });
+  document.getElementById('recentBtn')?.addEventListener('click', () => {
     // 展示成长日记
     const existing = document.getElementById('journalModal');
     if (existing) { existing.remove(); return; }
