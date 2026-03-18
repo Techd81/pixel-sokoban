@@ -48,6 +48,9 @@ export function updateTimerDisplay(): void {
   }
 }
 
+let _lastGridCols = 0;
+let _lastGridRows = 0;
+
 export function render(): void {
   // 统计数值——无论 board/grid 状态如何都要更新
   if (els.moveCount)  els.moveCount.textContent  = String(state.moves);
@@ -69,9 +72,13 @@ export function render(): void {
   const cols   = rows > 0 ? grid[0].length : 0;
   if (rows === 0 || cols === 0) return;
 
-  // grid 布局尺寸
-  board.style.gridTemplateColumns = `repeat(${cols}, var(--tile-size))`;
-  board.style.gridTemplateRows    = `repeat(${rows}, var(--tile-size))`;
+  // grid 布局尺寸（只在尺寸变化时更新，避免每帧触发 layout）
+  if (cols !== _lastGridCols || rows !== _lastGridRows) {
+    board.style.gridTemplateColumns = `repeat(${cols}, var(--tile-size))`;
+    board.style.gridTemplateRows    = `repeat(${rows}, var(--tile-size))`;
+    _lastGridCols = cols;
+    _lastGridRows = rows;
+  }
 
   // 复用 DOM 节点
   const needed = rows * cols;
@@ -162,17 +169,17 @@ export function render(): void {
 
 // ─── 进度条 ────────────────────────────────────────────────────────────────────
 
+let _progressCache = -1;
+export function markProgressDirty(): void { _progressCache = -1; }
+
 export function renderProgress(): void {
   const total   = LEVELS.length;
-  const cleared = LEVELS.filter((_: unknown, i: number) => (getRecord(i)?.bestMoves ?? 0) > 0).length;
-  const pct     = total > 0 ? Math.round((cleared / total) * 100) : 0;
-
-  if (els.progressText) {
-    els.progressText.textContent = `${cleared} / ${total}`;
-  }
-  if (els.progressFill) {
-    (els.progressFill as HTMLElement).style.width = `${pct}%`;
-  }
+  const cleared = LEVELS.reduce((n: number, _: unknown, i: number) => n + ((getRecord(i)?.bestMoves ?? 0) > 0 ? 1 : 0), 0);
+  if (cleared === _progressCache) return;
+  _progressCache = cleared;
+  const pct = total > 0 ? Math.round((cleared / total) * 100) : 0;
+  if (els.progressText) els.progressText.textContent = `${cleared} / ${total}`;
+  if (els.progressFill) (els.progressFill as HTMLElement).style.width = `${pct}%`;
 }
 
 // ─── 关卡预览 canvas ───────────────────────────────────────────────────────────

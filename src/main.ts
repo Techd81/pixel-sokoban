@@ -17,7 +17,7 @@ import {
   getPlaybackMode,
   setPlaybackMode,
 } from './game';
-import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay } from './ui';
+import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay, markProgressDirty } from './ui';
 import { audioSystem } from './audio';
 import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
@@ -404,6 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderCoachPanel(coachPanel, advices);
     }
 
+    markProgressDirty();
     renderProgress();
     const record = state.records?.[state.levelIndex];
     openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
@@ -693,10 +694,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 解法弹窗 ─────────────────────────────────────────────────────────────
   let solutionModal: HTMLDivElement | null = null;
+  let solutionModalKeyHandler: ((e: KeyboardEvent) => void) | null = null;
 
   const closeSolutionModal = (): void => {
     solutionModal?.remove();
     solutionModal = null;
+    if (solutionModalKeyHandler) {
+      document.removeEventListener('keydown', solutionModalKeyHandler);
+      solutionModalKeyHandler = null;
+    }
   };
 
   const showSolutionModal = (steps: Array<{ dx: number; dy: number; facing: string }>): void => {
@@ -729,10 +735,10 @@ document.addEventListener('DOMContentLoaded', () => {
       setMessage(copied ? '解法已复制' : '复制失败', copied ? 'win' : 'error');
     });
 
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { closeSolutionModal(); document.removeEventListener('keydown', onKey); }
+    solutionModalKeyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSolutionModal();
     };
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', solutionModalKeyHandler);
   };
 
   // ─── 按钮事件绑定 ────────────────────────────────────────────────────────
