@@ -17,7 +17,7 @@ import {
   getPlaybackMode,
   setPlaybackMode,
 } from './game';
-import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard } from './ui';
+import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay } from './ui';
 import { audioSystem } from './audio';
 import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
@@ -1097,4 +1097,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
   loadLevel(startupLevelIndex);
+
+  // 计时显示每100ms刷新一次，不依赖玩家移动
+  setInterval(() => {
+    if (!state.won && !isPaused()) updateTimerDisplay();
+  }, 100);
 });

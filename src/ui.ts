@@ -42,7 +42,25 @@ export function initDomRefs(): void {
 
 // ─── 主渲染 ────────────────────────────────────────────────────────────────────
 
+export function updateTimerDisplay(): void {
+  if (els.timeDisplay) {
+    els.timeDisplay.textContent = formatMs(getElapsedTimeMs());
+  }
+}
+
 export function render(): void {
+  // 统计数值——无论 board/grid 状态如何都要更新
+  if (els.moveCount)  els.moveCount.textContent  = String(state.moves);
+  if (els.pushCount)  els.pushCount.textContent  = String(state.pushes);
+  if (els.levelLabel) els.levelLabel.textContent = `${state.levelIndex + 1} / ${LEVELS.length}`;
+  if (els.timeDisplay) els.timeDisplay.textContent = formatMs(getElapsedTimeMs());
+  const cfg = getLevelConfig(state.levelIndex);
+  if (els.parMoves && cfg) els.parMoves.textContent = String(cfg.parMoves ?? '-');
+  const rec = getRecord(state.levelIndex);
+  if (els.bestMoves) els.bestMoves.textContent = formatBest(rec);
+  if (els.bestRank)  els.bestRank.textContent  = rec?.bestRank ?? '';
+  renderProgress();
+
   const board = els.board;
   if (!board) return;
 
@@ -134,29 +152,6 @@ export function render(): void {
     void board.offsetWidth; // 重启动画
     board.classList.add('shake');
   }
-
-  // 统计数值
-  if (els.moveCount)  els.moveCount.textContent  = String(state.moves);
-  if (els.pushCount)  els.pushCount.textContent  = String(state.pushes);
-
-  const cfg = getLevelConfig(state.levelIndex);
-  if (els.parMoves && cfg) {
-    els.parMoves.textContent = String(cfg.parMoves ?? '-');
-  }
-
-  const rec = getRecord(state.levelIndex);
-  if (els.bestMoves) els.bestMoves.textContent = formatBest(rec);
-  if (els.bestRank)  els.bestRank.textContent  = rec?.bestRank ?? '';
-
-  if (els.levelLabel && cfg) {
-    els.levelLabel.textContent = cfg.name ?? `Level ${state.levelIndex + 1}`;
-  }
-
-  if (els.timeDisplay) {
-    els.timeDisplay.textContent = formatMs(getElapsedTimeMs());
-  }
-
-  renderProgress();
 
   // 一次性特效：渲染后清除，便于下次触发
   state.playerMoved = false;
