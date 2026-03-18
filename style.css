@@ -3582,3 +3582,22 @@ button:not(.fdpad-btn):not(.star-btn):not(.level-card):active {
 .new-record-flash {
   animation: newRecordFlash 0.6s ease-out forwards;
 }
+
+/* ─── 提示箭头覆盖层 ─────────────────────────────────────────────────────────── */
+.tile.player[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+  top: -1.2em;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.1em;
+  color: #ffd166;
+  text-shadow: 0 0 6px #ffd166;
+  pointer-events: none;
+  animation: hintPulse 0.8s ease-in-out infinite;
+  z-index: 20;
+}
+@keyframes hintPulse {
+  0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.6; transform: translateX(-50%) scale(1.2); }
+}

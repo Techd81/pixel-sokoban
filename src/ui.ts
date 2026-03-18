@@ -162,8 +162,12 @@ export function render(): void {
       if (isPlayer) {
         cell.dataset.facing = state.facing || 'down';
         cell.dataset.step = String(state.stepFrame ?? 0);
+        // 提示箭头
+        if (state.ai.hintArrow) cell.dataset.hint = state.ai.hintArrow;
+        else delete cell.dataset.hint;
       } else {
         if (cell.dataset.facing) delete cell.dataset.facing;
+        if (cell.dataset.hint) delete cell.dataset.hint;
         if (cell.dataset.step) delete cell.dataset.step;
       }
     }
