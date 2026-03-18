@@ -38,8 +38,8 @@ export function saveGame(slot: number, state: GameState, levelName: string): Sav
     timeMs: state.timer.elapsedMs,
     savedAt: Date.now(),
     grid: state.grid.map(row => [...row]),
-    history: state.history,
-    recording: state.recording,
+    history: [], // 存档不持久化undo历史（节省空间）
+    recording: [], // 存档不持久化录制（节省空间）
   };
   localStorage.setItem(SAVE_PREFIX + slot, JSON.stringify(data));
   return data;
