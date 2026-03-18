@@ -36,6 +36,7 @@ import { createMinimapOverlay, renderMinimap } from './minimap';
 import { initHaptics, haptic } from './haptic';
 import { addJournalEntry } from './journal';
 import { PerformanceMonitor } from './perf';
+import { saveGame, loadGame, getSaveSlots } from './saveload';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -1185,6 +1186,17 @@ document.addEventListener('DOMContentLoaded', () => {
     showScreenshotPreview(canvas);
   });
 
+  document.getElementById('quickSaveBtn')?.addEventListener('click', () => {
+    saveGame(0, state, getLevelConfig(state.levelIndex).name);
+    notify('快速存档已保存', 'success');
+  });
+  document.getElementById('quickLoadBtn')?.addEventListener('click', () => {
+    const slot = loadGame(0);
+    if (!slot) { setMessage('没有存档', 'warn'); return; }
+    // 恢复存档：加载关卡并恢复网格
+    loadLevel(slot.levelIndex);
+    setMessage(`已读取存档：第${slot.levelIndex + 1}关 (${slot.moves}步 ${new Date(slot.savedAt).toLocaleString('zh-CN')})`, 'info');
+  });
   document.getElementById('exportSaveBtn')?.addEventListener('click', () => {
     exportRecords(state.records, 'json');
   });
