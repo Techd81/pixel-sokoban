@@ -1306,7 +1306,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('nextAchievBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 5);
+    // 显示最近可解锁的成就
+    const unlocked = getUnlocked();
+    const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
+    const stars3 = Object.values(state.records).filter((r: any) => r?.bestRank === '★★★').length;
+    const notUnlocked = ACHIEVEMENTS.filter(a => !unlocked.has(a.id));
+    // 找最近一个根据条件接近的
+    const getProgress = (a: typeof ACHIEVEMENTS[0]): string => {
+      if (a.condition.includes('cleared')) {
+        const needed = parseInt(a.condition.match(/\d+/)?.[0] || '0');
+        return `通关进度: ${cleared}/${needed}`;
+      }
+      if (a.condition.includes('stars3')) {
+        const needed = parseInt(a.condition.match(/\d+/)?.[0] || '0');
+        return `三星进度: ${stars3}/${needed}`;
+      }
+      return '继续游戏解锁';
+    };
+    if (notUnlocked.length === 0) { setMessage('🎉 全部成就已解锁！', 'win'); return; }
+    const next = notUnlocked[0];
+    notify(`🎯 下一成就：${next.icon} ${next.name} — ${next.desc}\n${getProgress(next)}`, { type:'info', duration:5000 });
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('batchTestBtn')?.addEventListener('click', () => {
