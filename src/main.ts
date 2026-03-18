@@ -504,11 +504,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const newAchievements = checkAchievements(achStats);
     newAchievements.forEach(a => { showAchievementUnlock(a); notifyAchievement(a.name, a.desc ?? ''); });
 
-    // 自适应推荐
-    void analyzePlayer(state.records);
+    // 自适应推荐（复用analyzePlayer结果，避免双重计算）
+    const playerProfile = analyzePlayer(state.records);
     const next = getNextRecommended(state.records, state.levelIndex);
     if (next >= 0 && next !== state.levelIndex) {
-      setTimeout(() => setMessage(`推荐下一关：L${next + 1} ${LEVELS[next].name}`, 'info'), 2000);
+      const skillLabels: Record<string, string> = { beginner: '新手', intermediate: '进阶', advanced: '高手', expert: '专家' };
+      const skill = skillLabels[playerProfile.skillLevel] ?? '';
+      setTimeout(() => setMessage(`推荐[${skill}]下一关：L${next + 1} ${LEVELS[next].name}`, 'info'), 2000);
     }
 
     // 保存回放
