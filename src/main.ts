@@ -1447,6 +1447,24 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('sokoban_a11y_hc', hcEl.checked ? '1' : '0');
       });
     }
+    // 高级配置按钮
+    const advBtn = document.createElement('button');
+    advBtn.textContent = '⚙️ 高级配置';
+    advBtn.style.marginTop = '8px';
+    advBtn.addEventListener('click', () => {
+      sm.remove();
+      const adv = document.createElement('div');
+      adv.className = 'modal'; adv.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9001';
+      const advCard = document.createElement('div'); advCard.className = 'modal-card'; advCard.style.maxWidth = '480px';
+      advCard.innerHTML = '<p class="eyebrow">CONFIG</p><h2>高级配置</h2>';
+      renderConfigPanel(advCard);
+      const closeAdv = document.createElement('button'); closeAdv.textContent = '关闭'; closeAdv.style.marginTop = '12px';
+      closeAdv.addEventListener('click', () => adv.remove());
+      advCard.appendChild(closeAdv); adv.appendChild(advCard);
+      adv.addEventListener('click', (e) => { if (e.target === adv) adv.remove(); });
+      document.body.appendChild(adv);
+    });
+    sm.querySelector('.modal-card div.controls')?.before(advBtn);
     document.getElementById('stClose')?.addEventListener('click', () => sm.remove());
   });
 
