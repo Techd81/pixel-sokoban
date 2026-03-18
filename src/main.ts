@@ -1710,10 +1710,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
-  // 恢复持久化的 stats（特别是 activityLog）
+  // 恢复持久化的 stats
   const savedStats = loadStats();
-  if (savedStats?.activityLog && Array.isArray(savedStats.activityLog)) {
-    state.stats.activityLog = savedStats.activityLog as number[];
+  if (savedStats && typeof savedStats === 'object') {
+    if (Array.isArray(savedStats.activityLog)) state.stats.activityLog = savedStats.activityLog as number[];
+    if (typeof savedStats.maxCombo === 'number') state.stats.maxCombo = savedStats.maxCombo;
+    if (typeof savedStats.maxLevel === 'number') state.stats.maxLevel = savedStats.maxLevel;
+    if (typeof savedStats.totalMoves === 'number') state.stats.totalMoves = savedStats.totalMoves;
   }
 
   loadLevel(startupLevelIndex);
