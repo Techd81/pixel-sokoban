@@ -257,7 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
       winChallengeEl.textContent = challengeCleared ? `达成 ${level.parMoves} 步挑战` : `未达成 ${level.parMoves} 步挑战`;
     }
     if (winBestEl) {
-      winBestEl.textContent = record?.bestMoves ? `${record.bestMoves} 步` : `${state.moves} 步`;
+      const prevBest = record?.bestMoves;
+      if (prevBest && prevBest < state.moves) {
+        winBestEl.textContent = `${prevBest} 步（本次 ${state.moves} 步）`;
+      } else if (prevBest && prevBest === state.moves) {
+        winBestEl.textContent = `${prevBest} 步 ✓ 平最佳`;
+      } else {
+        winBestEl.textContent = `${state.moves} 步 🏆 新最佳！`;
+      }
     }
     if (winNoteInput) winNoteInput.value = getNote(state.levelIndex);
     if (modalNextBtn) {
