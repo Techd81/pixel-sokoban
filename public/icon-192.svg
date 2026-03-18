@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#17121f"/>
+  <rect x="16" y="16" width="48" height="48" rx="4" fill="#3c3150"/>
+  <rect x="72" y="16" width="48" height="48" rx="4" fill="#3c3150"/>
+  <rect x="128" y="16" width="48" height="48" rx="4" fill="#5c4b73"/>
+  <rect x="16" y="72" width="48" height="48" rx="4" fill="#3c3150"/>
+  <rect x="72" y="72" width="48" height="48" rx="4" fill="#3c3150"/>
+  <rect x="128" y="72" width="48" height="48" rx="4" fill="#3c3150"/>
+  <rect x="16" y="128" width="48" height="48" rx="4" fill="#5c4b73"/>
+  <rect x="72" y="128" width="48" height="48" rx="4" fill="#3c3150"/>
+  <rect x="128" y="128" width="48" height="48" rx="4" fill="#3c3150"/>
+  <circle cx="144" cy="40" r="14" fill="#ffd166" opacity="0.9"/>
+  <circle cx="40" cy="144" r="14" fill="#ffd166" opacity="0.9"/>
+  <rect x="78" y="78" width="36" height="36" rx="4" fill="#c98f52"/>
+  <rect x="78" y="78" width="36" height="8" rx="4" fill="#efbb77"/>
+  <line x1="96" y1="78" x2="96" y2="114" stroke="#8c5a2d" stroke-width="2"/>
+  <line x1="78" y1="96" x2="114" y2="96" stroke="#8c5a2d" stroke-width="2"/>
+  <rect x="22" y="22" width="36" height="36" rx="18" fill="#7ee081"/>
+  <rect x="30" y="22" width="20" height="20" rx="10" fill="#c9ffc7"/>
+  <text x="96" y="178" font-family="monospace" font-size="14" fill="#8be9fd" text-anchor="middle" font-weight="bold">SOKOBAN</text>
+</svg>

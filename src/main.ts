@@ -47,6 +47,8 @@ import { getDailyChallenge } from './daily';
 import { initI18n, getLocale, setLocale, t } from './i18n';
 import { initEditorModal } from './editor_modal';
 import { initPWA, triggerInstall } from './pwa';
+import { getNote, setNote } from './notes';
+import { copyText, escapeHtml } from './web_utils';
 
 
 const macroRecorder = new MacroRecorder();
@@ -54,6 +56,30 @@ const raceMode = new RaceMode();
 const _timelineUI = new TimelineUI(); // 备用
 
 const solverViz = new SolverVisualizer();
+const LEVEL_RATING_KEY = 'pixelSokobanLevelRatings';
+
+function loadLevelRatings(): Record<number, number> {
+  try {
+    const raw = localStorage.getItem(LEVEL_RATING_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function getLevelRating(levelIndex: number): number {
+  return loadLevelRatings()[levelIndex] ?? 0;
+}
+
+function saveLevelRating(levelIndex: number, rating: number): void {
+  const ratings = loadLevelRatings();
+  ratings[levelIndex] = Math.max(0, Math.min(5, Math.trunc(rating)));
+  try {
+    localStorage.setItem(LEVEL_RATING_KEY, JSON.stringify(ratings));
+  } catch {
+    // Ignore storage quota issues for optional feedback data.
+  }
+}
 
 // ─── 获取棋盘格大小 ──────────────────────────────────────────────────────────
 function getTileSize(): number {
@@ -129,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 编辑器（基于 index.html 的 editorModal）
   const editorModal = initEditorModal();
+  let startupLevelIndex = 0;
 
   // PWA：安装按钮接入（避免重复 id，统一用右侧工具栏的 pwaInstallBtn）
   initPWA(() => {
@@ -165,6 +192,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const playerNameEl = document.getElementById('playerNameDisplay');
   if (playerNameEl) playerNameEl.textContent = loadPlayerName();
+  const winModal = document.getElementById('winModal');
+  const winTextEl = document.getElementById('winText');
+  const winRankEl = document.getElementById('winRank');
+  const winChallengeEl = document.getElementById('winChallenge');
+  const winBestEl = document.getElementById('winBest');
+  const winNoteInput = document.getElementById('winNoteInput') as HTMLTextAreaElement | null;
+  const modalNextBtn = document.getElementById('modalNextBtn') as HTMLButtonElement | null;
+  const winStarButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('#winModal .star-btn'));
+
+  const syncWinStars = (rating: number): void => {
+    winStarButtons.forEach((btn) => {
+      const star = Number(btn.dataset.star);
+      const active = Number.isFinite(star) && star <= rating;
+      btn.textContent = active ? '★' : '☆';
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  };
+
+  const closeWinModal = (): void => {
+    winModal?.classList.add('hidden');
+  };
+
+  const openWinModal = (rank: string | null, challengeCleared: boolean): void => {
+    if (!winModal) return;
+    const level = getLevelConfig(state.levelIndex);
+    const record = state.records?.[state.levelIndex];
+    if (winTextEl) {
+      winTextEl.textContent = `你完成了第${state.levelIndex + 1}关「${level.name}」，本次用时 ${Math.max(0, state.timer.elapsedMs / 1000).toFixed(1)} 秒。`;
+    }
+    if (winRankEl) winRankEl.textContent = rank ?? '通关';
+    if (winChallengeEl) {
+      winChallengeEl.textContent = challengeCleared ? `达成 ${level.parMoves} 步挑战` : `未达成 ${level.parMoves} 步挑战`;
+    }
+    if (winBestEl) {
+      winBestEl.textContent = record?.bestMoves ? `${record.bestMoves} 步` : `${state.moves} 步`;
+    }
+    if (winNoteInput) winNoteInput.value = getNote(state.levelIndex);
+    if (modalNextBtn) {
+      const isLastLevel = state.levelIndex >= LEVELS.length - 1;
+      modalNextBtn.disabled = isLastLevel;
+      modalNextBtn.textContent = isLastLevel ? '已是最后一关' : '继续下一关';
+    }
+    syncWinStars(getLevelRating(state.levelIndex));
+    winModal.classList.remove('hidden');
+  };
+
+  winModal?.addEventListener('click', (event) => {
+    if (event.target === winModal) closeWinModal();
+  });
+  document.getElementById('modalRestartBtn')?.addEventListener('click', () => {
+    closeWinModal();
+    restartLevel();
+  });
+  document.getElementById('modalNextBtn')?.addEventListener('click', () => {
+    closeWinModal();
+    loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1));
+  });
+  document.getElementById('winNoteSaveBtn')?.addEventListener('click', () => {
+    setNote(state.levelIndex, winNoteInput?.value ?? '');
+    setMessage('笔记已保存', 'win');
+  });
+  document.getElementById('pathVizBtn')?.addEventListener('click', () => {
+    closeWinModal();
+    const replayData = loadReplay(state.levelIndex);
+    if (!replayData?.steps?.length) {
+      setMessage('暂无路径回放', 'info');
+      return;
+    }
+    startReplay();
+    setMessage('开始路径回放', 'info');
+  });
+  winStarButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const rating = Number(btn.dataset.star);
+      if (!Number.isFinite(rating)) return;
+      saveLevelRating(state.levelIndex, rating);
+      syncWinStars(rating);
+      setMessage(`已评分 ${rating} 星`, 'win');
+    });
+  });
 
   const bgmSlider = document.getElementById('bgmSlider') as HTMLInputElement | null;
   const sfxSlider = document.getElementById('sfxSlider') as HTMLInputElement | null;
@@ -200,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   gameEvents.addEventListener('levelLoaded', () => {
+    closeWinModal();
     render();
     renderProgress();
     autoScaleBoard();
@@ -292,6 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const advices = getCoachAdvice(state.records, state.levelIndex, []);
       renderCoachPanel(coachPanel, advices);
     }
+
+    renderProgress();
+    const record = state.records?.[state.levelIndex];
+    openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
   });
 
   // ─── 键盘事件 ────────────────────────────────────────────────────────────
@@ -299,11 +412,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ev.repeat) return;
     const key = ev.key;
     if (key === 'Escape') {
+      closeWinModal();
       document.getElementById('levelSelect')?.classList.add('hidden');
       if (isPaused()) handleTogglePause();
       if (getPlaybackMode() === 'demo') stopAIDemo();
       if (getPlaybackMode() === 'replay') stopReplay();
       return;
+    }
+
+    if (winModal && !winModal.classList.contains('hidden')) return;
+    if (ev.target instanceof HTMLElement) {
+      const tag = ev.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || ev.target.isContentEditable) {
+        return;
+      }
     }
 
     if (editorModal.isOpen()) return;
@@ -597,10 +719,9 @@ document.addEventListener('DOMContentLoaded', () => {
     solutionModal = overlay;
 
     overlay.querySelector<HTMLButtonElement>('#solutionCloseBtn')?.addEventListener('click', closeSolutionModal);
-    overlay.querySelector<HTMLButtonElement>('#solutionCopyBtn')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(arrows)
-        .then(() => setMessage('解法已复制', 'win'))
-        .catch(() => setMessage('复制失败', 'error'));
+    overlay.querySelector<HTMLButtonElement>('#solutionCopyBtn')?.addEventListener('click', async () => {
+      const copied = await copyText(arrows);
+      setMessage(copied ? '解法已复制' : '复制失败', copied ? 'win' : 'error');
     });
 
     const onKey = (e: KeyboardEvent) => {
@@ -651,13 +772,13 @@ document.addEventListener('DOMContentLoaded', () => {
     showShareModal(LEVELS[state.levelIndex], state.levelIndex);
   });
 
-  document.getElementById('shareResultBtn')?.addEventListener('click', () => {
+  document.getElementById('shareResultBtn')?.addEventListener('click', async () => {
     const level = LEVELS[state.levelIndex];
     const rec = state.records?.[state.levelIndex];
-    const text = `我在「像素推箱子」第${state.levelIndex + 1}关「${level.name}」用了${rec?.bestMoves ?? state.moves}步！${window.location.href}`;
-    navigator.clipboard.writeText(text)
-      .then(() => setMessage('成绩已复制！', 'win'))
-      .catch(() => setMessage('复制失败', 'error'));
+    const shareUrl = encodeLevelToUrl(level);
+    const text = `我在「像素推箱子」第${state.levelIndex + 1}关「${level.name}」用了${rec?.bestMoves ?? state.moves}步！${shareUrl}`;
+    const copied = await copyText(text);
+    setMessage(copied ? '成绩已复制！' : '复制失败', copied ? 'win' : 'error');
   });
 
   // ─── 分享卡片按钮 ────────────────────────────────────────────────────────
@@ -860,6 +981,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const customLevel = checkUrlLevelParam();
   if (customLevel) {
     LEVELS.push(customLevel);
+    startupLevelIndex = LEVELS.length - 1;
     setMessage(`加载分享关卡：${customLevel.name}`, 'win');
   }
 
@@ -922,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="level-card-head">
           <div class="level-card-title">
             <div class="level-index">L${idx + 1}</div>
-            <strong class="level-name">${lv.name}</strong>
+            <strong class="level-name">${escapeHtml(lv.name)}</strong>
           </div>
           <div class="level-stars">${rec?.bestRank ?? ''}</div>
         </div>
@@ -969,5 +1091,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
-  loadLevel(0);
+  loadLevel(startupLevelIndex);
 });

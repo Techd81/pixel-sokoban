@@ -1,22 +1,42 @@
 // 像素推箱子 Service Worker
-const CACHE_NAME = 'pixel-sokoban-v3';
-const ASSETS = [
-  './',
-  './index.html',
-  './game.js',
-  './style.css',
-  './manifest.json',
-  './icon-192.svg',
-  './icon-512.svg',
-];
+const CACHE_NAME = 'pixel-sokoban-v4';
 
-// 安装：预缓存所有核心资源
+async function collectInstallAssets() {
+  const response = await fetch('./', { cache: 'no-store' });
+  const html = await response.text();
+  const assets = new Set(['./']);
+  const attrRegex = /(?:href|src)="([^"]+)"/g;
+  let match;
+
+  while ((match = attrRegex.exec(html)) !== null) {
+    const raw = match[1];
+    if (!raw || raw.startsWith('http') || raw.startsWith('data:') || raw.startsWith('#')) continue;
+    assets.add(new URL(raw, self.registration.scope).toString());
+  }
+
+  const manifestUrl = [...assets].find((asset) => asset.includes('manifest') && asset.endsWith('.json'));
+  if (manifestUrl) {
+    try {
+      const manifest = await fetch(manifestUrl, { cache: 'no-store' }).then((res) => res.json());
+      for (const icon of manifest.icons || []) {
+        if (!icon?.src) continue;
+        assets.add(new URL(icon.src, manifestUrl).toString());
+      }
+    } catch {
+      // Ignore manifest discovery failures and rely on runtime caching.
+    }
+  }
+
+  return [...assets];
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    }).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const assets = await collectInstallAssets();
+    await cache.addAll(assets.map((asset) => new Request(asset, { cache: 'reload' })));
+    await self.skipWaiting();
+  })());
 });
 
 // 激活：清理旧缓存
@@ -30,25 +50,38 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 拦截请求：Cache First 策略
 self.addEventListener('fetch', (event) => {
-  // 只处理同源 GET 请求
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200) return response;
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+  if (event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(event.request);
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put('./', response.clone());
         return response;
-      }).catch(() => {
-        // 离线时返回 index.html 兜底
-        return caches.match('./index.html');
-      });
-    })
-  );
+      } catch {
+        return (await caches.match(event.request)) || (await caches.match('./'));
+      }
+    })());
+    return;
+  }
+
+  event.respondWith((async () => {
+    const cached = await caches.match(event.request);
+    if (cached) return cached;
+
+    try {
+      const response = await fetch(event.request);
+      if (response && response.status === 200) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(event.request, response.clone());
+      }
+      return response;
+    } catch {
+      return (await caches.match(event.request)) || Response.error();
+    }
+  })());
 });

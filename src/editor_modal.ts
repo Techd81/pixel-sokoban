@@ -8,6 +8,7 @@ import { loadLevel, state } from './game';
 import { solveAsync } from './solver';
 import { showShareModal } from './share';
 import { setMessage } from './ui';
+import { copyText, escapeHtml } from './web_utils';
 
 type ToolTile = TileChar | 'E';
 type DrawMode = 'paint' | 'line' | 'rect' | 'fill';
@@ -17,6 +18,7 @@ const MAX_W = 16;
 const MAX_H = 14;
 const MIN_W = 5;
 const MIN_H = 5;
+let tempPlayLevelIndex = -1;
 
 function clampInt(n: number, min: number, max: number): number {
   const v = Number.isFinite(n) ? Math.trunc(n) : min;
@@ -482,7 +484,7 @@ export function initEditorModal(): EditorModalApi {
   // 模板
   if (templateSelect) {
     templateSelect.innerHTML = '<option value="">📋 模板...</option>' +
-      LEVELS.slice(0, 60).map((lv, i) => `<option value="${i}">L${i + 1} ${lv.name}</option>`).join('');
+      LEVELS.slice(0, 60).map((lv, i) => `<option value="${i}">L${i + 1} ${escapeHtml(lv.name)}</option>`).join('');
     templateSelect.addEventListener('change', () => {
       const idx = Number(templateSelect.value);
       if (!Number.isFinite(idx) || !LEVELS[idx]) return;
@@ -523,11 +525,10 @@ export function initEditorModal(): EditorModalApi {
   });
 
   // 复制代码（地图文本）
-  document.getElementById('editorExportBtn')?.addEventListener('click', () => {
+  document.getElementById('editorExportBtn')?.addEventListener('click', async () => {
     const txt = gridToMap(grid).join('\n');
-    navigator.clipboard.writeText(txt)
-      .then(() => setMessage('地图已复制', 'win'))
-      .catch(() => setMessage('复制失败', 'error'));
+    const copied = await copyText(txt);
+    setMessage(copied ? '地图已复制' : '复制失败', copied ? 'win' : 'error');
   });
 
   // 导出文件
@@ -564,9 +565,15 @@ export function initEditorModal(): EditorModalApi {
   // 试玩（临时关卡）
   document.getElementById('editorTestBtn')?.addEventListener('click', () => {
     const lv = buildLevelFromGrid(grid);
-    (LEVELS as typeof LEVELS & { _temp?: boolean }).push(Object.assign(lv, { _temp: true }) as any);
+    const tempLevel = Object.assign(lv, { _temp: true }) as typeof LEVELS[0];
+    if (tempPlayLevelIndex >= 0 && LEVELS[tempPlayLevelIndex]) {
+      LEVELS[tempPlayLevelIndex] = tempLevel;
+    } else {
+      LEVELS.push(tempLevel);
+      tempPlayLevelIndex = LEVELS.length - 1;
+    }
     api.close();
-    loadLevel(LEVELS.length - 1);
+    loadLevel(tempPlayLevelIndex);
     setMessage('已进入试玩关卡', 'info');
   });
 

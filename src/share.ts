@@ -2,6 +2,7 @@
 // URL 编码分享 + 轻量二维码生成（基于 canvas，无需外部库）
 
 import type { Level } from './types';
+import { copyText, escapeHtml } from './web_utils';
 
 // ─── URL 编码/解码 ────────────────────────────────────────────────────────────
 // 编码格式：name|par|map（map用'/'分隔行）压缩后 base64url
@@ -78,7 +79,7 @@ export function showShareModal(level: Level, levelIndex: number): void {
   modal.innerHTML = `
     <div class="share-overlay" id="shareOverlay"></div>
     <div class="share-dialog">
-      <h3>分享关卡「${level.name}」</h3>
+      <h3>分享关卡「${escapeHtml(level.name)}」</h3>
       <div class="share-qr-wrap">
         <canvas id="shareQrCanvas" width="200" height="200"></canvas>
         <p class="share-qr-hint">扫码或复制链接</p>
@@ -110,15 +111,15 @@ export function showShareModal(level: Level, levelIndex: number): void {
   });
 
   // 复制按钮
-  document.getElementById('shareCopyBtn')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(url).then(() => {
+  document.getElementById('shareCopyBtn')?.addEventListener('click', async () => {
+    if (await copyText(url)) {
       const btn = document.getElementById('shareCopyBtn');
       if (btn) { btn.textContent = '已复制！'; setTimeout(() => { btn.textContent = '复制'; }, 2000); }
-    }).catch(() => {
-      const input = document.getElementById('shareUrlInput') as HTMLInputElement;
-      input?.select();
-      document.execCommand('copy');
-    });
+      return;
+    }
+    const input = document.getElementById('shareUrlInput') as HTMLInputElement | null;
+    input?.focus();
+    input?.select();
   });
 
   // 关闭
