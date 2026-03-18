@@ -48,6 +48,7 @@ import { GestureRecognizer } from './gestures';
 import { notify, notifyWin, notifyAchievement } from './notify';
 import { initAccessibility } from './accessibility';
 import { TutorialManager, isTutorialDone } from './tutorial';
+import { searchLevels } from './search';
 import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 import { initThemeButtons } from './themes';
@@ -1340,11 +1341,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 搜索框
   document.getElementById('levelSearch')?.addEventListener('input', (e) => {
-    const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
-    document.querySelectorAll<HTMLElement>('.level-card').forEach(cell => {
-      const name = cell.querySelector('.level-name')?.textContent?.toLowerCase() ?? '';
-      cell.style.display = name.includes(q) ? '' : 'none';
+    const q = (e.target as HTMLInputElement).value.trim();
+    if (!q) {
+      // 清空搜索时重新渲染完整列表
+      document.querySelectorAll<HTMLElement>('.level-card').forEach(cell => { cell.style.display = ''; });
+      document.querySelectorAll<HTMLElement>('.world-header').forEach(h => { h.style.display = ''; });
+      return;
+    }
+    // 使用 searchLevels 获取匹配结果集合
+    const results = searchLevels({ query: q }, state.records);
+    const matchedIndices = new Set(results.map(r => r.index));
+    document.querySelectorAll<HTMLElement>('.level-card').forEach((cell, idx) => {
+      // 卡片顺序与 LEVELS 顺序一致
+      const levelIndex = Number(cell.querySelector('.level-index')?.textContent?.replace('L','')) - 1;
+      cell.style.display = matchedIndices.has(levelIndex) ? '' : 'none';
     });
+    // 隐藏所有 world-header（搜索时不显示章节标题）
+    document.querySelectorAll<HTMLElement>('.world-header').forEach(h => { h.style.display = 'none'; });
   });
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
