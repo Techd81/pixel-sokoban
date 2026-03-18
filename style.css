@@ -1199,6 +1199,17 @@ p {
   font-size: 12px;
 }
 
+.level-preview-canvas {
+  display: block;
+  margin: 6px auto 0;
+  image-rendering: pixelated;
+  border: 2px solid rgba(0,0,0,0.4);
+  border-radius: 2px;
+  opacity: 0.92;
+  width: 64px;
+  height: 56px;
+}
+
 .badge {
   display: inline-block;
   padding: 2px 6px;
