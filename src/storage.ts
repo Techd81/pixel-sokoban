@@ -43,6 +43,15 @@ function scheduleWrite(key: string, value: string): void {
   }
 }
 
+// 页面关闭时强制刷新待写队列，防止数据丢失
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', flushWrites);
+  window.addEventListener('pagehide', flushWrites);
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushWrites();
+  });
+}
+
 export function saveRecords(records: Records): void {
   scheduleWrite(STORAGE_KEY, JSON.stringify({ version: 2, levels: records }));
 }
