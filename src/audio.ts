@@ -83,6 +83,9 @@ export class AudioSystem {
     return true;
   }
 
+  getContext(): AudioContext | null { return this.ctx; }
+  getBgmNode(): GainNode | null { return this.bgmGain; }
+
   unlock(): void {
     if (!this.ensureContext()) return;
     if (this.ctx!.state === 'suspended') this.ctx!.resume();

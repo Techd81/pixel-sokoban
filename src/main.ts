@@ -42,6 +42,7 @@ import { animate, Easing } from './animation';
 import { analyzeDifficultyCurve, renderCurveChart } from './curve';
 import { initSoundPack, getSoundPack, setSoundPack, SOUND_PACKS } from './sound_pack';
 import { loadConfig, getConfig, setConfig, renderConfigPanel } from './config';
+import { AudioVisualizer } from './visualizer_audio';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -143,6 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initHaptics();
   initSoundPack();
   loadConfig(); // 加载游戏配置
+  // 音频可视化器（BGM频谱）
+  const audioViz = new AudioVisualizer();
   // 性能监控（按 ` 键切换 FPS 显示）
   const perfMon = new PerformanceMonitor();
   perfMon.start();
