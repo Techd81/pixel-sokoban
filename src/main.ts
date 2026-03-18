@@ -508,6 +508,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markProgressDirty();
     renderProgress();
+    // 皮肤解锁检查
+    const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
+    initSkin(newCleared);
     const record = state.records?.[state.levelIndex];
     notifyWin(getLevelConfig(state.levelIndex).name, state.moves, record?.bestRank ?? '');
     openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
