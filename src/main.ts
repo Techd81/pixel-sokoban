@@ -308,9 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
         onUpdate: t => { card.style.transform = `scale(${0.8 + t*0.2}) translateY(${20-t*20}px)`; card.style.opacity = String(t); }
       });
     }
-    // 自动进入下一关（5秒倒计时）
+    // 自动进入下一关（5秒倒计时，可在config中关闭）
     const isLast = state.levelIndex >= LEVELS.length - 1;
-    if (!isLast) {
+    if (!isLast && getConfig().autoNextLevel !== false) {
       let countdown = 5;
       const tick = (): void => {
         if (modalNextBtn && !modalNextBtn.disabled) modalNextBtn.textContent = `继续下一关（${countdown}s）`;
