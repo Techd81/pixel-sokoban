@@ -1,4 +1,5 @@
 // ─── 音频系统 ─────────────────────────────────────────────────────────────────
+import { getSoundPack } from './sound_pack';
 
 interface ToneOptions {
   frequency: number;
@@ -149,12 +150,14 @@ export class AudioSystem {
 
     const actions: Record<string, () => void> = {
       step: () => {
-        const f = stepFrame === 0 ? mb : mb * 1.06;
-        this.playTone({ frequency: f, type: 'triangle', duration: 0.07, volume: 0.38, slideTo: f + 35 });
+        const pack = getSoundPack();
+        const f = (stepFrame === 0 ? mb : mb * 1.06) * pack.stepPitch;
+        this.playTone({ frequency: f, type: pack.waveform, duration: 0.07 + pack.attackMs/1000, volume: 0.38, slideTo: f + 35 });
       },
       move: () => {
-        const f = stepFrame === 0 ? mb : mb * 1.06;
-        this.playTone({ frequency: f, type: 'triangle', duration: 0.07, volume: 0.38, slideTo: f + 35 });
+        const pack = getSoundPack();
+        const f = (stepFrame === 0 ? mb : mb * 1.06) * pack.stepPitch;
+        this.playTone({ frequency: f, type: pack.waveform, duration: 0.07 + pack.attackMs/1000, volume: 0.38, slideTo: f + 35 });
       },
       fail: () => {
         this.playTone({ frequency: 180, type: 'sawtooth', duration: 0.11, volume: 0.14, slideTo: 110 });
