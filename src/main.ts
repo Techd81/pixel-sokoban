@@ -1155,14 +1155,28 @@ document.addEventListener('DOMContentLoaded', () => {
     _isSolving = false;
     board?.classList.remove('ai-solving');
     if (!result) { setMessage('无解或超时', 'error'); return; }
-    // 可视化解法路径
+    // 可视化解法路径（从当前状态模拟每步构建SolveVizStep）
     if (board) {
       solverViz.attach(board);
-      // 将 SolveVizStep 转换
-      const vizSteps = result.steps.map(s => ({ dx: s.dx, dy: s.dy, facing: s.facing, isPush: false }));
-      solverViz.loadSteps(vizSteps as any);
-      solverViz.startPlayback(500);
-      setTimeout(() => solverViz.detach(), result.steps.length * 500 + 1000);
+      // 模拟玩家和箱子位置
+      let px = state.player.x, py = state.player.y;
+      const bxArr: Array<[number, number]> = [];
+      for (let y = 0; y < state.grid.length; y++)
+        for (let x = 0; x < state.grid[y].length; x++)
+          if (state.grid[y][x] === '$' || state.grid[y][x] === '*') bxArr.push([x, y]);
+      const vizSteps: import('./visualizer').SolveVizStep[] = [];
+      let simBoxes = bxArr.map(b => [...b] as [number, number]);
+      for (const step of result.steps) {
+        const nx = px + step.dx, ny = py + step.dy;
+        const bIdx = simBoxes.findIndex(([bx,by]) => bx===nx && by===ny);
+        const isPush = bIdx >= 0;
+        if (isPush) simBoxes[bIdx] = [nx + step.dx, ny + step.dy];
+        px = nx; py = ny;
+        vizSteps.push({ playerPos:{x:px,y:py}, boxPositions:simBoxes.map(([x,y])=>({x,y})), pushCount:0, isBoxPush:isPush });
+      }
+      solverViz.loadSteps(vizSteps);
+      solverViz.startPlayback(400);
+      setTimeout(() => solverViz.detach(), result.steps.length * 400 + 1000);
     }
     showSolutionModal(result.steps);
   });
