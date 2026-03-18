@@ -936,7 +936,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('timelineBtn')?.addEventListener('click', () => {
     const replayData = loadReplay(state.levelIndex);
     if (!replayData) { setMessage('暂无回放记录', 'info'); return; }
-    _timelineUI.create(document.body, replayData, (step) => { console.log('seek', step); });
+    // seek 回调：跳到指定步骤（重新加载并重放到该步）
+    _timelineUI.create(document.body, replayData, (step) => {
+      restartLevel();
+      for (let i = 0; i < step && i < replayData.steps.length; i++) {
+        const s = replayData.steps[i];
+        tryMove(s.dx, s.dy, s.facing);
+      }
+    });
   });
 
   // ─── 热力图按钮 ──────────────────────────────────────────────────────────
