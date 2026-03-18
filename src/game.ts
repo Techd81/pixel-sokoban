@@ -33,10 +33,17 @@ let undoLimit = -1;
 let timerRafId: number | null = null;
 let goalsSet = new Set<string>();
 
-// --- 历史快照
+// --- 历史快照（增量差分，只存变化的格子，节省 ~90% 内存）
+interface GridDiff {
+  x: number;
+  y: number;
+  from: TileChar;
+  to: TileChar;
+}
 interface HistorySnap {
-  grid: TileChar[][];
+  diffs: GridDiff[];
   player: Pos;
+  prevPlayer: Pos;
   moves: number;
   pushes: number;
   won: boolean;
@@ -286,10 +293,12 @@ export function loadLevel(index: number): void {
 }
 
 // --- 历史 / undo / restart
-export function saveHistory(): void {
+// diffs: 本步将要改变的格子 [{x,y,from,to}, ...]，由调用方传入
+export function saveHistory(diffs: Array<{x:number;y:number;from:TileChar;to:TileChar}>): void {
   state.history.push({
-    grid: cloneGrid(state.grid as unknown as TileChar[][]),
+    diffs,
     player: { ...state.player },
+    prevPlayer: { ...state.player },
     moves: state.moves,
     pushes: state.pushes,
     won: state.won,
@@ -302,7 +311,10 @@ export function undo(): boolean {
   if (state.history.length === 0) return false;
   if (undoLimit >= 0 && undoUsed >= undoLimit) return false;
   const snap = state.history.pop()!;
-  state.grid = snap.grid;
+  // 反向应用 diffs 恢复 grid
+  for (const d of snap.diffs) {
+    (state.grid as unknown as TileChar[][])[d.y][d.x] = d.from;
+  }
   state.player = snap.player;
   state.moves = snap.moves;
   state.pushes = snap.pushes;
@@ -420,7 +432,11 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       emit("update");
       return;
     }
-    saveHistory();
+    saveHistory([
+      { x: state.player.x, y: state.player.y, from: getCell(state.player.x, state.player.y), to: isGoal(state.player.x, state.player.y) ? TILE.GOAL : TILE.FLOOR },
+      { x: nextX, y: nextY, from: nextCell, to: isGoal(nextX, nextY) ? TILE.PLAYER_ON_GOAL : TILE.PLAYER },
+      { x: bx, y: by, from: getCell(bx, by), to: isGoal(bx, by) ? TILE.BOX_ON_GOAL : TILE.BOX },
+    ]);
     state.effects.prevPlayer = { x: state.player.x, y: state.player.y };
     state.effects.prevBoxes = [{ from: { x: nextX, y: nextY }, to: { x: bx, y: by } }];
     restoreFloorOrGoal(state.player.x, state.player.y);
@@ -459,7 +475,10 @@ export function tryMove(dx: number, dy: number, facing: string): void {
   }
 
   // 普通移动
-  saveHistory();
+  saveHistory([
+    { x: state.player.x, y: state.player.y, from: getCell(state.player.x, state.player.y), to: isGoal(state.player.x, state.player.y) ? TILE.GOAL : TILE.FLOOR },
+    { x: nextX, y: nextY, from: getCell(nextX, nextY), to: isGoal(nextX, nextY) ? TILE.PLAYER_ON_GOAL : TILE.PLAYER },
+  ]);
   state.effects.prevPlayer = { x: state.player.x, y: state.player.y };
   state.effects.prevBoxes = null;
   restoreFloorOrGoal(state.player.x, state.player.y);

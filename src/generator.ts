@@ -60,19 +60,20 @@ function floorCells(grid: Grid): Array<{ x: number; y: number }> {
 
 function isConnected(grid: Grid, start: { x: number; y: number }): boolean {
   const rows = grid.length, cols = grid[0].length;
-  const visited = new Set<string>();
-  const queue = [start];
-  visited.add(`${start.x},${start.y}`);
+  const visited = new Uint8Array(rows * cols);
+  const queue: Array<{ x: number; y: number }> = [start];
+  let head = 0;
+  visited[start.y * cols + start.x] = 1;
   const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-  while (queue.length) {
-    const { x, y } = queue.shift()!;
+  while (head < queue.length) {
+    const { x, y } = queue[head++];
     for (const [dx, dy] of dirs) {
       const nx = x + dx, ny = y + dy;
-      const key = `${nx},${ny}`;
       if (nx < 0 || ny < 0 || ny >= rows || nx >= cols) continue;
       if (grid[ny][nx] === TILE.WALL) continue;
-      if (visited.has(key)) continue;
-      visited.add(key);
+      const idx = ny * cols + nx;
+      if (visited[idx]) continue;
+      visited[idx] = 1;
       queue.push({ x: nx, y: ny });
     }
   }
@@ -81,7 +82,7 @@ function isConnected(grid: Grid, start: { x: number; y: number }): boolean {
   for (let y = 0; y < rows; y++)
     for (let x = 0; x < cols; x++)
       if (grid[y][x] !== TILE.WALL) total++;
-  return visited.size === total;
+  return (head) === total;
 }
 
 // ─── 反向生成算法 ─────────────────────────────────────────────────────────────

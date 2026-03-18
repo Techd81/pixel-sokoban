@@ -81,7 +81,15 @@ function loop(): void {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  particles = particles.filter(p => p.life > 0);
+  // 原地 swap 删除死亡粒子，避免 filter 每帧创建新数组
+  let i = particles.length - 1;
+  while (i >= 0) {
+    if (particles[i].life <= 0) {
+      particles[i] = particles[particles.length - 1];
+      particles.pop();
+    }
+    i--;
+  }
 
   for (const p of particles) {
     ctx.save();

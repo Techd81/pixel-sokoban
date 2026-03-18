@@ -19,10 +19,36 @@ export function loadRecords(): Records {
   } catch { return {}; }
 }
 
+// 延迟写队列：用 requestIdleCallback 在空闲时批量写，消除主线程卡顿
+const pendingWrites = new Map<string, string>();
+let writeScheduled = false;
+
+function flushWrites(): void {
+  for (const [key, value] of pendingWrites) {
+    try { localStorage.setItem(key, value); } catch {}
+  }
+  pendingWrites.clear();
+  writeScheduled = false;
+}
+
+function scheduleWrite(key: string, value: string): void {
+  pendingWrites.set(key, value);
+  if (!writeScheduled) {
+    writeScheduled = true;
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(flushWrites, { timeout: 2000 });
+    } else {
+      setTimeout(flushWrites, 200);
+    }
+  }
+}
+
 export function saveRecords(records: Records): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, levels: records }));
-  } catch {}
+  scheduleWrite(STORAGE_KEY, JSON.stringify({ version: 2, levels: records }));
+}
+
+export function saveAchievements(unlocked: Set<string>): void {
+  scheduleWrite(STORAGE_KEY_ACHIEVEMENTS, JSON.stringify([...unlocked]));
 }
 
 export function loadAchievements(): Set<string> {
@@ -30,10 +56,6 @@ export function loadAchievements(): Set<string> {
     const raw = localStorage.getItem(STORAGE_KEY_ACHIEVEMENTS);
     return raw ? new Set(JSON.parse(raw)) : new Set();
   } catch { return new Set(); }
-}
-
-export function saveAchievements(unlocked: Set<string>): void {
-  try { localStorage.setItem(STORAGE_KEY_ACHIEVEMENTS, JSON.stringify([...unlocked])); } catch {}
 }
 
 export function loadPlayerName(): string {
