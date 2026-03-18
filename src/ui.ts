@@ -128,6 +128,8 @@ export function render(): void {
   const deadlockSet = new Set(
     (state.effects.deadlocks ?? []).map((p: Pos) => `${p.x},${p.y}`)
   );
+  // 只在有死锁时才建 Set（大多数情况无死锁）
+  const hasDeadlocks = (state.effects.deadlocks?.length ?? 0) > 0;
 
   let idx = 0;
   for (let y = 0; y < rows; y++) {
@@ -173,7 +175,7 @@ export function render(): void {
       ) {
         cell.classList.add('pulse');
       }
-      if (deadlockSet.has(`${x},${y}`)) cell.classList.add('deadlock');
+      if (hasDeadlocks && deadlockSet.has(`${x},${y}`)) cell.classList.add('deadlock');
 
       // AI 提示箭头
       if (
