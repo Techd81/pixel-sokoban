@@ -1172,7 +1172,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('speedRankBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 1);
+    // 展示本关速度排行
+    const entries = getTopEntries(state.levelIndex).sort((a,b) => a.timeMs - b.timeMs);
+    const existing = document.getElementById('speedRankModal');
+    if (existing) { existing.remove(); return; }
+    const overlay = document.createElement('div');
+    overlay.id = 'speedRankModal'; overlay.className = 'modal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const card = document.createElement('div');
+    card.className = 'modal-card'; card.style.maxWidth = '500px';
+    card.innerHTML = `<p class="eyebrow">SPEED</p><h2>L${state.levelIndex + 1} 速度排行</h2>`;
+    const tbl = document.createElement('div');
+    renderLeaderboard(tbl, entries);
+    card.appendChild(tbl);
+    const btn = document.createElement('button'); btn.textContent = '关闭'; btn.style.marginTop = '12px';
+    btn.addEventListener('click', () => overlay.remove());
+    card.appendChild(btn); overlay.appendChild(card); document.body.appendChild(overlay);
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('globalRecBtn')?.addEventListener('click', () => {
