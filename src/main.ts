@@ -31,6 +31,8 @@ import { checkAchievements, showAchievementUnlock, injectAchievementStyles } fro
 import { MacroRecorder } from './macro';
 import { addLeaderboardEntry } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
+import { initSkin } from './skins';
+import { createMinimapOverlay, renderMinimap } from './minimap';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -49,7 +51,7 @@ import { initThemeButtons } from './themes';
 import { showKeyboardHelp } from './shortcuts';
 import { captureBoard, showScreenshotPreview } from './screenshot';
 import { exportRecords, importRecordsFromJSON } from './export';
-import { saveRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK } from './storage';
+import { saveRecords, loadRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK } from './storage';
 import { getDailyChallenge, completeDailyChallenge } from './daily';
 import { initI18n, getLocale, setLocale, t } from './i18n';
 import { initEditorModal } from './editor_modal';
@@ -127,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
   injectAchievementStyles();
   initThemeButtons();
   initAccessibility();
+  // 皮肤初始化（用已通关数）
+  initSkin(Object.values(loadRecords()).filter((r: any) => r?.bestMoves > 0).length);
   initFontSizeControls();
   initI18n();
 
@@ -328,6 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ─── 游戏事件监听 ───────────────────────────────────────────────────────
+  // minimap 覆盖层（懒创建）
+  let minimapOverlay: HTMLCanvasElement | null = null;
+
   gameEvents.addEventListener('update', () => {
     render();
     if (!state.won && getPlaybackMode() === 'none') {
@@ -339,6 +346,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       ghostRecorder.captureFrame(state.player, boxes, state.facing);
+    }
+    // 更新 minimap
+    const boardEl = document.getElementById('board');
+    if (boardEl) {
+      if (!minimapOverlay) minimapOverlay = createMinimapOverlay(boardEl);
+      renderMinimap(minimapOverlay, state.grid as string[][], state.player, state.goals);
     }
   });
 
