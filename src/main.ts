@@ -729,6 +729,12 @@ document.addEventListener('DOMContentLoaded', () => {
             setMessage(`跳转到「${WORLDS[worldIdx].name}」第${startLevel + 1}关`, 'info');
           }
         }
+        // Ctrl+S: 快速存档
+        if (ev.ctrlKey && ev.key === 's') {
+          ev.preventDefault();
+          saveGame(0, state as unknown as import('./types').GameState, getLevelConfig(state.levelIndex).name);
+          notify('已快速保存', 'success');
+        }
         // Ctrl+M: 宏录制开始/停止
         if (ev.ctrlKey && ev.key === 'm') {
           ev.preventDefault();
