@@ -83,3 +83,14 @@ export function formatBest(record: LevelRecord | null): string {
   if (!record) return '--';
   return `${record.bestMoves} 步`;
 }
+
+export function saveStats(stats: Record<string, unknown>): void {
+  scheduleWrite(STORAGE_KEY_STATS, JSON.stringify(stats));
+}
+
+export function loadStats(): Record<string, unknown> | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_STATS);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}

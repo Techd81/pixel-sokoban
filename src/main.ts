@@ -62,7 +62,7 @@ import { initThemeButtons } from './themes';
 import { showKeyboardHelp } from './shortcuts';
 import { captureBoard, showScreenshotPreview } from './screenshot';
 import { exportRecords, importRecordsFromJSON } from './export';
-import { saveRecords, loadRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK } from './storage';
+import { saveRecords, loadRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK, saveStats, loadStats } from './storage';
 import { getDailyChallenge, completeDailyChallenge, getDailyStreak } from './daily';
 import { initI18n, getLocale, setLocale, t } from './i18n';
 import { initEditorModal } from './editor_modal';
@@ -600,6 +600,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 皮肤解锁检查
     const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
     initSkin(newCleared);
+    // 持久化 stats
+    saveStats(state.stats as unknown as Record<string, unknown>);
     const record = state.records?.[state.levelIndex];
     notifyWin(getLevelConfig(state.levelIndex).name, state.moves, record?.bestRank ?? '');
     openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
@@ -1708,6 +1710,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
+  // 恢复持久化的 stats（特别是 activityLog）
+  const savedStats = loadStats();
+  if (savedStats?.activityLog && Array.isArray(savedStats.activityLog)) {
+    state.stats.activityLog = savedStats.activityLog as number[];
+  }
+
   loadLevel(startupLevelIndex);
   state.stats.sessions = (state.stats.sessions ?? 0) + 1;
 
