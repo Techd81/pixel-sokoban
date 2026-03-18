@@ -398,6 +398,9 @@ document.addEventListener('DOMContentLoaded', () => {
     _adaptiveHintShown = false; // 重置自适应提示标志
     if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
     invalidateRenderCache();
+    // 重置 minimap（换关后重新创建）
+    minimapOverlay?.remove();
+    minimapOverlay = null;
     // 宏录制自动随关卡切换停止
     if (macroRecorder.isRecording) macroRecorder.cancel(); // 换关时重置渲染缓存
     render();
