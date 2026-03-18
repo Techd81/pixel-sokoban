@@ -461,7 +461,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dc = getDailyChallenge();
     if (dc.levelIndex === state.levelIndex && !dc.completed) {
       completeDailyChallenge(state.moves, state.timer.elapsedMs);
-      notify('每日挑战完成！', 'success');
+      const streak = getDailyStreak();
+      const milestones = [3, 7, 14, 30, 60, 100];
+      if (milestones.includes(streak)) {
+        notify(`🔥 连续 ${streak} 天每日挑战！里程碑达成！`, 'achievement');
+      } else {
+        notify(`每日挑战完成！🔥${streak > 1 ? ` 连续${streak}天` : ''}`, 'success');
+      }
     }
 
     // 排行榜记录
