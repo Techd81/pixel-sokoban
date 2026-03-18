@@ -424,6 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameEvents.addEventListener('levelLoaded', () => {
     closeWinModal();
+    // 停止AI演示和回放
+    if (getPlaybackMode() === 'demo') stopAIDemo();
+    if (getPlaybackMode() === 'replay') stopReplay();
     _adaptiveHintShown = false; // 重置自适应提示标志
     if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
     invalidateRenderCache();
