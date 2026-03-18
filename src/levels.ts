@@ -1,7 +1,7 @@
 import type { Level } from './types'
 
 export const LEVELS: Level[] = [
-  { name: '一步入库', parMoves: 2, starMoves: { three: 2, two: 3, one: 5 },
+  { name: '一步入库', parMoves: 1, starMoves: { three: 1, two: 2, one: 3 },
     map: ['########','#  .   #','#  $   #','#  @   #','#      #','########'] },
 
   { name: '绕侧推入', parMoves: 6, starMoves: { three: 6, two: 8, one: 12 },
@@ -19,7 +19,7 @@ export const LEVELS: Level[] = [
   { name: '三角阵列', parMoves: 5, starMoves: { three: 5, two: 7, one: 10 },
     map: ['#######','# .   #','# $.  #','#  $@ #','#######'] },
 
-  { name: '转角入仓', parMoves: 10, starMoves: { three: 10, two: 13, one: 18 },
+  { name: '转角入仓', parMoves: 9, starMoves: { three: 9, two: 12, one: 17 },
     map: ['#######','#.    #','#   # #','#  $  #','#     #','#  @  #','#######'] },
 
   { name: '平行推入', parMoves: 5, starMoves: { three: 5, two: 8, one: 12 },
