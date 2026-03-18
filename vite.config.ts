@@ -34,9 +34,30 @@ export default defineConfig({
             id.includes('editor_modal') ||
             id.includes('race') ||
             id.includes('leaderboard') ||
-            id.includes('sharecard')
+            id.includes('sharecard') ||
+            id.includes('tutorial') ||
+            id.includes('skins') ||
+            id.includes('worlds') ||
+            id.includes('export') ||
+            id.includes('macro')
           ) {
             return 'extras';
+          }
+          if (
+            id.includes('gestures') ||
+            id.includes('notify') ||
+            id.includes('haptic') ||
+            id.includes('minimap') ||
+            id.includes('accessibility') ||
+            id.includes('combo') ||
+            id.includes('hint_engine') ||
+            id.includes('notes') ||
+            id.includes('screenshot') ||
+            id.includes('curve') ||
+            id.includes('fsm') ||
+            id.includes('bus')
+          ) {
+            return 'ux';
           }
         },
       },
