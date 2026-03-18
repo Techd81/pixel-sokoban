@@ -622,8 +622,18 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       case '`':
         perfMon.toggleDisplay(); break;
-    }
-  });
+      default:
+        // Ctrl+1~6: 跳转到对应世界章节起点
+        if (ev.ctrlKey && ev.key >= '1' && ev.key <= '6') {
+          ev.preventDefault();
+          const worldIdx = Number(ev.key) - 1;
+          if (worldIdx < WORLDS.length) {
+            const startLevel = WORLDS[worldIdx].levelRange[0];
+            loadLevel(startLevel);
+            setMessage(`跳转到「${WORLDS[worldIdx].name}」第${startLevel + 1}关`, 'info');
+          }
+        }
+        break;
 
   // ─── 触摸手势（GestureRecognizer）────────────────────────────────────────
   const gesture = new GestureRecognizer(document.body, { swipeThreshold: 20, longPressMs: 600 });
