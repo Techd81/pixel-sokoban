@@ -28,7 +28,7 @@ import { SolverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
-import { MacroRecorder } from './macro';
+import { MacroRecorder, getMacrosForLevel } from './macro';
 import { addLeaderboardEntry, getTopEntries, renderLeaderboard } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
 import { initSkin, renderSkinSelector, SKINS } from './skins';
@@ -709,6 +709,24 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             macroRecorder.start(state.levelIndex);
             setMessage('🔴 宏录制已开始（再按Ctrl+M停止）', 'info');
+          }
+        }
+        // Ctrl+P: 回放当前关最新宏
+        if (ev.ctrlKey && ev.key === 'p') {
+          ev.preventDefault();
+          if (macroRecorder.isPlaying()) {
+            macroRecorder.stop();
+            setMessage('宏回放已停止', 'info');
+          } else {
+            const macros = getMacrosForLevel(state.levelIndex);
+            if (macros.length === 0) { setMessage('当前关无宏记录，用Ctrl+M录制', 'warn'); break; }
+            const latest = macros[0];
+            restartLevel();
+            setTimeout(() => {
+              macroRecorder.play(latest, (dx, dy, facing) => tryMove(dx, dy, facing),
+                () => setMessage(`宏回放完成(${latest.moves.length}步)`, 'win'), 200);
+              setMessage(`▶ 回放宏「${latest.name}」`, 'info');
+            }, 100);
           }
         }
         break;
