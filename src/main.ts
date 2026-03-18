@@ -1524,9 +1524,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('changeNameBtn')?.addEventListener('click', () => {
     const current = loadPlayerName();
-    const name = window.prompt('输入玩家昵称', current);
+    const name = window.prompt('输入玩家昵称（最多20字）', current);
     if (!name) return;
-    savePlayerName(name.trim() || current);
+    const trimmed = name.trim().slice(0, 20); // 限制长度
+    savePlayerName(trimmed || current);
     const display = document.getElementById('playerNameDisplay');
     if (display) display.textContent = loadPlayerName();
   });
@@ -1573,6 +1574,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 预计算难度（避免每次 renderLevelSelectGrid 重复计算）
   const _diffCache = LEVELS.map(lv => predictDifficulty(lv));
+  // 预渲染关卡预览缓存（避免每次打开选关都重绘）
+  const _previewCache: string[] = [];
+  LEVELS.forEach((lv, idx) => {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 56;
+    renderLevelPreview(c, lv.map);
+    _previewCache[idx] = c.toDataURL();
+  });
 
   function renderLevelSelectGrid(): void {
     const grid = document.getElementById('levelSelectGrid');
@@ -1663,9 +1671,18 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => document.addEventListener('click', closeMenu, { once: true }), 0);
       });
       grid.appendChild(cell);
-      // 渲染关卡预览
+      // 使用预渲染缓存替代实时渲染（性能优化）
       const canvas = cell.querySelector<HTMLCanvasElement>('.level-preview-canvas');
-      if (canvas) renderLevelPreview(canvas, lv.map);
+      if (canvas) {
+        if (_previewCache[idx]) {
+          const img = new Image();
+          img.src = _previewCache[idx];
+          img.style.cssText = 'display:block;margin:4px auto 0;image-rendering:pixelated;width:64px;height:56px;border:2px solid rgba(0,0,0,0.4);border-radius:2px;opacity:0.92';
+          canvas.replaceWith(img);
+        } else {
+          renderLevelPreview(canvas, lv.map);
+        }
+      }
     });
   }
 
