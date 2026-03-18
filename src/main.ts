@@ -936,7 +936,82 @@ document.addEventListener('DOMContentLoaded', () => {
     createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
   });
 
+  // statsModal 静态面板按钮绑定
+  document.getElementById('statsCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('statsResetBtn')?.addEventListener('click', () => {
+    if (!confirm('确定要清除所有记录吗？此操作不可撤销！')) return;
+    localStorage.removeItem('pixelSokobanRecords');
+    state.records = {};
+    markProgressDirty();
+    renderProgress();
+    setMessage('记录已清除', 'info');
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('adaptiveBtn')?.addEventListener('click', () => {
+    void analyzePlayer(state.records);
+    const next = getNextRecommended(state.records, state.levelIndex);
+    if (next >= 0) setMessage(`建议挑战：L${next + 1} ${LEVELS[next].name}`, 'info');
+    else setMessage('继续加油，已有不错的进度！', 'info');
+  });
+  document.getElementById('recommendBtn')?.addEventListener('click', () => {
+    const next = getNextRecommended(state.records, state.levelIndex);
+    if (next >= 0) { loadLevel(next); document.getElementById('statsModal')?.classList.add('hidden'); }
+    else setMessage('所有关卡已通关！', 'win');
+  });
+  document.getElementById('printBtn')?.addEventListener('click', () => {
+    window.print();
+  });
+  document.getElementById('progressRingBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('recentBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('speedRankBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 1);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('globalRecBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 2);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('diffAnalBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 3);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('effRankBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 4);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('achievWallBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 5);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('nextAchievBtn')?.addEventListener('click', () => {
+    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 5);
+    document.getElementById('statsModal')?.classList.add('hidden');
+  });
+  document.getElementById('batchTestBtn')?.addEventListener('click', () => {
+    setMessage('批量测试：正在验证所有关卡...', 'info');
+    let bugs = 0;
+    LEVELS.forEach((lv, i) => {
+      const flat = lv.map.join('');
+      const p = (flat.match(/@/g)||[]).length;
+      const b = (flat.match(/\$/g)||[]).length + (flat.match(/\*/g)||[]).length;
+      const g = (flat.match(/\./g)||[]).length + (flat.match(/\*/g)||[]).length + (flat.match(/\+/g)||[]).length;
+      if (p !== 1 || b !== g || b === 0) bugs++;
+    });
+    setMessage(bugs === 0 ? `✓ 全部${LEVELS.length}关验证通过` : `发现${bugs}个关卡数据异常`, bugs === 0 ? 'win' : 'error');
+  });
+
   document.getElementById('helpBtn')?.addEventListener('click', () => showKeyboardHelp());
+  document.getElementById('helpCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('helpModal')?.classList.add('hidden');
+  });
 
   document.getElementById('replayBtn')?.addEventListener('click', () => {
     if (getPlaybackMode() === 'replay') stopReplay();
