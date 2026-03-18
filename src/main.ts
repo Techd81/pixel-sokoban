@@ -866,7 +866,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('nextBtn')?.addEventListener('click',
     () => loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)));
   document.getElementById('generateBtn')?.addEventListener('click', () => handleGenerate());
-  document.getElementById('randomChalBtn')?.addEventListener('click', () => handleGenerate());
+  document.getElementById('randomChalBtn')?.addEventListener('click', () => {
+    // 优先随机跳转未完成的关卡，若全通关则随机跳任意关
+    const uncleared = LEVELS.map((_, i) => i).filter(i => !(state.records?.[i]?.bestMoves > 0));
+    const pool = uncleared.length > 0 ? uncleared : LEVELS.map((_, i) => i);
+    const idx = pool[Math.floor(Math.random() * pool.length)];
+    loadLevel(idx);
+    setMessage(`🎲 随机挑战：第${idx + 1}关「${LEVELS[idx].name}」`, 'info');
+  });
   document.getElementById('undoLimitBtn')?.addEventListener('click', () => {
     const cur = getUndoLimit();
     const idx = UNDO_LIMIT_CYCLE.indexOf(cur);
