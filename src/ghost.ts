@@ -53,6 +53,7 @@ export class GhostRecorder {
 
   captureFrame(playerPos: Pos, boxPositions: Pos[], facing: string): void {
     if (!this.active) return;
+    if (this.frames.length >= 800) return; // 限制最多800帧防内存/存储溢出
     this.frames.push({
       playerPos: { ...playerPos },
       boxPositions: boxPositions.map(b => ({ ...b })),
