@@ -50,7 +50,7 @@ import { notify, notifyWin, notifyAchievement } from './notify';
 import { initAccessibility } from './accessibility';
 import { TutorialManager, isTutorialDone } from './tutorial';
 import { searchLevels } from './search';
-import { getFavorites } from './favorites';
+import { getFavorites, toggleFavorite, isFavorite } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 import { initThemeButtons } from './themes';
 import { showKeyboardHelp } from './shortcuts';
@@ -612,6 +612,14 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'g': case 'G':
         if (!canInteractive) break;
         handleGenerate(); break;
+      case 'f': case 'F':
+        if (!canInteractive) break;
+        {
+          const faved = toggleFavorite(state.levelIndex);
+          setMessage(faved ? '⭐ 已收藏' : '取消收藏', 'info');
+          haptic('move');
+        }
+        break;
       case '`':
         perfMon.toggleDisplay(); break;
     }
