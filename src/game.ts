@@ -299,7 +299,19 @@ export function loadLevel(index: number): void {
   emit("levelLoaded", { index });
 }
 
-// --- 历史 / undo / restart
+// 日历活动日志：缓存今日 dayOfYear，避免每次移动都重新计算
+let _cachedDayOfYear = -1;
+let _cachedDate = '';
+function getDayOfYear(): number {
+  const today = new Date();
+  const dateStr = today.toDateString();
+  if (dateStr !== _cachedDate) {
+    _cachedDate = dateStr;
+    _cachedDayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+  }
+  return _cachedDayOfYear;
+}
+
 // diffs: 本步将要改变的格子 [{x,y,from,to}, ...]，由调用方传入
 const MAX_HISTORY = 1000; // 最多保留1000步历史，防止内存无限增长
 
@@ -467,9 +479,7 @@ export function tryMove(dx: number, dy: number, facing: string): void {
     }
     updateCombo(true);
     // 更新活动日志
-    const todayP = new Date();
-    const dayOfYearP = Math.floor((todayP.getTime() - new Date(todayP.getFullYear(), 0, 0).getTime()) / 86400000);
-    state.stats.activityLog[dayOfYearP] = (state.stats.activityLog[dayOfYearP] ?? 0) + 1;
+    state.stats.activityLog[getDayOfYear()] = (state.stats.activityLog[getDayOfYear()] ?? 0) + 1;
     state.effects.deadlocks = getDeadlockedBoxes();
     emit("pushed", { from: { x: nextX, y: nextY }, to: { x: bx, y: by } });
     if (checkWin()) {
@@ -513,9 +523,7 @@ export function tryMove(dx: number, dy: number, facing: string): void {
   if (!state.heatmap[nextY]) state.heatmap[nextY] = [];
   state.heatmap[nextY][nextX] = (state.heatmap[nextY][nextX] ?? 0) + 1;
   // 更新活动日志（今日移动数）
-  const today = new Date();
-  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-  state.stats.activityLog[dayOfYear] = (state.stats.activityLog[dayOfYear] ?? 0) + 1;
+  state.stats.activityLog[getDayOfYear()] = (state.stats.activityLog[getDayOfYear()] ?? 0) + 1;
   emit("moved", { x: nextX, y: nextY });
   emit("update");
 }
