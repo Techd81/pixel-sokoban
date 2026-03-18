@@ -44,7 +44,15 @@ function loop(now: number): void {
   const dt = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  messages = messages.filter(m => m.x + 300 > 0 && m.opacity > 0.01);
+  // 原地清理死亡弹幕，避免每帧创建新数组
+  let j = messages.length - 1;
+  while (j >= 0) {
+    if (messages[j].x + 300 <= 0 || messages[j].opacity <= 0.01) {
+      messages[j] = messages[messages.length - 1];
+      messages.pop();
+    }
+    j--;
+  }
   for (const m of messages) {
     m.x -= m.speed * dt;
     if (m.x < -200) m.opacity -= dt * 2;
