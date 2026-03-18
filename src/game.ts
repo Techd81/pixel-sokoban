@@ -277,6 +277,12 @@ export function loadLevel(index: number): void {
   state.heatmap = [];  // 重置热力图
   undoUsed = 0;
   state.stats.undoUsed = 0;
+  // 重置 AI 状态
+  state.ai.hintArrow = null;
+  state.ai.hintBox = null;
+  state.ai.demo = false;
+  state.ai.demoIndex = 0;
+  state.ai.demoSteps = [];
   resetTimer();
   for (let y = 0; y < state.grid.length; y++) {
     for (let x = 0; x < state.grid[y].length; x++) {

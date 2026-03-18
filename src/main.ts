@@ -69,6 +69,7 @@ const macroRecorder = new MacroRecorder(); // 备用：宏录制（当前无UI�
 const _timelineUI = new TimelineUI(); // 备用
 
 const solverViz = new SolverVisualizer();
+let _isSolving = false; // 防止solveAsync并发重复调用
 const LEVEL_RATING_KEY = 'pixelSokobanLevelRatings';
 
 function loadLevelRatings(): Record<number, number> {
@@ -613,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'n': loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)); break;
       case 'h': case 'H':
         if (!canInteractive) break;
-        void handleHint(); break;
+        handleHint(); break;
       case 'g': case 'G':
         if (!canInteractive) break;
         handleGenerate(); break;
@@ -668,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bindDirButtons('.dpad button[data-dir]');
 
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
-  async function handleHint(): Promise<void> {
+  function handleHint(): void {
     setMessage('AI 计算中...', 'info');
     state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
     const hint = getSmartHint(state.grid as string[][], state.player, state.goals);
@@ -818,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const startAIDemo = async (): Promise<void> => {
+    if (_isSolving) return; // 防止并发
     // 如果正在回放，先停止
     stopReplay();
     state.stats.taPlayed = true;
@@ -825,11 +827,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('aiDemoBtn') as HTMLButtonElement | null;
     const board = document.getElementById('board');
 
+    _isSolving = true;
     board?.classList.add('ai-solving');
     if (btn) { btn.classList.add('active'); btn.textContent = '停止演示'; }
     setMessage('AI 计算中...', 'info');
 
     const result = await solveAsync(state.grid as string[][], state.player, state.goals);
+    _isSolving = false;
     board?.classList.remove('ai-solving');
 
     if (!result || result.steps.length === 0) {
@@ -1105,10 +1109,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('solutionBtn')?.addEventListener('click', async () => {
     if (state.won) { setMessage('已经通关！', 'info'); return; }
+    if (_isSolving) { setMessage('AI 正在计算中...', 'info'); return; }
     const board = document.getElementById('board');
+    _isSolving = true;
     board?.classList.add('ai-solving');
     setMessage('AI 计算中...', 'info');
     const result = await solveAsync(state.grid as string[][], state.player, state.goals);
+    _isSolving = false;
     board?.classList.remove('ai-solving');
     if (!result) { setMessage('无解或超时', 'error'); return; }
     // 可视化解法路径
@@ -1428,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeMenu();
             if (btn.dataset.action === 'fav') { const f = toggleFavorite(idx); notify(f ? '⭐ 已收藏' : '取消收藏', 'info'); renderLevelSelectGrid(); }
             else if (btn.dataset.action === 'replay') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => document.getElementById('timelineBtn')?.click(), 200); }
-            else if (btn.dataset.action === 'hint') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => void handleHint(), 300); }
+            else if (btn.dataset.action === 'hint') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => handleHint(), 300); }
           });
         });
         document.body.appendChild(menu);
