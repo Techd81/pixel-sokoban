@@ -78,11 +78,14 @@ const _timelineUI = new TimelineUI(); // 备用
 const solverViz = new SolverVisualizer();
 let _isSolving = false; // 防止solveAsync并发重复调用
 const LEVEL_RATING_KEY = 'pixelSokobanLevelRatings';
+let _ratingsCache: Record<number, number> | null = null;
 
 function loadLevelRatings(): Record<number, number> {
+  if (_ratingsCache) return _ratingsCache;
   try {
     const raw = localStorage.getItem(LEVEL_RATING_KEY);
-    return raw ? JSON.parse(raw) : {};
+    _ratingsCache = raw ? JSON.parse(raw) : {};
+    return _ratingsCache!;
   } catch {
     return {};
   }
@@ -95,6 +98,7 @@ function getLevelRating(levelIndex: number): number {
 function saveLevelRating(levelIndex: number, rating: number): void {
   const ratings = loadLevelRatings();
   ratings[levelIndex] = Math.max(0, Math.min(5, Math.trunc(rating)));
+  _ratingsCache = ratings; // 更新缓存
   try {
     localStorage.setItem(LEVEL_RATING_KEY, JSON.stringify(ratings));
   } catch {
