@@ -1242,7 +1242,23 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCurveChart(canvas);
   });
   document.getElementById('effRankBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 4);
+    const existing = document.getElementById('effRankModal');
+    if (existing) { existing.remove(); return; }
+    const effData = LEVELS.map((lv, i) => {
+      const rec = state.records?.[i];
+      if (!rec?.bestMoves) return null;
+      return { name: lv.name, idx: i+1, eff: rec.bestMoves / lv.parMoves, best: rec.bestMoves, par: lv.parMoves };
+    }).filter(Boolean).sort((a,b) => a!.eff - b!.eff).slice(0, 15);
+    const overlay = document.createElement('div');
+    overlay.id = 'effRankModal'; overlay.className = 'modal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const card = document.createElement('div');
+    card.className = 'modal-card'; card.style.maxWidth = '480px';
+    const rows = effData.map((e, i) => `<tr style="border-bottom:1px solid #333"><td style="padding:4px">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td><td style="padding:4px">L${e!.idx} ${e!.name}</td><td style="padding:4px">${e!.best}/${e!.par}</td><td style="padding:4px"><b>${(e!.eff*100).toFixed(0)}%</b></td></tr>`).join('');
+    card.innerHTML = `<p class="eyebrow">EFFICIENCY</p><h2>效率排名（Top 15）</h2><table style="width:100%;border-collapse:collapse;font-size:0.85em"><thead><tr style="border-bottom:2px solid #555"><th>排</th><th>关卡</th><th>步/目标</th><th>效率</th></tr></thead><tbody>${rows}</tbody></table>`;
+    const btn = document.createElement('button'); btn.textContent = '关闭'; btn.style.marginTop = '12px';
+    btn.addEventListener('click', () => overlay.remove());
+    card.appendChild(btn); overlay.appendChild(card); document.body.appendChild(overlay);
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('achievWallBtn')?.addEventListener('click', () => {
