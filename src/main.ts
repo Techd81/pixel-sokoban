@@ -29,7 +29,7 @@ import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
 import { MacroRecorder } from './macro';
-import { addLeaderboardEntry } from './leaderboard';
+import { addLeaderboardEntry, getTopEntries, renderLeaderboard } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
 import { initSkin, renderSkinSelector, SKINS } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
@@ -1176,7 +1176,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('globalRecBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 2);
+    // 展示当前关卡排行榜
+    const existing = document.getElementById('lbModal');
+    if (existing) { existing.remove(); return; }
+    const entries = getTopEntries(state.levelIndex);
+    const overlay = document.createElement('div');
+    overlay.id = 'lbModal'; overlay.className = 'modal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const card = document.createElement('div');
+    card.className = 'modal-card'; card.style.maxWidth = '500px';
+    card.innerHTML = `<p class="eyebrow">RECORDS</p><h2>L${state.levelIndex + 1} 排行榜</h2>`;
+    const tbl = document.createElement('div');
+    renderLeaderboard(tbl, entries);
+    card.appendChild(tbl);
+    const btn = document.createElement('button'); btn.textContent = '关闭'; btn.style.marginTop = '12px';
+    btn.addEventListener('click', () => overlay.remove());
+    card.appendChild(btn); overlay.appendChild(card); document.body.appendChild(overlay);
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('diffAnalBtn')?.addEventListener('click', () => {
