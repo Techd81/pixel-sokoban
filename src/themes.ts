@@ -41,6 +41,10 @@ export function applyTheme(name: ThemeName): void {
   root.style.setProperty('--player', t.player);
   root.style.setProperty('--player-top', t.player);
   root.style.setProperty('--player-deep', t.player);
+  // 派生变量（从主色生成）
+  root.style.setProperty('--panel',  t.bg);
+  root.style.setProperty('--panel-2', t.bg);
+  root.style.setProperty('--panel-3', t.bg);
   localStorage.setItem('pixelSokobanTheme', name);
 }
 
