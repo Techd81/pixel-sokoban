@@ -51,6 +51,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ['I'], desc: '显示统计' },
       { keys: ['`'], desc: 'FPS 性能显示' },
       { keys: ['Ctrl+1~6'], desc: '跳转世界章节' },
+      { keys: ['Ctrl+M'], desc: '宏录制开始/停止' },
     ],
   },
 ];
