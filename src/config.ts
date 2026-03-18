@@ -77,9 +77,14 @@ export function saveConfig(): void {
 
 export function getConfig(): GameConfig { return _config; }
 
+// 配置变更回调（由main.ts注册）
+let _onConfigChange: ((key: string, value: unknown) => void) | null = null;
+export function onConfigChange(fn: (key: string, value: unknown) => void): void { _onConfigChange = fn; }
+
 export function setConfig<K extends keyof GameConfig>(key: K, value: GameConfig[K]): void {
   _config[key] = value;
   saveConfig();
+  _onConfigChange?.(key as string, value);
 }
 
 export function resetConfig(): void {
