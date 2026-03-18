@@ -52,6 +52,8 @@ export class GestureRecognizer {
 
   private onMove(e: TouchEvent): void {
     this.touches = [...e.touches] as unknown as Touch[];
+    // 防止单指滑动触发页面滚动
+    if (e.touches.length === 1) e.preventDefault();
     if (e.touches.length === 1 && this.longPressId) {
       const t = e.touches[0], s = this.startTouches[0];
       if (Math.hypot(t.clientX - s.clientX, t.clientY - s.clientY) > 10) {
