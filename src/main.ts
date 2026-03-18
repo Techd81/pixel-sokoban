@@ -781,6 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = loadReplay(state.levelIndex);
     if (!data) { setMessage('暂无回放记录', 'info'); return; }
     if (!data.steps?.length) { setMessage('回放为空：请重新通关生成录像', 'warn'); return; }
+    state.stats.replayPlayed = true;
 
     // 如果正在演示，先停止
     stopAIDemo();
@@ -816,6 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const startAIDemo = async (): Promise<void> => {
     // 如果正在回放，先停止
     stopReplay();
+    state.stats.taPlayed = true;
 
     const btn = document.getElementById('aiDemoBtn') as HTMLButtonElement | null;
     const board = document.getElementById('board');
@@ -911,6 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pool = uncleared.length > 0 ? uncleared : LEVELS.map((_, i) => i);
     const idx = pool[Math.floor(Math.random() * pool.length)];
     loadLevel(idx);
+    state.stats.randomPlayed = true;
     setMessage(`🎲 随机挑战：第${idx + 1}关「${LEVELS[idx].name}」`, 'info');
   });
   document.getElementById('undoLimitBtn')?.addEventListener('click', () => {
