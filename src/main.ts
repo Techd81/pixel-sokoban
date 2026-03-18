@@ -33,6 +33,7 @@ import { addLeaderboardEntry } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
 import { initSkin } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
+import { initHaptics, haptic } from './haptic';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -129,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectAchievementStyles();
   initThemeButtons();
   initAccessibility();
+  initHaptics();
   // 皮肤初始化（用已通关数）
   initSkin(Object.values(loadRecords()).filter((r: any) => r?.bestMoves > 0).length);
   initFontSizeControls();
@@ -383,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameEvents.addEventListener('pushed', (e: Event) => {
     const detail = (e as CustomEvent).detail as { to: { x: number; y: number } } | undefined;
+    haptic(state.combo.count > 2 ? 'combo' : 'push');
     if (detail?.to) {
       const { sx, sy } = getTileScreenPos(detail.to.x, detail.to.y);
       if (state.combo.count > 2) {
@@ -408,6 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playback = detail?.playback ?? (getPlaybackMode() !== 'none');
 
     emitWinBurst();
+    haptic('win');
     audioSystem.playSfx('win');
     ghostRecorder.stop();
     ghostPlayer.stop();
@@ -645,8 +649,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const used = getUndoUsed();
     if (limit >= 0 && used >= limit) {
       setMessage(`撤销次数已达上限！(${used}/${limit})`, 'warn');
+      haptic('fail');
       return;
     }
+    haptic('undo');
     undo();
   };
 
