@@ -29,7 +29,7 @@ import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
 import { MacroRecorder } from './macro';
-import { RaceMode } from './race';
+import { addLeaderboardEntry } from './leaderboard';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -57,8 +57,7 @@ import { getNote, setNote } from './notes';
 import { copyText, escapeHtml } from './web_utils';
 
 
-const macroRecorder = new MacroRecorder();
-const raceMode = new RaceMode();
+const macroRecorder = new MacroRecorder(); // 备用：宏录制（当前无UI入口，保留实例备扩展）
 const _timelineUI = new TimelineUI(); // 备用
 
 const solverViz = new SolverVisualizer();
@@ -394,6 +393,17 @@ document.addEventListener('DOMContentLoaded', () => {
       completeDailyChallenge(state.moves, state.timer.elapsedMs);
       notify('每日挑战完成！', 'success');
     }
+
+    // 排行榜记录
+    const lvConfig = getLevelConfig(state.levelIndex);
+    addLeaderboardEntry({
+      nickname: loadPlayerName(),
+      levelIndex: state.levelIndex,
+      moves: state.moves,
+      timeMs: state.timer.elapsedMs,
+      rank: '',
+      par: lvConfig.parMoves ?? state.moves,
+    });
 
     // 检查成就
     const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
