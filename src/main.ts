@@ -1600,6 +1600,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!modal) return;
     renderLevelSelectGrid();
     modal.classList.remove('hidden');
+    // 聚焦到搜索框，支持键盘输入
+    setTimeout(() => {
+      const search = document.getElementById('levelSearch') as HTMLInputElement | null;
+      search?.focus();
+    }, 50);
   });
   document.getElementById('levelSelectCloseBtn')?.addEventListener('click', () => {
     document.getElementById('levelSelect')?.classList.add('hidden');
