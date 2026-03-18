@@ -174,11 +174,21 @@ export function markProgressDirty(): void { _progressCache = -1; }
 
 export function renderProgress(): void {
   const total   = LEVELS.length;
-  const cleared = LEVELS.reduce((n: number, _: unknown, i: number) => n + ((getRecord(i)?.bestMoves ?? 0) > 0 ? 1 : 0), 0);
-  if (cleared === _progressCache) return;
-  _progressCache = cleared;
+  let cleared = 0, challenged = 0, stars3 = 0;
+  for (let i = 0; i < total; i++) {
+    const rec = getRecord(i);
+    if (rec?.bestMoves && rec.bestMoves > 0) {
+      cleared++;
+      if (rec.challengeCleared) challenged++;
+      if (rec.bestRank === '★★★') stars3++;
+    }
+  }
+  // 用 cleared*1000 + challenged*100 + stars3 做缓存键
+  const cacheKey = cleared * 1000000 + challenged * 1000 + stars3;
+  if (cacheKey === _progressCache) return;
+  _progressCache = cacheKey;
   const pct = total > 0 ? Math.round((cleared / total) * 100) : 0;
-  if (els.progressText) els.progressText.textContent = `${cleared} / ${total}`;
+  if (els.progressText) els.progressText.textContent = `已通关 ${cleared}/${total} · 挑战 ${challenged}/${total} · ★ ${stars3}`;
   if (els.progressFill) (els.progressFill as HTMLElement).style.width = `${pct}%`;
 }
 
