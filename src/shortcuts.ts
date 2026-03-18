@@ -46,12 +46,14 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     group: '高级',
     shortcuts: [
       { keys: ['Ctrl+Z'], desc: '撤销（同 Z）' },
+      { keys: ['Ctrl+S'], desc: '快速存档' },
+      { keys: ['Ctrl+M'], desc: '宏录制开始/停止' },
+      { keys: ['Ctrl+P'], desc: '回放最新宏' },
       { keys: ['T'], desc: '速通挑战' },
       { keys: ['G'], desc: '随机关卡' },
       { keys: ['I'], desc: '显示统计' },
       { keys: ['`'], desc: 'FPS 性能显示' },
       { keys: ['Ctrl+1~6'], desc: '跳转世界章节' },
-      { keys: ['Ctrl+M'], desc: '宏录制开始/停止' },
     ],
   },
 ];
