@@ -17,7 +17,7 @@ import {
   getPlaybackMode,
   setPlaybackMode,
 } from './game';
-import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay, markProgressDirty } from './ui';
+import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay, markProgressDirty, renderLevelPreview } from './ui';
 import { audioSystem } from './audio';
 import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
@@ -1028,12 +1028,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // 预计算难度（避免每次 renderLevelSelectGrid 重复计算）
+  const _diffCache = LEVELS.map(lv => predictDifficulty(lv));
+
   function renderLevelSelectGrid(): void {
     const grid = document.getElementById('levelSelectGrid');
     if (!grid) return;
     grid.innerHTML = '';
     LEVELS.forEach((lv, idx) => {
-      const diff = predictDifficulty(lv);
+      const diff = _diffCache[idx];
       const rec = state.records?.[idx];
       const cleared = rec?.bestMoves && rec.bestMoves > 0;
       const locked = levelLockMode && idx > 0 && !(state.records?.[idx - 1]?.bestMoves > 0);
@@ -1063,6 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span>${locked ? '🔒 未解锁' : (cleared ? `${rec!.bestMoves}步` : '未通关')}</span>
           ${diffLabel ? `<span class="badge">${diffLabel}</span>` : ''}
         </div>
+        <canvas class="level-preview-canvas" width="64" height="56" style="display:block;margin:4px auto 0;image-rendering:pixelated"></canvas>
       `;
       cell.addEventListener('click', () => {
         if (locked) { setMessage('先通关上一关！', 'warn'); return; }
@@ -1070,6 +1074,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('levelSelect')?.classList.add('hidden');
       });
       grid.appendChild(cell);
+      // 渲染关卡预览
+      const canvas = cell.querySelector<HTMLCanvasElement>('.level-preview-canvas');
+      if (canvas) renderLevelPreview(canvas, lv.map);
     });
   }
 
