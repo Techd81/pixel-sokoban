@@ -256,56 +256,88 @@
       <div class="modal-card editor-card">
         <p class="eyebrow">LEVEL EDITOR</p>
         <h2 id="editorTitle">关卡编辑器</h2>
-        <div class="editor-toolbar">
-          <span class="editor-label">画笔：</span>
-          <button class="editor-tool active" data-tile="#" title="墙">🧱 墙</button>
-          <button class="editor-tool" data-tile=" " title="地板">⬜ 地板</button>
-          <button class="editor-tool" data-tile="." title="目标">🟡 目标</button>
-          <button class="editor-tool" data-tile="$" title="箱子">📦 箱子</button>
-          <button class="editor-tool" data-tile="@" title="玩家">🧑 玩家</button>
-          <button class="editor-tool" data-tile="E" title="橡皮">🧹 橡皮</button>
+
+        <!-- 行1：画笔工具 -->
+        <div class="editor-section">
+          <span class="editor-section-label">画笔</span>
+          <div class="editor-toolbar">
+            <button class="editor-tool active" data-tile="#" title="墙">🧱 墙</button>
+            <button class="editor-tool" data-tile=" " title="地板">⬜ 地板</button>
+            <button class="editor-tool" data-tile="." title="目标">🟡 目标</button>
+            <button class="editor-tool" data-tile="$" title="箱子">📦 箱子</button>
+            <button class="editor-tool" data-tile="@" title="玩家">🧑 玩家</button>
+            <button class="editor-tool" data-tile="E" title="橡皮">🧹 橡皮</button>
+          </div>
         </div>
-        <div id="editorSizePresets" class="editor-size" style="margin-bottom:4px"></div>
-        <div class="editor-size">
-          <label>宽 <input id="editorW" type="number" min="5" max="16" value="8"></label>
-          <label>高 <input id="editorH" type="number" min="5" max="14" value="7"></label>
-          <button id="editorResizeBtn" type="button">调整大小</button>
-          <button id="editorFillWallBtn" type="button">边框填墙</button>
-          <button id="editorClearBtn" type="button">清空</button>
-          <button id="editorSymBtn" type="button">对称 OFF</button>
-          <button id="editorFlipHBtn" type="button">⇔ 水平</button>
-          <button id="editorFlipVBtn" type="button">⇕ 垂直</button>
-          <button id="editorRotBtn" type="button">↻ 90°</button>
-          <button id="editorLineBtn" type="button" title="线条绘制，点击两次画线">╱ 线条</button>
-          <button id="editorRectBtn" type="button" title="矩形填充，点击两次确定">□ 矩形</button>
-          <button id="editorFillBtn" type="button" title="洪汛填充，点击格子填充连通区域">🖌 填充</button>
-          <button id="editorUndoBtn" type="button">↩ 撤销</button>
-          <button id="editorRedoBtn" type="button">↪ 重做</button>
-          <button id="editorRandomBtn" type="button">🎲 随机生成</button>
-          <select id="editorTemplateSelect"><option value="">📋 模板...</option></select>
+
+        <!-- 行2：画布尺寸 + 预设 -->
+        <div class="editor-section">
+          <span class="editor-section-label">画布</span>
+          <div class="editor-row">
+            <label class="editor-size-label">宽 <input id="editorW" type="number" min="5" max="16" value="8"></label>
+            <label class="editor-size-label">高 <input id="editorH" type="number" min="5" max="14" value="7"></label>
+            <button id="editorResizeBtn" type="button">调整大小</button>
+            <button id="editorFillWallBtn" type="button">边框填墙</button>
+            <button id="editorClearBtn" type="button">清空</button>
+            <button id="editorSymBtn" type="button">对称 OFF</button>
+            <button id="editorRandomBtn" type="button">🎲 随机</button>
+            <select id="editorTemplateSelect"><option value="">📋 模板...</option></select>
+            <div id="editorSizePresets" class="editor-presets"></div>
+          </div>
         </div>
-        <div id="editorBoard" class="editor-board"></div>
-        <div id="editorCoord" class="editor-coord"></div>
+
+        <!-- 行3：绘图模式 + 变换 + 历史 -->
+        <div class="editor-section">
+          <span class="editor-section-label">工具</span>
+          <div class="editor-row">
+            <button id="editorLineBtn" type="button" title="线条绘制，点击两次画线">╱ 线条</button>
+            <button id="editorRectBtn" type="button" title="矩形填充，点击两次确定">□ 矩形</button>
+            <button id="editorFillBtn" type="button" title="洪水填充">🖌 填充</button>
+            <span class="editor-divider"></span>
+            <button id="editorFlipHBtn" type="button">⇔ 水平</button>
+            <button id="editorFlipVBtn" type="button">⇕ 垂直</button>
+            <button id="editorRotBtn" type="button">↻ 90°</button>
+            <span class="editor-divider"></span>
+            <button id="editorUndoBtn" type="button">↩ 撤销</button>
+            <button id="editorRedoBtn" type="button">↪ 重做</button>
+          </div>
+        </div>
+
+        <!-- 画布区域 -->
+        <div class="editor-board-wrap">
+          <div id="editorBoard" class="editor-board"></div>
+          <div id="editorCoord" class="editor-coord"></div>
+        </div>
+
+        <!-- 状态栏 -->
         <div id="editorStatus" class="editor-status">请放置玩家和等量的箱子与目标</div>
+
+        <!-- 导入面板 -->
         <div id="editorImportBox" class="editor-import-box hidden">
           <p class="editor-import-hint">粘贴关卡地图文本（每行为字符串，#墙 空格地板 .目标 $箱子 @玩家）</p>
           <textarea id="editorImportText" rows="8" placeholder="########"></textarea>
-          <div class="controls" style="margin-top:8px">
+          <div class="editor-row" style="margin-top:8px;justify-content:center">
             <button id="editorImportConfirmBtn" type="button">确认导入</button>
             <button id="editorImportCancelBtn" type="button">取消</button>
           </div>
         </div>
-        <div class="controls center">
-          <button id="editorTestBtn" type="button">▶ 试玩</button>
-          <button id="editorAiBtn" type="button">🤖 AI验证</button>
-          <button id="batchTestBtn" type="button">🧪 批量测试</button>
-          <button id="editorExportBtn" type="button">📋 复制代码</button>
-          <button id="editorShareBtn" type="button">🔗 分享链接</button>
-          <button id="editorExportFileBtn" type="button">💾 导出文件</button>
-          <button id="editorImportBtn" type="button">📥 导入地图</button>
-          <button id="editorClipBtn" type="button">📋 剪贴板</button>
-          <button id="packImportBtn" type="button">📦 导入关卡包</button>
-          <button id="editorCloseBtn" type="button">关闭</button>
+
+        <!-- 底部操作区 -->
+        <div class="editor-footer">
+          <div class="editor-footer-row">
+            <button id="editorTestBtn" type="button">▶ 试玩</button>
+            <button id="editorAiBtn" type="button">🤖 AI验证</button>
+            <button id="batchTestBtn" type="button">🧪 批量测试</button>
+            <button id="editorExportBtn" type="button">📋 复制代码</button>
+            <button id="editorShareBtn" type="button">🔗 分享</button>
+          </div>
+          <div class="editor-footer-row">
+            <button id="editorExportFileBtn" type="button">💾 导出文件</button>
+            <button id="editorImportBtn" type="button">📥 导入地图</button>
+            <button id="editorClipBtn" type="button">📋 剪贴板</button>
+            <button id="packImportBtn" type="button">📦 导入关卡包</button>
+            <button id="editorCloseBtn" type="button">✕ 关闭</button>
+          </div>
         </div>
       </div>
     </div>

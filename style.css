@@ -1091,6 +1091,7 @@ p {
   justify-content: center;
   background: rgba(7, 5, 10, 0.74);
   padding: 20px;
+  z-index: 10000;
 }
 
 .modal.hidden {
@@ -1620,10 +1621,34 @@ body.low-fx .tile.crate.pulse::after {
 /* ─── 关卡编辑器 ─────────────────────────────────────────────────────────── */
 
 .editor-card {
-  width: min(700px, 96vw);
+  width: min(780px, 96vw);
   max-height: 90vh;
   overflow-y: auto;
   text-align: left;
+}
+
+/* ── 分组行 ── */
+.editor-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+
+.editor-section:last-of-type {
+  margin-bottom: 10px;
+}
+
+.editor-section-label {
+  flex-shrink: 0;
+  width: 32px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+  letter-spacing: 0.05em;
 }
 
 .editor-toolbar {
@@ -1631,12 +1656,69 @@ body.low-fx .tile.crate.pulse::after {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  margin-bottom: 10px;
 }
 
-.editor-label {
+.editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.editor-divider {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.editor-size-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
   color: var(--muted);
+}
+
+.editor-size-label input {
+  width: 48px;
+  padding: 3px 6px;
+  background: var(--panel-3);
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
   font-size: 0.85rem;
+}
+
+.editor-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+/* 工具栏内按钮统一样式（覆盖全局 button） */
+.editor-section button,
+.editor-section select {
+  padding: 4px 10px;
+  border: 2px solid var(--line);
+  background: var(--panel-3);
+  color: var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  box-shadow: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.editor-section button:hover,
+.editor-section select:hover {
+  border-color: var(--accent-2);
+  color: var(--text);
 }
 
 .editor-tool {
@@ -1648,6 +1730,7 @@ body.low-fx .tile.crate.pulse::after {
   cursor: pointer;
   font-size: 0.82rem;
   font-family: inherit;
+  box-shadow: none;
   transition: all 0.15s;
 }
 
@@ -1662,50 +1745,37 @@ body.low-fx .tile.crate.pulse::after {
   font-weight: 700;
 }
 
-.editor-size {
+/* 画布居中包裹 */
+.editor-board-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.editor-size input {
-  width: 48px;
-  padding: 3px 6px;
-  background: var(--panel-3);
-  border: 2px solid var(--line);
-  border-radius: 4px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-
-.editor-size button {
-  padding: 4px 10px;
-  border: 2px solid var(--line);
-  background: var(--panel-3);
-  color: var(--muted);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-family: inherit;
-  transition: all 0.15s;
-}
-
-.editor-size button:hover {
-  border-color: var(--accent-2);
-  color: var(--text);
+  margin: 12px 0 4px;
 }
 
 #editorBoard {
   display: grid;
   gap: 2px;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   user-select: none;
   cursor: crosshair;
+}
+
+/* ── 底部操作区 ── */
+.editor-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.editor-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
 }
 
 .editor-cell {
