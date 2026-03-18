@@ -30,6 +30,7 @@ import { analyzePlayer, getNextRecommended } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
 import { MacroRecorder } from './macro';
 import { addLeaderboardEntry } from './leaderboard';
+import { getComboLabel, getComboColor } from './combo';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -355,12 +356,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ─── Combo HUD ────────────────────────────────────────────────────────────
+  let comboHudEl: HTMLElement | null = null;
+  let comboHudTimer: ReturnType<typeof setTimeout> | null = null;
+  function ensureComboHud(): HTMLElement {
+    if (!comboHudEl) {
+      comboHudEl = document.createElement('div');
+      comboHudEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:9990;font-size:2em;font-weight:900;font-family:monospace;text-shadow:0 0 12px currentColor;display:none;transition:opacity .3s';
+      document.body.appendChild(comboHudEl);
+    }
+    return comboHudEl;
+  }
+
   gameEvents.addEventListener('pushed', (e: Event) => {
     const detail = (e as CustomEvent).detail as { to: { x: number; y: number } } | undefined;
     if (detail?.to) {
       const { sx, sy } = getTileScreenPos(detail.to.x, detail.to.y);
       if (state.combo.count > 2) {
         emitCombo(sx, sy, state.combo.count);
+        const label = getComboLabel(state.combo.count);
+        if (label) {
+          const hud = ensureComboHud();
+          hud.textContent = `${state.combo.count}× ${label}`;
+          hud.style.color = getComboColor(state.combo.count);
+          hud.style.display = 'block';
+          hud.style.opacity = '1';
+          if (comboHudTimer) clearTimeout(comboHudTimer);
+          comboHudTimer = setTimeout(() => { if (comboHudEl) { comboHudEl.style.opacity='0'; setTimeout(()=>{ if(comboHudEl) comboHudEl.style.display='none'; },300); } }, 1200);
+        }
       } else {
         emitPushSpark(sx, sy);
       }
