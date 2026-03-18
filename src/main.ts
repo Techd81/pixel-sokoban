@@ -37,6 +37,7 @@ import { initHaptics, haptic, setHapticsEnabled } from './haptic';
 import { addJournalEntry } from './journal';
 import { PerformanceMonitor } from './perf';
 import { saveGame, loadGame, getSaveSlots } from './saveload';
+import { RaceMode } from './race';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -1322,6 +1323,34 @@ document.addEventListener('DOMContentLoaded', () => {
       setMessage('速通模式已开始！完成关卡记录分段', 'info');
       loadLevel(0);
     }
+  });
+
+  // ─── 双人对战模式 ─────────────────────────────────────────────────────────
+  const raceMode = new RaceMode();
+  document.getElementById('raceBtn')?.addEventListener('click', () => {
+    if (raceMode.state?.active) {
+      raceMode.stop();
+      document.getElementById('raceOverlay')?.remove();
+      setMessage('对战结束', 'info');
+      return;
+    }
+    const level = LEVELS[state.levelIndex];
+    // 创建双画布覆盖层
+    const overlay = document.createElement('div');
+    overlay.id = 'raceOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#17121f;display:flex;gap:8px;padding:8px;z-index:8000';
+    const c1 = document.createElement('canvas'); c1.style.flex='1;max-width:50%';
+    const c2 = document.createElement('canvas'); c2.style.flex='1;max-width:50%';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent='✕ 退出'; closeBtn.style.cssText='position:absolute;top:8px;right:8px;z-index:1';
+    closeBtn.addEventListener('click', () => { raceMode.stop(); overlay.remove(); });
+    overlay.append(c1, c2, closeBtn);
+    document.body.appendChild(overlay);
+    raceMode.start(level, state.levelIndex,
+      () => { raceMode.renderPlayer(c1, raceMode.state!.p1); raceMode.renderPlayer(c2, raceMode.state!.p2); },
+      (winner) => { setMessage(`玩家${winner}获胜！`, 'win'); haptic('win'); setTimeout(() => { overlay.remove(); }, 3000); }
+    );
+    setMessage('对战开始！P1:WASD P2:方向键', 'info');
   });
 
   // ─── 关卡选择按钮 ────────────────────────────────────────────────────────
