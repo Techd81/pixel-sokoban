@@ -49,7 +49,7 @@ import { showKeyboardHelp } from './shortcuts';
 import { captureBoard, showScreenshotPreview } from './screenshot';
 import { exportRecords, importRecordsFromJSON } from './export';
 import { saveRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK } from './storage';
-import { getDailyChallenge } from './daily';
+import { getDailyChallenge, completeDailyChallenge } from './daily';
 import { initI18n, getLocale, setLocale, t } from './i18n';
 import { initEditorModal } from './editor_modal';
 import { initPWA, triggerInstall } from './pwa';
@@ -387,6 +387,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sendWinDanmaku(state.records?.[state.levelIndex]?.bestRank ?? '');
     ghostRecorder.save(state.moves);
+
+    // 每日挑战完成记录
+    const dc = getDailyChallenge();
+    if (dc.levelIndex === state.levelIndex && !dc.completed) {
+      completeDailyChallenge(state.moves, state.timer.elapsedMs);
+      notify('每日挑战完成！', 'success');
+    }
 
     // 检查成就
     const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
