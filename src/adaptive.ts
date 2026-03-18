@@ -92,6 +92,7 @@ export function getNextRecommended(records: Records, currentIndex: number): numb
 }
 
 export function getAdaptiveHintDelay(records: Records, currentMoves: number, parMoves: number): number {
+  if (parMoves <= 0) return -1; // 无par则不提示
   const profile = analyzePlayer(records);
   const ratio = currentMoves / parMoves;
   if (ratio < profile.struggleThreshold) return -1; // 不提示
