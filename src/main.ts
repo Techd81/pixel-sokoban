@@ -218,11 +218,21 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const closeWinModal = (): void => {
+    cancelAutoNext();
     winModal?.classList.add('hidden');
+  };
+
+  let autoNextTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const cancelAutoNext = (): void => {
+    if (autoNextTimer !== null) { clearTimeout(autoNextTimer); autoNextTimer = null; }
+    const btn = document.getElementById('modalNextBtn') as HTMLButtonElement | null;
+    if (btn && !btn.disabled) btn.textContent = '继续下一关';
   };
 
   const openWinModal = (rank: string | null, challengeCleared: boolean): void => {
     if (!winModal) return;
+    cancelAutoNext();
     const level = getLevelConfig(state.levelIndex);
     const record = state.records?.[state.levelIndex];
     if (winTextEl) {
@@ -243,6 +253,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     syncWinStars(getLevelRating(state.levelIndex));
     winModal.classList.remove('hidden');
+    // 自动进入下一关（5秒倒计时）
+    const isLast = state.levelIndex >= LEVELS.length - 1;
+    if (!isLast) {
+      let countdown = 5;
+      const tick = (): void => {
+        if (modalNextBtn && !modalNextBtn.disabled) modalNextBtn.textContent = `继续下一关（${countdown}s）`;
+        if (countdown <= 0) {
+          closeWinModal();
+          loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1));
+          return;
+        }
+        countdown--;
+        autoNextTimer = setTimeout(tick, 1000);
+      };
+      autoNextTimer = setTimeout(tick, 1000);
+    }
   };
 
   winModal?.addEventListener('click', (event) => {
