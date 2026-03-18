@@ -632,6 +632,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (winModal && !winModal.classList.contains('hidden')) return;
+    // 双人对战模式激活时，跳过主游戏键盘处理（race模式自己处理键盘）
+    if (raceMode.state?.active) return;
     if (ev.target instanceof HTMLElement) {
       const tag = ev.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || ev.target.isContentEditable) {
