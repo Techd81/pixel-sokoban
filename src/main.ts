@@ -34,7 +34,7 @@ import { getComboLabel, getComboColor } from './combo';
 import { initSkin, renderSkinSelector, SKINS } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
 import { initHaptics, haptic, setHapticsEnabled } from './haptic';
-import { addJournalEntry } from './journal';
+import { addJournalEntry, getRecentEntries, renderJournal } from './journal';
 import { PerformanceMonitor } from './perf';
 import { saveGame, loadGame, getSaveSlots } from './saveload';
 import { RaceMode } from './race';
@@ -1130,7 +1130,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(overlay);
   });
   document.getElementById('recentBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
+    // 展示成长日记
+    const existing = document.getElementById('journalModal');
+    if (existing) { existing.remove(); return; }
+    const overlay = document.createElement('div');
+    overlay.id = 'journalModal';
+    overlay.className = 'modal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const card = document.createElement('div');
+    card.className = 'modal-card';
+    card.style.maxWidth = '480px';
+    card.innerHTML = '<p class="eyebrow">JOURNAL</p><h2>成长日记</h2>';
+    const content = document.createElement('div');
+    renderJournal(content);
+    card.appendChild(content);
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '关闭'; closeBtn.style.marginTop = '12px';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    card.appendChild(closeBtn);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('speedRankBtn')?.addEventListener('click', () => {
