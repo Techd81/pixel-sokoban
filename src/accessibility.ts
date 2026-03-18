@@ -14,8 +14,15 @@ let currentMode: ColorBlindMode = 'none';
 export function setColorBlindMode(mode: ColorBlindMode): void {
   currentMode = mode;
   localStorage.setItem('sokoban_a11y_cbm', mode);
-  const filter = COLOR_FILTERS[mode];
-  document.documentElement.style.filter = filter ? `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='f'><feColorMatrix type='${mode === 'monochrome' ? 'saturate' : 'matrix'}' values='${filter.replace('saturate(0)', '0').replace('matrix(', '').replace(')', '')}'/></filter></svg>#f")` : '';
+  // 使用CSS filter（更简单可靠）
+  const filters: Record<ColorBlindMode, string> = {
+    none: '',
+    deuteranopia: 'hue-rotate(90deg) saturate(0.8)',
+    protanopia:   'hue-rotate(180deg) saturate(0.7)',
+    tritanopia:   'hue-rotate(-90deg) saturate(0.8)',
+    monochrome:   'saturate(0)',
+  };
+  document.documentElement.style.filter = filters[mode];
   document.body.dataset.cbMode = mode;
 }
 
