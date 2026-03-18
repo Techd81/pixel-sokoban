@@ -80,16 +80,25 @@ export function exportRecords(records: Records, format: ExportFormat = 'json'): 
 
 export function importRecordsFromJSON(jsonStr: string): Records | null {
   try {
+    if (jsonStr.length > 200000) return null; // 导入大小限制200KB
     const data = JSON.parse(jsonStr);
-    // 支持直接的 records 对象格式
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      if (data.levels) return data.levels;
-      if (data.records && Array.isArray(data.records)) {
-        // 从导出格式反向导入（仅恢复基本数据）
-        return {}; // 导出格式不含完整数据，仅供参考
-      }
-      return data;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+    // 验证并提取records
+    const raw: Record<string, unknown> = data.levels ?? data;
+    const result: Records = {};
+    for (const [k, v] of Object.entries(raw)) {
+      const idx = Number(k);
+      if (!Number.isFinite(idx) || idx < 0 || idx > 9999) continue;
+      if (!v || typeof v !== 'object') continue;
+      const r = v as Record<string, unknown>;
+      if (typeof r.bestMoves !== 'number') continue;
+      result[idx] = {
+        bestMoves: r.bestMoves as number,
+        bestRank: (r.bestRank as string) ?? null,
+        bestTimeMs: (r.bestTimeMs as number) ?? 0,
+        challengeCleared: !!(r.challengeCleared),
+      };
     }
-    return null;
+    return Object.keys(result).length > 0 ? result : null;
   } catch { return null; }
 }
