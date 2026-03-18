@@ -9,6 +9,7 @@ import { solveAsync } from './solver';
 import { showShareModal } from './share';
 import { setMessage } from './ui';
 import { copyText, escapeHtml } from './web_utils';
+import { predictDifficulty } from './difficulty';
 
 type ToolTile = TileChar | 'E';
 type DrawMode = 'paint' | 'line' | 'rect' | 'fill';
@@ -326,6 +327,10 @@ export function initEditorModal(): EditorModalApi {
     if (player !== 1) msg += '  |  ⚠ 需要且只能放置 1 个玩家';
     else if (box === 0 || goal === 0) msg += '  |  ⚠ 需要放置箱子与目标';
     else if (box !== goal) msg += '  |  ⚠ 箱子与目标数量需相等';
+    else {
+      const diff = predictDifficulty({ name:'', parMoves:0, starMoves:{three:0,two:0,one:0}, map:gridToMap(grid) });
+      msg += `  |  难度: ${diff.label}(${diff.score.toFixed(0)}分)`;
+    }
     statusEl.textContent = msg;
   };
 
