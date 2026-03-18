@@ -1054,8 +1054,27 @@ document.addEventListener('DOMContentLoaded', () => {
     window.print();
   });
   document.getElementById('progressRingBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
-    document.getElementById('statsModal')?.classList.add('hidden');
+    // 显示SVG进度环
+    const existing = document.getElementById('progressRingModal');
+    if (existing) { existing.remove(); return; }
+    const total = LEVELS.length;
+    const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
+    const star3 = Object.values(state.records).filter((r: any) => r?.bestRank === '★★★').length;
+    const pct = Math.round(cleared / total * 100);
+    const r = 54, cx = 64, cy = 64, circ = 2 * Math.PI * r;
+    const dash = (cleared / total) * circ;
+    const overlay = document.createElement('div');
+    overlay.id = 'progressRingModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9000';
+    overlay.innerHTML = `<div style="background:#17121f;border:2px solid #8be9fd;border-radius:12px;padding:24px 32px;text-align:center;font-family:monospace;color:#f8f8f2">
+      <p style="color:#8be9fd;font-size:11px;letter-spacing:2px">PROGRESS</p>
+      <svg width="128" height="128"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#261d34" stroke-width="12"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ffd166" stroke-width="12" stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/><text x="${cx}" y="${cy}" text-anchor="middle" dy=".35em" fill="#f8f8f2" font-size="22" font-weight="bold" font-family="monospace">${pct}%</text></svg>
+      <div style="margin-top:8px">已通关 <strong style="color:#ffd166">${cleared}</strong> / ${total}</div>
+      <div style="margin-top:4px">三星 <strong style="color:#8be9fd">${star3}</strong> 关</div>
+      <button style="margin-top:12px;padding:6px 16px;border:1px solid #56406f;background:transparent;color:#f8f8f2;cursor:pointer;font-family:monospace" onclick="this.closest('#progressRingModal').remove()">关闭</button>
+    </div>`;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
   });
   document.getElementById('recentBtn')?.addEventListener('click', () => {
     createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
