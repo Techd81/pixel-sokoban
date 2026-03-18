@@ -195,8 +195,9 @@ export function markProgressDirty(): void { _progressCache = -1; }
 export function renderProgress(): void {
   const total   = LEVELS.length;
   let cleared = 0, challenged = 0, stars3 = 0;
+  const records = state.records;
   for (let i = 0; i < total; i++) {
-    const rec = getRecord(i);
+    const rec = records[i];
     if (rec?.bestMoves && rec.bestMoves > 0) {
       cleared++;
       if (rec.challengeCleared) challenged++;
