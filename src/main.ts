@@ -37,8 +37,10 @@ import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
 import { WORLDS, getWorldForLevel, isWorldUnlocked } from './worlds';
+import { getSmartHint } from './hint_engine';
 import { GestureRecognizer } from './gestures';
 import { notify, notifyWin, notifyAchievement } from './notify';
+import { initAccessibility } from './accessibility';
 import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 import { initThemeButtons } from './themes';
@@ -123,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDomRefs();
   injectAchievementStyles();
   initThemeButtons();
+  initAccessibility();
   initFontSizeControls();
   initI18n();
 
@@ -515,12 +518,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
   async function handleHint(): Promise<void> {
     setMessage('AI 计算中...', 'info');
-    const result = await solveAsync(state.grid as string[][], state.player, state.goals);
-    if (!result) { setMessage('无解或超时', 'error'); return; }
-    const step = result.steps[0];
-    if (!step) { setMessage('已是最优位置', 'info'); return; }
-    const dirs: Record<string, string> = { up: '↑', down: '↓', left: '←', right: '→' };
-    setMessage(`提示：向 ${dirs[step.facing] ?? step.facing} 移动`, 'info');
+    const hint = getSmartHint(state.grid as string[][], state.player, state.goals);
+    if (!hint) { setMessage('无解或超时', 'error'); return; }
+    if (hint.type === 'stuck') { setMessage(hint.message, 'error'); return; }
+    const msg = hint.type === 'nearWin'
+      ? `${hint.arrow} ${hint.message}（置信度 ${Math.round(hint.confidence * 100)}%）`
+      : `提示：向 ${hint.arrow} ${hint.type === 'push' ? '推箱子' : '移动'}${hint.stepsToWin > 0 ? `（剩 ${hint.stepsToWin} 步）` : ''}`;
+    setMessage(msg, 'info');
+    state.ai.hintArrow = hint.arrow;
   }
 
   // ─── 程序化关卡生成 ──────────────────────────────────────────────────────
