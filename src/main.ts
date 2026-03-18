@@ -372,11 +372,23 @@ document.addEventListener('DOMContentLoaded', () => {
     render();
     renderProgress();
     autoScaleBoard();
+    // 清除上一关的幽灵
+    document.getElementById('ghost-overlay')?.remove();
     ghostRecorder.start(state.levelIndex);
     if (ghostPlayer.load(state.levelIndex)) {
       ghostPlayer.start((frame, _progress) => {
-        // 幽灵帧回调：可在此绘制幽灵位置（扩展点）
-        void frame;
+        // 显示幽灵位置（半透明覆盖层）
+        let ghostEl = document.getElementById('ghost-overlay') as HTMLElement | null;
+        if (!ghostEl) {
+          ghostEl = document.createElement('div');
+          ghostEl.id = 'ghost-overlay';
+          ghostEl.style.cssText = 'position:absolute;pointer-events:none;z-index:10;font-size:var(--tile-size,40px);line-height:1;opacity:0.45;transition:left .2s,top .2s';
+          els.board?.appendChild(ghostEl);
+        }
+        ghostEl.textContent = '👻';
+        const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 40;
+        ghostEl.style.left = `${frame.playerPos.x * tileSize}px`;
+        ghostEl.style.top = `${frame.playerPos.y * tileSize}px`;
       }, 250);
     }
   });
