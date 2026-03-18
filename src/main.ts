@@ -37,6 +37,8 @@ import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
 import { WORLDS, getWorldForLevel, isWorldUnlocked } from './worlds';
+import { GestureRecognizer } from './gestures';
+import { notify, notifyWin, notifyAchievement } from './notify';
 import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 import { initThemeButtons } from './themes';
@@ -369,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
       shared: 0,
     };
     const newAchievements = checkAchievements(achStats);
-    newAchievements.forEach(a => showAchievementUnlock(a));
+    newAchievements.forEach(a => { showAchievementUnlock(a); notifyAchievement(a.name, a.desc ?? ''); });
 
     // 自适应推荐
     void analyzePlayer(state.records);
@@ -408,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     markProgressDirty();
     renderProgress();
     const record = state.records?.[state.levelIndex];
+    notifyWin(getLevelConfig(state.levelIndex).name, state.moves, record?.bestRank ?? '');
     openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
   });
 
@@ -482,21 +485,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ─── 触摸滑动 ────────────────────────────────────────────────────────────
-  let touchStart = { x: 0, y: 0 };
-  document.addEventListener('touchstart', (e) => {
-    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }, { passive: true });
-  document.addEventListener('touchend', (e) => {
-    audioSystem.unlock();
-    if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return;
-    const dx = e.changedTouches[0].clientX - touchStart.x;
-    const dy = e.changedTouches[0].clientY - touchStart.y;
-    const adx = Math.abs(dx), ady = Math.abs(dy);
-    if (Math.max(adx, ady) < 20) return;
-    if (adx > ady) tryMove(dx > 0 ? 1 : -1, 0, dx > 0 ? 'right' : 'left');
-    else tryMove(0, dy > 0 ? 1 : -1, dy > 0 ? 'down' : 'up');
-  }, { passive: true });
+  // ─── 触摸手势（GestureRecognizer）────────────────────────────────────────
+  const gesture = new GestureRecognizer(document.body, { swipeThreshold: 20, longPressMs: 600 });
+  gesture
+    .on('swipe-right', () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return; tryMove(1, 0, 'right'); })
+    .on('swipe-left',  () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return; tryMove(-1, 0, 'left'); })
+    .on('swipe-down',  () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return; tryMove(0, 1, 'down'); })
+    .on('swipe-up',    () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return; tryMove(0, -1, 'up'); })
+    .on('double-tap',  () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || editorModal.isOpen()) return; undo(); })
+    .on('long-press',  () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || editorModal.isOpen()) return; restartLevel(); notify('已重开本关', 'info'); });
 
   // ─── 方向键按钮（浮动 + 面板）───────────────────────────────────────────
   const bindDirButtons = (selector: string) => {
