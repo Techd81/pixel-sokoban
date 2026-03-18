@@ -301,7 +301,10 @@ export function loadLevel(index: number): void {
 
 // --- 历史 / undo / restart
 // diffs: 本步将要改变的格子 [{x,y,from,to}, ...]，由调用方传入
+const MAX_HISTORY = 1000; // 最多保留1000步历史，防止内存无限增长
+
 export function saveHistory(diffs: Array<{x:number;y:number;from:TileChar;to:TileChar}>): void {
+  if (state.history.length >= MAX_HISTORY) state.history.shift(); // 超限时丢弃最早的步骤
   state.history.push({
     diffs,
     player: { ...state.player },
