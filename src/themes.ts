@@ -27,7 +27,7 @@ export function applyTheme(name: ThemeName): void {
   const root = document.documentElement;
   root.dataset.theme = name;
   root.style.setProperty('--bg',     t.bg);
-  root.style.setProperty('--fg',     t.fg);
+  root.style.setProperty('--text',   t.fg); // CSS使用--text而非--fg
   root.style.setProperty('--accent', t.accent);
   root.style.setProperty('--wall',   t.wall);
   root.style.setProperty('--wall-deep', t.wall);
