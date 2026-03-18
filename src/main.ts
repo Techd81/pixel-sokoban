@@ -44,7 +44,7 @@ import { initSoundPack, getSoundPack, setSoundPack, SOUND_PACKS } from './sound_
 import { loadConfig, getConfig, setConfig, renderConfigPanel, onConfigChange } from './config';
 import { AudioVisualizer } from './visualizer_audio';
 import { renderStatsHeatmap } from './heatmap';
-import { generateShareCard, downloadShareCard } from './sharecard';
+import { downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
@@ -1092,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('shareCardBtn')?.addEventListener('click', () => {
     const cfg = getLevelConfig(state.levelIndex);
     const rec = state.records?.[state.levelIndex];
-    const card = generateShareCard({
+    const opts = {
       levelName: cfg.name,
       levelIndex: state.levelIndex,
       moves: state.moves,
@@ -1100,9 +1100,9 @@ document.addEventListener('DOMContentLoaded', () => {
       rank: rec?.bestRank ?? '',
       par: cfg.parMoves,
       map: cfg.map,
-    });
-    downloadShareCard({ levelName: cfg.name, levelIndex: state.levelIndex, moves: state.moves, timeMs: state.timer.elapsedMs, rank: rec?.bestRank ?? '', par: cfg.parMoves, map: cfg.map });
-    void card;
+    };
+    downloadShareCard(opts); // 直接下载（内部会生成）
+    setMessage('分享卡片已下载', 'win');
   });
 
   // ─── 回放查看器按钮（statsModal 中的时间线按钮）────────────────────────
