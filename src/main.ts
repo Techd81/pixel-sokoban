@@ -26,7 +26,7 @@ import { generateLevel, generateLevelAsync } from './generator';
 import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModal } from './share';
 import { SolverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
-import { analyzePlayer, getNextRecommended } from './adaptive';
+import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
 import { MacroRecorder } from './macro';
 import { addLeaderboardEntry } from './leaderboard';
@@ -351,6 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── 游戏事件监听 ───────────────────────────────────────────────────────
   // minimap 覆盖层（懒创建）
   let minimapOverlay: HTMLCanvasElement | null = null;
+  let _adaptiveHintShown = false; // 每关只自动提示一次
+  let _adaptiveHintTimer: ReturnType<typeof setTimeout> | null = null;
 
   gameEvents.addEventListener('update', () => {
     render();
@@ -373,10 +375,28 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!minimapOverlay) minimapOverlay = createMinimapOverlay(boardEl);
       renderMinimap(minimapOverlay, state.grid as string[][], state.player, state.goals);
     }
+    // 自适应提示：步数超阈值时自动建议（每关只提示一次）
+    if (!state.won && getPlaybackMode() === 'none' && state.moves > 0 && !_adaptiveHintShown && !_adaptiveHintTimer) {
+      const cfg2 = getLevelConfig(state.levelIndex);
+      if (cfg2) {
+        const delay = getAdaptiveHintDelay(state.records, state.moves, cfg2.parMoves);
+        if (delay > 0) {
+          _adaptiveHintTimer = setTimeout(() => {
+            _adaptiveHintTimer = null;
+            if (!state.won && !_adaptiveHintShown) {
+              _adaptiveHintShown = true;
+              setMessage('💡 步数较多，按H获取AI提示', 'info');
+            }
+          }, delay);
+        }
+      }
+    }
   });
 
   gameEvents.addEventListener('levelLoaded', () => {
     closeWinModal();
+    _adaptiveHintShown = false; // 重置自适应提示标志
+    if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
     invalidateRenderCache(); // 换关时重置渲染缓存
     render();
     renderProgress();
