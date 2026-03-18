@@ -85,7 +85,14 @@ export function render(): void {
     const rec = getRecord(state.levelIndex);
     const bm = formatBest(rec);
     const br = rec?.bestRank ?? '';
-    if (els.bestMoves && bm !== _lastBestMoves) { _lastBestMoves = bm; els.bestMoves.textContent = bm; }
+    if (els.bestMoves && bm !== _lastBestMoves) {
+      _lastBestMoves = bm;
+      els.bestMoves.textContent = bm;
+      // 新记录闪光动画
+      els.bestMoves.classList.remove('new-record-flash');
+      void els.bestMoves.offsetWidth; // 触发 reflow
+      els.bestMoves.classList.add('new-record-flash');
+    }
     if (els.bestRank && br !== _lastBestRank) { _lastBestRank = br; els.bestRank.textContent = br; }
   }
   if (els.timeDisplay) els.timeDisplay.textContent = formatMs(getElapsedTimeMs());
