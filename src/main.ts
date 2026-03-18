@@ -481,6 +481,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   gameEvents.addEventListener('won', (e: Event) => {
+    // 通关时清除自适应提示定时器
+    if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
+    _adaptiveHintShown = true;
     const detail = (e as CustomEvent).detail as { playback?: boolean; mode?: string } | undefined;
     const playback = detail?.playback ?? (getPlaybackMode() !== 'none');
 
