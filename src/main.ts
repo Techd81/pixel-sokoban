@@ -1375,6 +1375,35 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLevel(idx);
         document.getElementById('levelSelect')?.classList.add('hidden');
       });
+      cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        // 右键上下文菜单
+        document.getElementById('levelCtxMenu')?.remove();
+        const menu = document.createElement('div');
+        menu.id = 'levelCtxMenu';
+        menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;background:#261d34;border:2px solid #56406f;border-radius:6px;z-index:9995;min-width:140px;box-shadow:4px 4px 0 #000;font-family:monospace`;
+        const fav = isFavorite(idx);
+        menu.innerHTML = `
+          <button class="ctx-item" data-action="fav">${fav ? '💛 取消收藏' : '⭐ 收藏'}</button>
+          <button class="ctx-item" data-action="replay">📽 查看回放</button>
+          <button class="ctx-item" data-action="hint">💡 AI提示</button>
+        `;
+        menu.style.cssText += ';color:#f6f1ff';
+        const closeMenu = () => menu.remove();
+        menu.querySelectorAll<HTMLButtonElement>('.ctx-item').forEach(btn => {
+          btn.style.cssText = 'display:block;width:100%;padding:8px 14px;background:transparent;border:none;color:#f6f1ff;cursor:pointer;text-align:left;font:13px monospace';
+          btn.addEventListener('mouseenter', () => btn.style.background = '#312544');
+          btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
+          btn.addEventListener('click', () => {
+            closeMenu();
+            if (btn.dataset.action === 'fav') { const f = toggleFavorite(idx); notify(f ? '⭐ 已收藏' : '取消收藏', 'info'); renderLevelSelectGrid(); }
+            else if (btn.dataset.action === 'replay') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => document.getElementById('timelineBtn')?.click(), 200); }
+            else if (btn.dataset.action === 'hint') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => void handleHint(), 300); }
+          });
+        });
+        document.body.appendChild(menu);
+        setTimeout(() => document.addEventListener('click', closeMenu, { once: true }), 0);
+      });
       grid.appendChild(cell);
       // 渲染关卡预览
       const canvas = cell.querySelector<HTMLCanvasElement>('.level-preview-canvas');
