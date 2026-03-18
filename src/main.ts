@@ -40,6 +40,7 @@ import { saveGame, loadGame, getSaveSlots } from './saveload';
 import { RaceMode } from './race';
 import { animate, Easing } from './animation';
 import { analyzeDifficultyCurve, renderCurveChart } from './curve';
+import { initSoundPack, getSoundPack, setSoundPack, SOUND_PACKS } from './sound_pack';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -139,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initThemeButtons();
   initAccessibility();
   initHaptics();
+  initSoundPack();
   // 性能监控（按 ` 键切换 FPS 显示）
   const perfMon = new PerformanceMonitor();
   perfMon.start();
@@ -1197,7 +1199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sm.id = 'inlineSettingsModal';
     sm.className = 'modal';
     sm.addEventListener('click', (e) => { if (e.target === sm) sm.remove(); });
-    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>低特效模式</span><input type="checkbox" id="stLowFx"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>色盲模式</span><select id="stCbMode" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px"><option value="none">关闭</option><option value="deuteranopia">红绿色盲</option><option value="protanopia">红色盲</option><option value="tritanopia">蓝黄色盲</option><option value="monochrome">单色</option></select></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
+    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>低特效模式</span><input type="checkbox" id="stLowFx"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>色盲模式</span><select id="stCbMode" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px"><option value="none">关闭</option><option value="deuteranopia">红绿色盲</option><option value="protanopia">红色盲</option><option value="tritanopia">蓝黄色盲</option><option value="monochrome">单色</option></select></label><label style="display:flex;justify-content:space-between;align-items:center"><span>音效风格</span><select id="stSoundPack" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px">${Object.values(SOUND_PACKS).map(p=>`<option value="${p.id}">${p.emoji} ${p.name}</option>`).join('')}</select></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
     document.body.appendChild(sm);
     const hapticEl = document.getElementById('stHaptic') as HTMLInputElement | null;
     if (hapticEl) {
@@ -1220,6 +1222,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cbEl) {
       cbEl.value = localStorage.getItem('sokoban_a11y_cbm') || 'none';
       cbEl.addEventListener('change', () => { import('./accessibility').then(m => m.setColorBlindMode(cbEl.value as any)); });
+    }
+    const soundPackEl = document.getElementById('stSoundPack') as HTMLSelectElement | null;
+    if (soundPackEl) {
+      soundPackEl.value = getSoundPack().id;
+      soundPackEl.addEventListener('change', () => setSoundPack(soundPackEl.value as any));
     }
     document.getElementById('stClose')?.addEventListener('click', () => sm.remove());
   });
