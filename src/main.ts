@@ -397,7 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
     closeWinModal();
     _adaptiveHintShown = false; // 重置自适应提示标志
     if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
-    invalidateRenderCache(); // 换关时重置渲染缓存
+    invalidateRenderCache();
+    // 宏录制自动随关卡切换停止
+    if (macroRecorder.isRecording) macroRecorder.cancel(); // 换关时重置渲染缓存
     render();
     renderProgress();
     autoScaleBoard();
@@ -607,19 +609,23 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'ArrowUp':    case 'w': case 'W':
         if (!canInteractive) break;
         ev.preventDefault();
-        audioSystem.unlock(); tryMove(0, -1, 'up'); break;
+        audioSystem.unlock(); tryMove(0, -1, 'up');
+        macroRecorder.record(0, -1, 'up'); break;
       case 'ArrowDown':  case 's': case 'S':
         if (!canInteractive) break;
         ev.preventDefault();
-        audioSystem.unlock(); tryMove(0,  1, 'down'); break;
+        audioSystem.unlock(); tryMove(0,  1, 'down');
+        macroRecorder.record(0, 1, 'down'); break;
       case 'ArrowLeft':  case 'a': case 'A':
         if (!canInteractive) break;
         ev.preventDefault();
-        audioSystem.unlock(); tryMove(-1, 0, 'left'); break;
+        audioSystem.unlock(); tryMove(-1, 0, 'left');
+        macroRecorder.record(-1, 0, 'left'); break;
       case 'ArrowRight': case 'd': case 'D':
         if (!canInteractive) break;
         ev.preventDefault();
-        audioSystem.unlock(); tryMove(1,  0, 'right'); break;
+        audioSystem.unlock(); tryMove(1,  0, 'right');
+        macroRecorder.record(1, 0, 'right'); break;
       case 'z': case 'Z':
         if (!canInteractive) break;
         handleUndo(); break;
