@@ -147,6 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initAccessibility();
   initHaptics();
   initSoundPack();
+  // 监听主题切换，更新themesUsed统计
+  document.addEventListener('theme-changed', (e) => {
+    const theme = (e as CustomEvent).detail?.theme as string;
+    if (theme) state.stats.themesUsed.add(theme);
+  });
   loadConfig(); // 加载游戏配置
   onConfigChange((key, val) => {
     if (key === 'masterVolume') audioSystem.setVolume('master', val as number);

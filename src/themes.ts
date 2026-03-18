@@ -65,7 +65,11 @@ export function initThemeButtons(): void {
   document.querySelectorAll<HTMLElement>('[data-theme]').forEach(btn => {
     const theme = btn.dataset.theme as ThemeName;
     if (!THEMES[theme]) return;
-    btn.addEventListener('click', () => applyTheme(theme));
+    btn.addEventListener('click', () => {
+      applyTheme(theme);
+      // 通知外部（统计主题使用）
+      document.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme } }));
+    });
   });
   applyTheme(getCurrentTheme());
 }
