@@ -56,7 +56,7 @@ import { showKeyboardHelp } from './shortcuts';
 import { captureBoard, showScreenshotPreview } from './screenshot';
 import { exportRecords, importRecordsFromJSON } from './export';
 import { saveRecords, loadRecords, loadPlayerName, savePlayerName, STORAGE_KEY_LOCK } from './storage';
-import { getDailyChallenge, completeDailyChallenge } from './daily';
+import { getDailyChallenge, completeDailyChallenge, getDailyStreak } from './daily';
 import { initI18n, getLocale, setLocale, t } from './i18n';
 import { initEditorModal } from './editor_modal';
 import { initPWA, triggerInstall } from './pwa';
@@ -1157,8 +1157,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('dailyStepBtn')?.addEventListener('click', () => {
     const dc = getDailyChallenge();
+    const streak = getDailyStreak();
     loadLevel(dc.levelIndex);
-    setMessage(`今日挑战：第${dc.levelIndex + 1}关 ${dc.level.name}`, 'info');
+    const streakMsg = streak > 1 ? ` 🔥${streak}天连续` : '';
+    const completedMsg = dc.completed ? ` ✓已完成(${dc.completedMoves}步)` : '';
+    setMessage(`今日挑战：第${dc.levelIndex + 1}关 ${dc.level.name}${completedMsg}${streakMsg}`, 'info');
   });
 
   document.querySelectorAll<HTMLButtonElement>('.speed-btn').forEach(btn => {
