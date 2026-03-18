@@ -65,7 +65,13 @@ export function notify(
     'transition:all 0.3s ease', 'opacity:0', 'transform:translateX(20px)',
     'max-width:300px', 'word-break:break-word',
   ].join(';');
-  el.innerHTML = `<span>${icon ?? style.icon}</span><span>${message}</span>`;
+  // 用textContent防XSS，分两个span分别设置
+  const iconSpan = document.createElement('span');
+  iconSpan.textContent = icon ?? style.icon;
+  const msgSpan = document.createElement('span');
+  msgSpan.textContent = message;
+  el.appendChild(iconSpan);
+  el.appendChild(msgSpan);
 
   if (onClick) el.addEventListener('click', onClick);
   el.addEventListener('click', () => remove(el));
