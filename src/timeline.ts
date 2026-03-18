@@ -19,9 +19,15 @@ export interface ReplayData {
 }
 
 const REPLAY_PREFIX = 'sokoban_replay_';
+const MAX_REPLAY_STEPS = 500;
 
 export function saveReplay(data: ReplayData): void {
-  try { localStorage.setItem(REPLAY_PREFIX + data.levelIndex, JSON.stringify(data)); } catch { }
+  try {
+    const steps = data.steps.length > MAX_REPLAY_STEPS
+      ? data.steps.slice(-MAX_REPLAY_STEPS)
+      : data.steps;
+    localStorage.setItem(REPLAY_PREFIX + data.levelIndex, JSON.stringify({ ...data, steps }));
+  } catch { }
 }
 
 export function loadReplay(levelIndex: number): ReplayData | null {
