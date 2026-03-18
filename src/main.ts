@@ -34,6 +34,7 @@ import { getComboLabel, getComboColor } from './combo';
 import { initSkin } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
 import { initHaptics, haptic } from './haptic';
+import { addJournalEntry } from './journal';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -443,6 +444,17 @@ document.addEventListener('DOMContentLoaded', () => {
       timeMs: state.timer.elapsedMs,
       rank: '',
       par: lvConfig.parMoves ?? state.moves,
+    });
+
+    // 成长日记记录
+    const prevBest = state.records?.[state.levelIndex]?.bestMoves ?? 0;
+    addJournalEntry({
+      levelIndex: state.levelIndex,
+      levelName: lvConfig.name,
+      moves: state.moves,
+      timeMs: state.timer.elapsedMs,
+      rank: state.records?.[state.levelIndex]?.bestRank ?? '',
+      isNewRecord: prevBest === 0 || state.moves < prevBest,
     });
 
     // 检查成就
