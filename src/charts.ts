@@ -13,7 +13,7 @@ export function drawBarChart(
   const PAD = { top: 30, right: 10, bottom: 40, left: 45 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
-  const max = maxVal ?? (data.length > 0 ? data.reduce((a,b)=>Math.max(a,b), 0) : 0) || 1;
+  const max = maxVal ?? ((data.length > 0 ? data.reduce((a,b)=>Math.max(a,b), 0) : 0) || 1);
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#17121f'; ctx.fillRect(0, 0, W, H);
   if (title) {
