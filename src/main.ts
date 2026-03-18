@@ -695,6 +695,17 @@ document.addEventListener('DOMContentLoaded', () => {
             setMessage(`跳转到「${WORLDS[worldIdx].name}」第${startLevel + 1}关`, 'info');
           }
         }
+        // Ctrl+M: 宏录制开始/停止
+        if (ev.ctrlKey && ev.key === 'm') {
+          ev.preventDefault();
+          if (macroRecorder.isRecording) {
+            const macro = macroRecorder.stop();
+            setMessage(macro ? `宏已保存(${macro.moves.length}步)` : '宏录制取消', macro ? 'win' : 'info');
+          } else {
+            macroRecorder.start(state.levelIndex);
+            setMessage('🔴 宏录制已开始（再按Ctrl+M停止）', 'info');
+          }
+        }
         break;
     }
   });
