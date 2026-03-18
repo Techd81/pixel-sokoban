@@ -39,6 +39,7 @@ import { PerformanceMonitor } from './perf';
 import { saveGame, loadGame, getSaveSlots } from './saveload';
 import { RaceMode } from './race';
 import { animate, Easing } from './animation';
+import { analyzeDifficultyCurve, renderCurveChart } from './curve';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -1128,8 +1129,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('diffAnalBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 3);
-    document.getElementById('statsModal')?.classList.add('hidden');
+    // 显示难度曲线分析
+    const existing = document.getElementById('curveModal');
+    if (existing) { existing.remove(); return; }
+    const analysis = analyzeDifficultyCurve();
+    const overlay = document.createElement('div');
+    overlay.id = 'curveModal';
+    overlay.className = 'modal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const card = document.createElement('div');
+    card.className = 'modal-card';
+    card.style.maxWidth = '600px';
+    card.innerHTML = `<p class="eyebrow">ANALYSIS</p><h2>难度曲线分析</h2>
+      <p style="color:var(--muted);font-size:0.85em">平滑度: ${(analysis.smoothness*100).toFixed(0)}% · 趋势: ${analysis.trend === 'rising' ? '上升' : analysis.trend === 'flat' ? '平稳' : '混合'} · 突变点: ${analysis.spikes.length}个</p>`;
+    const canvas = document.createElement('canvas');
+    canvas.width = 560; canvas.height = 180;
+    canvas.style.cssText = 'display:block;margin:12px 0;max-width:100%';
+    card.appendChild(canvas);
+    if (analysis.recommendations.length > 0) {
+      const recs = document.createElement('ul');
+      recs.style.cssText = 'color:var(--muted);font-size:0.8em;margin:8px 0 0;padding-left:20px';
+      analysis.recommendations.forEach(r => { const li = document.createElement('li'); li.textContent = r; recs.appendChild(li); });
+      card.appendChild(recs);
+    }
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '关闭'; closeBtn.style.marginTop = '12px';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    card.appendChild(closeBtn);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    renderCurveChart(canvas);
   });
   document.getElementById('effRankBtn')?.addEventListener('click', () => {
     createStatsPanel(document.body, state.records, state.heatmap, state.stats, 4);
