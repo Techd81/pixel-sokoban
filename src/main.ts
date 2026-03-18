@@ -41,6 +41,7 @@ import { getSmartHint } from './hint_engine';
 import { GestureRecognizer } from './gestures';
 import { notify, notifyWin, notifyAchievement } from './notify';
 import { initAccessibility } from './accessibility';
+import { TutorialManager, isTutorialDone } from './tutorial';
 import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 import { initThemeButtons } from './themes';
@@ -1151,6 +1152,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
   loadLevel(startupLevelIndex);
+
+  // 新手教程（仅首次进入）
+  if (!isTutorialDone()) {
+    setTimeout(() => new TutorialManager().start(), 800);
+  }
 
   // 计时显示每100ms刷新一次，不依赖玩家移动
   setInterval(() => {
