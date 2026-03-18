@@ -62,7 +62,12 @@ export default defineConfig({
             id.includes('daily') ||
             id.includes('favorites') ||
             id.includes('adaptive') ||
-            id.includes('search')
+            id.includes('search') ||
+            id.includes('config') ||
+            id.includes('sound_pack') ||
+            id.includes('saveload') ||
+            id.includes('timer_display') ||
+            id.includes('undo_tree')
           ) {
             return 'ux';
           }
