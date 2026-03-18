@@ -30,10 +30,17 @@ export function applyTheme(name: ThemeName): void {
   root.style.setProperty('--fg',     t.fg);
   root.style.setProperty('--accent', t.accent);
   root.style.setProperty('--wall',   t.wall);
+  root.style.setProperty('--wall-deep', t.wall);
   root.style.setProperty('--floor',  t.floor);
-  root.style.setProperty('--box',    t.box);
+  root.style.setProperty('--floor-deep', t.floor);
+  root.style.setProperty('--crate',    t.box);
+  root.style.setProperty('--crate-top', t.box);
+  root.style.setProperty('--crate-deep', t.box);
   root.style.setProperty('--goal',   t.goal);
+  root.style.setProperty('--goal-deep', t.goal);
   root.style.setProperty('--player', t.player);
+  root.style.setProperty('--player-top', t.player);
+  root.style.setProperty('--player-deep', t.player);
   localStorage.setItem('pixelSokobanTheme', name);
 }
 
