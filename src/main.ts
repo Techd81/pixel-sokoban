@@ -609,8 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     markProgressDirty();
+    invalidateRenderCache(); // 通关后bestMoves/bestRank更新，强制刷新缓存
     renderProgress();
-    // 更新最高通关关卡记录
     if (state.levelIndex > state.stats.maxLevel) state.stats.maxLevel = state.levelIndex;
     // 皮肤解锁检查
     const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
