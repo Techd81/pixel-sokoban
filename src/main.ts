@@ -488,14 +488,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // 检查成就
     const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
     const stars3 = Object.values(state.records).filter((r: any) => r?.bestRank === '★★★').length;
+    // 幽灵对比：本次是否超越幽灵记录
+    const ghostRec = loadGhostRecord(state.levelIndex);
+    const beatGhost = ghostRec && ghostRec.totalMoves > 0 && state.moves < ghostRec.totalMoves ? 1 : 0;
     const achStats = {
       cleared,
       stars3,
       ta_cleared: state.stats.taPlayed ? 1 : 0,
       no_hint_clears: state.stats.hintCount === 0 ? cleared : 0,
       max_combo: state.stats.maxCombo,
-      beat_ghost: 0,
-      shared: 0,
+      beat_ghost: beatGhost,
+      shared: Number(localStorage.getItem('sokoban_shared_count') ?? 0),
     };
     const newAchievements = checkAchievements(achStats);
     newAchievements.forEach(a => { showAchievementUnlock(a); notifyAchievement(a.name, a.desc ?? ''); });
@@ -946,6 +949,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── 分享按钮 ────────────────────────────────────────────────────────────
   document.getElementById('shareBtn')?.addEventListener('click', () => {
     showShareModal(LEVELS[state.levelIndex], state.levelIndex);
+    const cnt = Number(localStorage.getItem('sokoban_shared_count') ?? 0) + 1;
+    localStorage.setItem('sokoban_shared_count', String(cnt));
   });
 
   document.getElementById('shareResultBtn')?.addEventListener('click', async () => {
