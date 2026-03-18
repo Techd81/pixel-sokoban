@@ -634,8 +634,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         break;
-
-  // ─── 触摸手势（GestureRecognizer）────────────────────────────────────────
+    }
+  });
   const gesture = new GestureRecognizer(document.body, { swipeThreshold: 20, longPressMs: 600 });
   gesture
     .on('swipe-right', () => { audioSystem.unlock(); if (getPlaybackMode() !== 'none' || isPaused() || editorModal.isOpen()) return; tryMove(1, 0, 'right'); })
