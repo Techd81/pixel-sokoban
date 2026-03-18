@@ -478,6 +478,7 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       });
     }
     updateCombo(true);
+    state.ai.hintArrow = null; // 推箱子后清除提示箭头
     // 更新活动日志
     state.stats.activityLog[getDayOfYear()] = (state.stats.activityLog[getDayOfYear()] ?? 0) + 1;
     state.effects.deadlocks = getDeadlockedBoxes();
@@ -521,6 +522,7 @@ export function tryMove(dx: number, dy: number, facing: string): void {
     });
   }
   updateCombo(false);
+  state.ai.hintArrow = null; // 移动后清除提示箭头
   // 更新热力图（玩家到达位置 +1）
   if (!state.heatmap[nextY]) state.heatmap[nextY] = [];
   state.heatmap[nextY][nextX] = (state.heatmap[nextY][nextX] ?? 0) + 1;
