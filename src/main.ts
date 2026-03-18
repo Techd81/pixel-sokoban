@@ -1110,6 +1110,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const result = await solveAsync(state.grid as string[][], state.player, state.goals);
     board?.classList.remove('ai-solving');
     if (!result) { setMessage('无解或超时', 'error'); return; }
+    // 可视化解法路径
+    if (board) {
+      solverViz.attach(board);
+      // 将 SolveVizStep 转换
+      const vizSteps = result.steps.map(s => ({ dx: s.dx, dy: s.dy, facing: s.facing, isPush: false }));
+      solverViz.loadSteps(vizSteps as any);
+      solverViz.startPlayback(500);
+      setTimeout(() => solverViz.detach(), result.steps.length * 500 + 1000);
+    }
     showSolutionModal(result.steps);
   });
 
