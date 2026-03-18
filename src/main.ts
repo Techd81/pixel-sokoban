@@ -780,10 +780,25 @@ document.addEventListener('DOMContentLoaded', () => {
   bindDirButtons('.dpad button[data-dir]');
 
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
+  let _hintCache: { levelIdx: number; moves: number; result: ReturnType<typeof getSmartHint> } | null = null;
+
   function handleHint(): void {
     setMessage('AI 计算中...', 'info');
     state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
+    // 缓存：同一关卡同一步数复用上次结果
+    if (_hintCache && _hintCache.levelIdx === state.levelIndex && _hintCache.moves === state.moves) {
+      const hint = _hintCache.result;
+      if (!hint) { setMessage('无解或超时', 'error'); return; }
+      if (hint.type === 'stuck') { setMessage(hint.message, 'error'); return; }
+      const msg = hint.type === 'nearWin'
+        ? `${hint.arrow} ${hint.message}（置信度 ${Math.round(hint.confidence * 100)}%）`
+        : `提示：向 ${hint.arrow} ${hint.type === 'push' ? '推箱子' : '移动'}${hint.stepsToWin > 0 ? `（剩 ${hint.stepsToWin} 步）` : ''}`;
+      setMessage(msg, 'info');
+      state.ai.hintArrow = hint.arrow;
+      return;
+    }
     const hint = getSmartHint(state.grid as string[][], state.player, state.goals);
+    _hintCache = { levelIdx: state.levelIndex, moves: state.moves, result: hint };
     if (!hint) { setMessage('无解或超时', 'error'); return; }
     if (hint.type === 'stuck') { setMessage(hint.message, 'error'); return; }
     const msg = hint.type === 'nearWin'
