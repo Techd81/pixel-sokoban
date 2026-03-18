@@ -1266,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const effData = LEVELS.map((lv, i) => {
       const rec = state.records?.[i];
       if (!rec?.bestMoves) return null;
-      return { name: lv.name, idx: i+1, eff: rec.bestMoves / lv.parMoves, best: rec.bestMoves, par: lv.parMoves };
+      return { name: lv.name, idx: i+1, eff: lv.parMoves > 0 ? rec.bestMoves / lv.parMoves : 1, best: rec.bestMoves, par: lv.parMoves };
     }).filter(Boolean).sort((a,b) => a!.eff - b!.eff).slice(0, 15);
     const overlay = document.createElement('div');
     overlay.id = 'effRankModal'; overlay.className = 'modal';

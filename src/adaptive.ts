@@ -47,7 +47,7 @@ export function analyzePlayer(records: Records): PlayerProfile {
     const boxes = LEVELS[i].map.reduce((n, row) =>
       n + [...row].filter(c => c === '$' || c === '*').length, 0);
     if (!boxPerf[boxes]) boxPerf[boxes] = [];
-    boxPerf[boxes].push(r.bestMoves / LEVELS[i].parMoves);
+    if (LEVELS[i].parMoves > 0) boxPerf[boxes].push(r.bestMoves / LEVELS[i].parMoves);
   }
 
   let bestBox = 2;
