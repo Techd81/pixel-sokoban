@@ -10,6 +10,7 @@ import { showShareModal } from './share';
 import { setMessage } from './ui';
 import { copyText, escapeHtml } from './web_utils';
 import { predictDifficulty } from './difficulty';
+import { validateLevel } from './validator';
 
 type ToolTile = TileChar | 'E';
 type DrawMode = 'paint' | 'line' | 'rect' | 'fill';
@@ -561,10 +562,14 @@ export function initEditorModal(): EditorModalApi {
     const goals = collectGoals(grid);
     if (!player) { setMessage('缺少玩家', 'warn'); return; }
     if (goals.length === 0) { setMessage('缺少目标点', 'warn'); return; }
+    // 先做快速静态验证
+    const lv = buildLevelFromGrid(grid);
+    const validation = validateLevel(lv);
+    if (!validation.valid) { setMessage('地图无效: ' + validation.errors.join('; '), 'error'); return; }
     setMessage('AI 验证中...', 'info');
     const result = await solveAsync(grid as unknown as string[][], player, goals);
     if (!result) { setMessage('无解或超时', 'error'); return; }
-    setMessage(`可解：${result.steps.length}步`, 'win');
+    setMessage(`可解：${result.steps.length}步 · ${validation.stats.mapSize}`, 'win');
   });
 
   // 试玩（临时关卡）
