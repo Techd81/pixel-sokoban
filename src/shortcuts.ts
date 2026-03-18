@@ -49,6 +49,8 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ['T'], desc: '速通挑战' },
       { keys: ['G'], desc: '随机关卡' },
       { keys: ['I'], desc: '显示统计' },
+      { keys: ['`'], desc: 'FPS 性能显示' },
+      { keys: ['Ctrl+1~6'], desc: '跳转世界章节' },
     ],
   },
 ];
