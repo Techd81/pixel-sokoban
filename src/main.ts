@@ -27,7 +27,7 @@ import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModa
 import { SolverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
-import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
+import { checkAchievements, showAchievementUnlock, injectAchievementStyles, ACHIEVEMENTS, getUnlocked } from './achievements';
 import { MacroRecorder, MacroPlayer, getMacrosForLevel } from './macro';
 import { addLeaderboardEntry, getTopEntries, renderLeaderboard } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
@@ -1281,7 +1281,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('achievWallBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 5);
+    const unlocked = getUnlocked();
+    const existing = document.getElementById('achievWallModal');
+    if (existing) { existing.remove(); return; }
+    const overlay = document.createElement('div');
+    overlay.id = 'achievWallModal'; overlay.className = 'modal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const card = document.createElement('div');
+    card.className = 'modal-card'; card.style.maxWidth = '520px';
+    const tierColors: Record<string,string> = { bronze:'#cd7f32', silver:'#c0c0c0', gold:'#ffd700', platinum:'#b9f2ff' };
+    const items = ACHIEVEMENTS.map(a => {
+      const done = unlocked.has(a.id);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:${done?'#1e2a1e':'#1e1a2e'};opacity:${done?1:0.4};margin-bottom:4px">
+        <span style="font-size:1.4em">${a.icon}</span>
+        <div><div style="color:${tierColors[a.tier]??'#888'};font-weight:bold">${a.name}</div>
+        <div style="font-size:0.8em;color:#aaa">${a.desc}</div></div>
+        <span style="margin-left:auto;font-size:0.8em;color:${done?'#50fa7b':'#666'}">${done?'✓ 已解锁':'🔒'}</span>
+      </div>`;
+    }).join('');
+    card.innerHTML = `<p class="eyebrow">ACHIEVEMENTS</p><h2>成就墙 (${unlocked.size}/${ACHIEVEMENTS.length})</h2><div style="max-height:400px;overflow-y:auto;margin-top:12px">${items}</div>`;
+    const btn = document.createElement('button'); btn.textContent = '关闭'; btn.style.marginTop = '12px';
+    btn.addEventListener('click', () => overlay.remove());
+    card.appendChild(btn); overlay.appendChild(card); document.body.appendChild(overlay);
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('nextAchievBtn')?.addEventListener('click', () => {
