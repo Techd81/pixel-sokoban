@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ghostEl = document.createElement('div');
           ghostEl.id = 'ghost-overlay';
           ghostEl.style.cssText = 'position:absolute;pointer-events:none;z-index:10;font-size:var(--tile-size,40px);line-height:1;opacity:0.45;transition:left .2s,top .2s';
-          els.board?.appendChild(ghostEl);
+          document.getElementById('board')?.appendChild(ghostEl);
         }
         ghostEl.textContent = '👻';
         const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 40;
