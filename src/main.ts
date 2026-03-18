@@ -1422,6 +1422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="level-meta">
           <span>${locked ? '🔒 未解锁' : (cleared ? `${rec!.bestMoves}步` : '未通关')}</span>
           ${diffLabel ? `<span class="badge">${diffLabel}</span>` : ''}
+          ${getNote(idx) ? '<span title="有笔记">📝</span>' : ''}
         </div>
         <canvas class="level-preview-canvas" width="64" height="56" style="display:block;margin:4px auto 0;image-rendering:pixelated"></canvas>
       `;
