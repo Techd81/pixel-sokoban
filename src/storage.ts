@@ -6,16 +6,21 @@ export const STORAGE_KEY_STATS = 'pixelSokobanStats';
 export const STORAGE_KEY_NAME = 'pixelSokobanName';
 export const STORAGE_KEY_LOCK = 'pixelSokobanLockMode';
 
+let _recordsCache: Records | null = null;
+
+export function invalidateRecordsCache(): void { _recordsCache = null; }
+
 export function loadRecords(): Records {
+  if (_recordsCache) return _recordsCache;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
+    if (!raw) { _recordsCache = {}; return _recordsCache; }
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === 'object') {
-      if (parsed.levels) return parsed.levels;
-      return parsed;
+      _recordsCache = parsed.levels ?? parsed;
+      return _recordsCache!;
     }
-    return {};
+    _recordsCache = {}; return _recordsCache;
   } catch { return {}; }
 }
 
@@ -53,6 +58,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function saveRecords(records: Records): void {
+  _recordsCache = records; // 更新缓存
   scheduleWrite(STORAGE_KEY, JSON.stringify({ version: 2, levels: records }));
 }
 
