@@ -274,6 +274,7 @@ export function loadLevel(index: number): void {
   state.playerMoved = false;
   state.combo.count = 0; state.combo.lastPushMs = 0;
   state.recording = [];
+  state.heatmap = [];  // 重置热力图
   undoUsed = 0;
   state.stats.undoUsed = 0;
   resetTimer();
@@ -495,6 +496,9 @@ export function tryMove(dx: number, dy: number, facing: string): void {
     });
   }
   updateCombo(false);
+  // 更新热力图（玩家到达位置 +1）
+  if (!state.heatmap[nextY]) state.heatmap[nextY] = [];
+  state.heatmap[nextY][nextX] = (state.heatmap[nextY][nextX] ?? 0) + 1;
   emit("moved", { x: nextX, y: nextY });
   emit("update");
 }
