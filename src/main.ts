@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
       levelIndex: state.levelIndex,
       moves: state.moves,
       timeMs: state.timer.elapsedMs,
-      rank: '',
+      rank: state.records?.[state.levelIndex]?.bestRank ?? '',
       par: lvConfig.parMoves ?? state.moves,
     });
 
