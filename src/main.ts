@@ -28,7 +28,7 @@ import { SolverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles } from './achievements';
-import { MacroRecorder, getMacrosForLevel } from './macro';
+import { MacroRecorder, MacroPlayer, getMacrosForLevel } from './macro';
 import { addLeaderboardEntry, getTopEntries, renderLeaderboard } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
 import { initSkin, renderSkinSelector, SKINS } from './skins';
@@ -71,7 +71,8 @@ import { getNote, setNote } from './notes';
 import { copyText, escapeHtml } from './web_utils';
 
 
-const macroRecorder = new MacroRecorder(); // 备用：宏录制（当前无UI入口，保留实例备扩展）
+const macroRecorder: MacroRecorder = new MacroRecorder(); // 宏录制
+const macroPlayer: MacroPlayer = new MacroPlayer(); // 宏回放
 const _timelineUI = new TimelineUI(); // 备用
 
 const solverViz = new SolverVisualizer();
@@ -714,8 +715,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ctrl+P: 回放当前关最新宏
         if (ev.ctrlKey && ev.key === 'p') {
           ev.preventDefault();
-          if (macroRecorder.isPlaying()) {
-            macroRecorder.stop();
+          if (macroPlayer.isPlaying()) {
+            macroPlayer.stop();
             setMessage('宏回放已停止', 'info');
           } else {
             const macros = getMacrosForLevel(state.levelIndex);
@@ -723,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const latest = macros[0];
             restartLevel();
             setTimeout(() => {
-              macroRecorder.play(latest, (dx, dy, facing) => tryMove(dx, dy, facing),
+              macroPlayer.play(latest, (dx: number, dy: number, facing: string) => tryMove(dx, dy, facing),
                 () => setMessage(`宏回放完成(${latest.moves.length}步)`, 'win'), 200);
               setMessage(`▶ 回放宏「${latest.name}」`, 'info');
             }, 100);
