@@ -49,7 +49,7 @@ import { sendWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
-import { WORLDS, getWorldForLevel, isWorldUnlocked } from './worlds';
+import { WORLDS, getWorldForLevel, isWorldUnlocked, renderWorldMap } from './worlds';
 import { getSmartHint } from './hint_engine';
 import { GestureRecognizer } from './gestures';
 import { notify, notifyWin, notifyAchievement } from './notify';
@@ -1187,8 +1187,15 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>`;
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
-  });
-  document.getElementById('recentBtn')?.addEventListener('click', () => {
+    // 在进度环下方渲染世界地图
+    const worldMapDiv = document.createElement('div');
+    worldMapDiv.style.cssText = 'margin-top:16px;max-height:300px;overflow-y:auto;text-align:left';
+    const overlayCard = overlay.querySelector('div') as HTMLElement;
+    if (overlayCard) overlayCard.appendChild(worldMapDiv);
+    renderWorldMap(worldMapDiv, state.records, (levelIdx) => {
+      overlay.remove();
+      loadLevel(levelIdx);
+    });?.addEventListener('click', () => {
     // 展示成长日记
     const existing = document.getElementById('journalModal');
     if (existing) { existing.remove(); return; }
