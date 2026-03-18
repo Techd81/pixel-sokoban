@@ -35,6 +35,7 @@ import { initSkin, renderSkinSelector, SKINS } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
 import { initHaptics, haptic } from './haptic';
 import { addJournalEntry } from './journal';
+import { PerformanceMonitor } from './perf';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -132,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initThemeButtons();
   initAccessibility();
   initHaptics();
+  // 性能监控（按 ` 键切换 FPS 显示）
+  const perfMon = new PerformanceMonitor();
+  perfMon.start();
   // 皮肤初始化（用已通关数）
   initSkin(Object.values(loadRecords()).filter((r: any) => r?.bestMoves > 0).length);
   initFontSizeControls();
@@ -584,6 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'g': case 'G':
         if (!canInteractive) break;
         handleGenerate(); break;
+      case '`':
+        perfMon.toggleDisplay(); break;
     }
   });
 
