@@ -1291,6 +1291,8 @@ document.addEventListener('DOMContentLoaded', () => {
         (locked ? ' is-locked' : '') +
         (idx === state.levelIndex ? ' is-current' : '');
       cell.setAttribute('role', 'listitem');
+      // 难度颜色左边框
+      if (diff?.color) cell.style.borderLeftColor = diff.color;
       cell.innerHTML = `
         <div class="level-card-head">
           <div class="level-card-title">
