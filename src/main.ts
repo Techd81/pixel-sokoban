@@ -629,6 +629,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (key === 'Escape') {
       closeWinModal();
       document.getElementById('levelSelect')?.classList.add('hidden');
+      // 关闭所有动态弹窗
+      const dynamicModals = ['curveModal','lbModal','effRankModal','speedRankModal','journalModal',
+        'progressRingModal','achievWallModal','inlineSettingsModal','skinModal','progressRingModal'];
+      dynamicModals.forEach(id => document.getElementById(id)?.remove());
       if (isPaused()) handleTogglePause();
       if (getPlaybackMode() === 'demo') stopAIDemo();
       if (getPlaybackMode() === 'replay') stopReplay();
