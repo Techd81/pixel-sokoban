@@ -38,6 +38,7 @@ import { addJournalEntry } from './journal';
 import { PerformanceMonitor } from './perf';
 import { saveGame, loadGame, getSaveSlots } from './saveload';
 import { RaceMode } from './race';
+import { animate, Easing } from './animation';
 import { renderStatsHeatmap } from './heatmap';
 import { generateShareCard, downloadShareCard } from './sharecard';
 import { sendWinDanmaku } from './danmaku';
@@ -276,6 +277,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     syncWinStars(getLevelRating(state.levelIndex));
     winModal.classList.remove('hidden');
+    // 弹窗入场动画
+    const card = winModal.querySelector('.modal-card') as HTMLElement | null;
+    if (card) {
+      card.style.transform = 'scale(0.8) translateY(20px)'; card.style.opacity = '0';
+      animate({ duration: 350, easing: Easing.bounce,
+        onUpdate: t => { card.style.transform = `scale(${0.8 + t*0.2}) translateY(${20-t*20}px)`; card.style.opacity = String(t); }
+      });
+    }
     // 自动进入下一关（5秒倒计时）
     const isLast = state.levelIndex >= LEVELS.length - 1;
     if (!isLast) {
