@@ -53,7 +53,16 @@ let _lastGridRows = 0;
 
 export function render(): void {
   // 统计数值——无论 board/grid 状态如何都要更新
-  if (els.moveCount)  els.moveCount.textContent  = String(state.moves);
+  if (els.moveCount) {
+    els.moveCount.textContent = String(state.moves);
+    const cfg2 = getLevelConfig(state.levelIndex);
+    const par = cfg2?.parMoves ?? 0;
+    if (par > 0 && state.moves > 0) {
+      els.moveCount.style.color = state.moves <= par ? 'var(--goal)' : state.moves <= par * 1.5 ? 'var(--accent)' : 'var(--danger)';
+    } else {
+      els.moveCount.style.color = '';
+    }
+  }
   if (els.pushCount)  els.pushCount.textContent  = String(state.pushes);
   if (els.levelLabel) els.levelLabel.textContent = `${state.levelIndex + 1} / ${LEVELS.length}`;
   if (els.timeDisplay) els.timeDisplay.textContent = formatMs(getElapsedTimeMs());
