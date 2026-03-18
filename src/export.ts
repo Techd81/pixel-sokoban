@@ -94,7 +94,7 @@ export function importRecordsFromJSON(jsonStr: string): Records | null {
       if (typeof r.bestMoves !== 'number') continue;
       result[idx] = {
         bestMoves: r.bestMoves as number,
-        bestRank: (r.bestRank as string) ?? null,
+        bestRank: (['★★★','★★','★'].includes(r.bestRank as string) ? r.bestRank as import('./types').Rank : null),
         bestTimeMs: (r.bestTimeMs as number) ?? 0,
         challengeCleared: !!(r.challengeCleared),
       };
