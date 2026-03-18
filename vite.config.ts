@@ -55,7 +55,14 @@ export default defineConfig({
             id.includes('screenshot') ||
             id.includes('curve') ||
             id.includes('fsm') ||
-            id.includes('bus')
+            id.includes('bus') ||
+            id.includes('danmaku') ||
+            id.includes('perf') ||
+            id.includes('journal') ||
+            id.includes('daily') ||
+            id.includes('favorites') ||
+            id.includes('adaptive') ||
+            id.includes('search')
           ) {
             return 'ux';
           }
