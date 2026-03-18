@@ -1013,6 +1013,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('helpModal')?.classList.add('hidden');
   });
 
+  document.getElementById('settingsBtn')?.addEventListener('click', () => {
+    const existing = document.getElementById('inlineSettingsModal');
+    if (existing) { existing.remove(); return; }
+    const sm = document.createElement('div');
+    sm.id = 'inlineSettingsModal';
+    sm.className = 'modal';
+    sm.addEventListener('click', (e) => { if (e.target === sm) sm.remove(); });
+    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
+    document.body.appendChild(sm);
+    const hapticEl = document.getElementById('stHaptic') as HTMLInputElement | null;
+    if (hapticEl) {
+      hapticEl.checked = localStorage.getItem('sokoban_haptic') !== '0';
+      hapticEl.addEventListener('change', () => localStorage.setItem('sokoban_haptic', hapticEl.checked ? '1' : '0'));
+    }
+    document.getElementById('stClose')?.addEventListener('click', () => sm.remove());
+  });
+
   document.getElementById('replayBtn')?.addEventListener('click', () => {
     if (getPlaybackMode() === 'replay') stopReplay();
     else startReplay();
