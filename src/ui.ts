@@ -79,6 +79,9 @@ export function render(): void {
     _lastLevelIdx = state.levelIndex;
     els.levelLabel.textContent = `${state.levelIndex + 1} / ${LEVELS.length}`;
     if (els.parMoves && cfg) els.parMoves.textContent = String(par || '-');
+  }
+  // bestMoves/bestRank 每次都检查（通关后记录可能在同一关更新）
+  if (els.bestMoves || els.bestRank) {
     const rec = getRecord(state.levelIndex);
     const bm = formatBest(rec);
     const br = rec?.bestRank ?? '';
