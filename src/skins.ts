@@ -41,9 +41,13 @@ export function setSkin(id: string, clearedCount: number): boolean {
 
 export function applySkin(skin: Skin): void {
   const root = document.documentElement;
-  root.style.setProperty('--player-color', skin.playerColor);
-  root.style.setProperty('--box-color', skin.boxColor);
-  root.style.setProperty('--goal-color', skin.goalColor);
+  root.style.setProperty('--player', skin.playerColor);
+  root.style.setProperty('--player-top', skin.playerColor);
+  root.style.setProperty('--player-deep', skin.playerColor);
+  root.style.setProperty('--crate', skin.boxColor);
+  root.style.setProperty('--crate-top', skin.boxColor);
+  root.style.setProperty('--goal', skin.goalColor);
+  root.style.setProperty('--goal-deep', skin.goalColor);
   root.dataset.skin = skin.id;
 }
 
