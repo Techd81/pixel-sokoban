@@ -1374,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sm.id = 'inlineSettingsModal';
     sm.className = 'modal';
     sm.addEventListener('click', (e) => { if (e.target === sm) sm.remove(); });
-    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>低特效模式</span><input type="checkbox" id="stLowFx"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>色盲模式</span><select id="stCbMode" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px"><option value="none">关闭</option><option value="deuteranopia">红绿色盲</option><option value="protanopia">红色盲</option><option value="tritanopia">蓝黄色盲</option><option value="monochrome">单色</option></select></label><label style="display:flex;justify-content:space-between;align-items:center"><span>音效风格</span><select id="stSoundPack" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px">${Object.values(SOUND_PACKS).map(p=>`<option value="${p.id}">${p.emoji} ${p.name}</option>`).join('')}</select></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
+    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>低特效模式</span><input type="checkbox" id="stLowFx"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>色盲模式</span><select id="stCbMode" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px"><option value="none">关闭</option><option value="deuteranopia">红绿色盲</option><option value="protanopia">红色盲</option><option value="tritanopia">蓝黄色盲</option><option value="monochrome">单色</option></select></label><label style="display:flex;justify-content:space-between;align-items:center"><span>音效风格</span><select id="stSoundPack" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px">${Object.values(SOUND_PACKS).map(p=>`<option value="${p.id}">${p.emoji} ${p.name}</option>`).join('')}</select></label><label style="display:flex;justify-content:space-between;align-items:center"><span>高对比度</span><input type="checkbox" id="stHighContrast"></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
     document.body.appendChild(sm);
     const hapticEl = document.getElementById('stHaptic') as HTMLInputElement | null;
     if (hapticEl) {
@@ -1402,6 +1402,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (soundPackEl) {
       soundPackEl.value = getSoundPack().id;
       soundPackEl.addEventListener('change', () => setSoundPack(soundPackEl.value as any));
+    }
+    const hcEl = document.getElementById('stHighContrast') as HTMLInputElement | null;
+    if (hcEl) {
+      hcEl.checked = localStorage.getItem('sokoban_a11y_hc') === '1';
+      hcEl.addEventListener('change', () => {
+        document.body.classList.toggle('high-contrast', hcEl.checked);
+        localStorage.setItem('sokoban_a11y_hc', hcEl.checked ? '1' : '0');
+      });
     }
     document.getElementById('stClose')?.addEventListener('click', () => sm.remove());
   });
