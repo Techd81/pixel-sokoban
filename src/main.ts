@@ -1170,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lowFxEl.checked = document.body.classList.contains('low-fx');
       lowFxEl.addEventListener('change', () => {
         document.body.classList.toggle('low-fx', lowFxEl.checked);
-        localStorage.setItem('sokobanLowFx', lowFxEl.checked ? '1' : '0');
+        localStorage.setItem(LOW_FX_KEY, lowFxEl.checked ? '1' : '0');
         if (lowFxEl.checked) {
           document.getElementById('particle-canvas')?.remove();
           document.getElementById('confetti-canvas')?.remove();
