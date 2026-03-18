@@ -617,7 +617,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
     initSkin(newCleared);
     // 持久化 stats
-    saveStats(state.stats as unknown as Record<string, unknown>);
+    // 序列化 Set 类型为数组
+    const statsToSave = { ...state.stats, themesUsed: [...state.stats.themesUsed] };
+    saveStats(statsToSave as unknown as Record<string, unknown>);
     const record = state.records?.[state.levelIndex];
     notifyWin(getLevelConfig(state.levelIndex).name, state.moves, record?.bestRank ?? '');
     openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
