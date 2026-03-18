@@ -49,6 +49,8 @@ export function notify(
   const { type = 'info', duration = 3000, icon, onClick, position = 'top-right' } = opts;
   const style = TYPE_STYLES[type];
   const c = ensureContainer(position);
+  // 通知数量上限：超过5条时移除最老的
+  if (c.children.length >= 5) (c.firstElementChild as HTMLElement)?.remove();
 
   const el = document.createElement('div');
   const id = ++notifyCount;
