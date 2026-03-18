@@ -1133,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('确定要清除所有记录吗？此操作不可撤销！\n（通关记录/排行榜/日记/幽灵/回放/速通PB）')) return;
     // 清除所有游戏数据
     const keysToRemove = ['pixelSokobanRecords', 'sokoban_leaderboard', 'sokoban_journal',
-      'sokoban_sr_pb', 'sokoban_shared_count'];
+      'sokoban_sr_pb', 'sokoban_shared_count', 'pixelSokobanStats', 'pixelSokobanAchievements'];
     keysToRemove.forEach(k => localStorage.removeItem(k));
     // 清除关卡相关数据（ghost/replay/daily）
     const prefix = ['sokoban_ghost_', 'sokoban_replay_', 'sokoban_daily_', 'sokoban_level_tags'];
@@ -1141,6 +1141,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (prefix.some(p => k.startsWith(p))) localStorage.removeItem(k);
     });
     state.records = {};
+    state.stats.activityLog = [];
+    state.stats.maxCombo = 0;
+    state.stats.maxLevel = 0;
+    state.stats.totalMoves = 0;
+    state.stats.hintCount = 0;
     markProgressDirty();
     renderProgress();
     setMessage('记录已清除', 'info');
