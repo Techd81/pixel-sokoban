@@ -22,7 +22,7 @@ import { audioSystem } from './audio';
 import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
 import { emitGoalExplosion, emitPushSpark, emitCombo, emitWinBurst } from './particles';
-import { generateLevel } from './generator';
+import { generateLevel, generateLevelAsync } from './generator';
 import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModal } from './share';
 import { SolverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
@@ -684,10 +684,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 程序化关卡生成 ──────────────────────────────────────────────────────
   function handleGenerate(): void {
+    if (_isSolving) { setMessage('AI 正在运算中，请稍候', 'info'); return; }
     setMessage('生成随机关卡...', 'info');
-    // 异步化：避免同步 BFS 阻塞 UI 线程
-    setTimeout(() => {
-      const level = generateLevel({ cols: 8, rows: 7, boxCount: 2, seed: Date.now() });
+    _isSolving = true;
+    void generateLevelAsync({ cols: 8, rows: 7, boxCount: 2, seed: Date.now() }).then(level => {
+      _isSolving = false;
       if (!level) { setMessage('生成失败，请重试', 'error'); return; }
       // 临时加入关卡列表并跳转
       (LEVELS as typeof LEVELS & { _temp?: boolean }).push(
@@ -695,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
       );
       loadLevel(LEVELS.length - 1);
       setMessage(`随机关卡已生成 (${level.map[0].length}×${level.map.length})`, 'win');
-    }, 0);
+    });
   }
 
   // ─── 撤销限制 ─────────────────────────────────────────────────────────────

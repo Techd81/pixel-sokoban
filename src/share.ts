@@ -19,15 +19,35 @@ export function encodeLevelToUrl(level: Level): string {
 
 export function decodeLevelFromUrl(encoded: string): Level | null {
   try {
+    // 安全限制：编码串不能超过4KB
+    if (encoded.length > 4096) return null;
     const padded = encoded.replace(/-/g, '+').replace(/_/g, '/') +
       '=='.slice(0, (4 - encoded.length % 4) % 4);
     const raw = decodeURIComponent(atob(padded));
+    // 解码后原始字符串不能超过2KB
+    if (raw.length > 2048) return null;
     const [name, parStr, starsStr, mapStr] = raw.split('|');
     if (!name || !parStr || !starsStr || !mapStr) return null;
+    // 名称长度限制
+    if (name.length > 50) return null;
     const [three, two, one] = starsStr.split(',').map(Number);
+    if ([three, two, one].some(n => !Number.isFinite(n) || n < 0 || n > 9999)) return null;
     const map = mapStr.split('/');
-    if (map.length < 3) return null;
-    return { name, parMoves: Number(parStr), starMoves: { three, two, one }, map };
+    // 地图行数限制：3~20行
+    if (map.length < 3 || map.length > 20) return null;
+    // 每行长度限制：3~30字符，且只含合法推箱子字符
+    const validChars = /^[# .@$*+\s]*$/;
+    if (map.some(row => row.length < 3 || row.length > 30 || !validChars.test(row))) return null;
+    // 必须有且只有一个玩家
+    const flat = map.join('');
+    if ((flat.match(/@/g)||[]).length !== 1) return null;
+    // 箱子数必须等于目标数
+    const boxes = (flat.match(/\$/g)||[]).length + (flat.match(/\*/g)||[]).length;
+    const goals = (flat.match(/\./g)||[]).length + (flat.match(/\*/g)||[]).length + (flat.match(/\+/g)||[]).length;
+    if (boxes !== goals || boxes === 0) return null;
+    const parMoves = Number(parStr);
+    if (!Number.isFinite(parMoves) || parMoves < 1 || parMoves > 9999) return null;
+    return { name: name.trim(), parMoves, starMoves: { three, two, one }, map };
   } catch { return null; }
 }
 
