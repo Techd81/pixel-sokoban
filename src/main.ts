@@ -33,7 +33,7 @@ import { addLeaderboardEntry } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
 import { initSkin, renderSkinSelector, SKINS } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
-import { initHaptics, haptic } from './haptic';
+import { initHaptics, haptic, setHapticsEnabled } from './haptic';
 import { addJournalEntry } from './journal';
 import { PerformanceMonitor } from './perf';
 import { saveGame, loadGame, getSaveSlots } from './saveload';
@@ -1163,12 +1163,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const hapticEl = document.getElementById('stHaptic') as HTMLInputElement | null;
     if (hapticEl) {
       hapticEl.checked = localStorage.getItem('sokoban_haptic') !== '0';
-      hapticEl.addEventListener('change', () => localStorage.setItem('sokoban_haptic', hapticEl.checked ? '1' : '0'));
+      hapticEl.addEventListener('change', () => { localStorage.setItem('sokoban_haptic', hapticEl.checked ? '1' : '0'); setHapticsEnabled(hapticEl.checked); });
     }
     const lowFxEl = document.getElementById('stLowFx') as HTMLInputElement | null;
     if (lowFxEl) {
       lowFxEl.checked = document.body.classList.contains('low-fx');
-      lowFxEl.addEventListener('change', () => document.body.classList.toggle('low-fx', lowFxEl.checked));
+      lowFxEl.addEventListener('change', () => {
+        document.body.classList.toggle('low-fx', lowFxEl.checked);
+        localStorage.setItem('sokobanLowFx', lowFxEl.checked ? '1' : '0');
+        if (lowFxEl.checked) {
+          document.getElementById('particle-canvas')?.remove();
+          document.getElementById('confetti-canvas')?.remove();
+        }
+      });
     }
     const cbEl = document.getElementById('stCbMode') as HTMLSelectElement | null;
     if (cbEl) {
