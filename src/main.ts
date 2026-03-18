@@ -439,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProgress();
     autoScaleBoard();
     // 清除上一关的幽灵
+    ghostPlayer.stop(); // 停止上一关的幽灵回放
     document.getElementById('ghost-overlay')?.remove();
     ghostRecorder.start(state.levelIndex);
     if (ghostPlayer.load(state.levelIndex)) {
