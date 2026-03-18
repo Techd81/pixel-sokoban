@@ -849,6 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.won || i >= result.steps.length) { stopAIDemo(); return; }
       const s = result.steps[i++];
       tryMove(s.dx, s.dy, s.facing);
+      setMessage(`AI演示 ${i}/${result.steps.length} 步`, 'info');
     }, Math.max(30, Math.round(state.ai.speed)));
   };
 
