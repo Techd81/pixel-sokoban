@@ -140,51 +140,31 @@ export function render(): void {
         tile === TILE.PLAYER || tile === TILE.PLAYER_ON_GOAL ||
         (px === x && py === y);
 
-      cell.className = 'tile';
-      cell.removeAttribute('data-facing');
-      cell.removeAttribute('data-step');
-
+      // 构建完整 className 字符串（减少多次 classList 修改导致的 reflow）
+      let cls = 'tile';
       switch (tile) {
-        case TILE.WALL:           cell.classList.add('wall'); break;
-        case TILE.GOAL:           cell.classList.add('goal'); break;
-        case TILE.BOX:            cell.classList.add('crate'); break;
-        case TILE.BOX_ON_GOAL:    cell.classList.add('crate', 'goal'); break;
-        case TILE.PLAYER_ON_GOAL: cell.classList.add('goal'); break;
+        case TILE.WALL:           cls += ' wall'; break;
+        case TILE.GOAL:           cls += ' goal'; break;
+        case TILE.BOX:            cls += ' crate'; break;
+        case TILE.BOX_ON_GOAL:    cls += ' crate goal'; break;
+        case TILE.PLAYER_ON_GOAL: cls += ' goal'; break;
         default: break;
       }
+      if (isPlayer) cls += ' player';
+      if (isPlayer && state.playerMoved) cls += ' moving';
+      if (state.effects.goalFlash?.x === x && state.effects.goalFlash?.y === y) cls += ' flash';
+      if (state.effects.cratePulse?.x === x && state.effects.cratePulse?.y === y) cls += ' pulse';
+      if (hasDeadlocks && deadlockSet.has(`${x},${y}`)) cls += ' deadlock';
+      if (state.ai.hintBox?.x === x && state.ai.hintBox?.y === y && tile === TILE.BOX) cls += ' hint-box';
+
+      if (cell.className !== cls) cell.className = cls; // 只在变化时更新
 
       if (isPlayer) {
-        cell.classList.add('player');
         cell.dataset.facing = state.facing || 'down';
         cell.dataset.step = String(state.stepFrame ?? 0);
-        if (state.playerMoved) cell.classList.add('moving');
-      }
-
-      // 特效
-      if (
-        state.effects.goalFlash &&
-        state.effects.goalFlash.x === x &&
-        state.effects.goalFlash.y === y
-      ) {
-        cell.classList.add('flash');
-      }
-      if (
-        state.effects.cratePulse &&
-        state.effects.cratePulse.x === x &&
-        state.effects.cratePulse.y === y
-      ) {
-        cell.classList.add('pulse');
-      }
-      if (hasDeadlocks && deadlockSet.has(`${x},${y}`)) cell.classList.add('deadlock');
-
-      // AI 提示箭头
-      if (
-        state.ai.hintBox &&
-        state.ai.hintBox.x === x &&
-        state.ai.hintBox.y === y &&
-        cell.classList.contains('crate')
-      ) {
-        cell.classList.add('hint-box');
+      } else {
+        if (cell.dataset.facing) delete cell.dataset.facing;
+        if (cell.dataset.step) delete cell.dataset.step;
       }
     }
   }
