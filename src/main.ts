@@ -36,6 +36,7 @@ import { sendWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
+import { WORLDS, getWorldForLevel, isWorldUnlocked } from './worlds';
 import { getFavorites } from './favorites';
 import { getCoachAdvice, renderCoachPanel } from './ai_coach';
 import { initThemeButtons } from './themes';
@@ -1035,6 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('levelSelectGrid');
     if (!grid) return;
     grid.innerHTML = '';
+    let lastWorldId = '';
     LEVELS.forEach((lv, idx) => {
       const diff = _diffCache[idx];
       const rec = state.records?.[idx];
@@ -1047,6 +1049,17 @@ document.addEventListener('DOMContentLoaded', () => {
       // 难度筛选
       const diffLabel = diff?.label ?? '';
       if (currentDiffFilter !== 'all' && diffLabel !== currentDiffFilter) return;
+      // 章节标题
+      const world = getWorldForLevel(idx);
+      if (world && world.id !== lastWorldId && currentClearFilter === 'all' && currentDiffFilter === 'all') {
+        lastWorldId = world.id;
+        const worldUnlocked = isWorldUnlocked(world, Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length);
+        const header = document.createElement('div');
+        header.className = 'world-header';
+        header.style.cssText = `grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:8px 4px 4px;border-bottom:2px solid ${world.color}44;margin-top:8px`;
+        header.innerHTML = `<span style="font-size:1.2em">${world.emoji}</span><strong style="color:${world.color}">${world.name}</strong><span style="color:var(--muted);font-size:11px">${world.description}</span>${!worldUnlocked ? '<span style="color:var(--danger);font-size:11px">🔒 未解锁</span>' : ''}`;
+        grid.appendChild(header);
+      }
       const cell = document.createElement('button');
       cell.className =
         'level-card' +
