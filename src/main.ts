@@ -345,6 +345,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameEvents.addEventListener('update', () => {
     render();
+    // 更新总步数统计
+    state.stats.totalMoves = state.moves;
+    if (state.combo.count > state.stats.maxCombo) state.stats.maxCombo = state.combo.count;
     if (!state.won && getPlaybackMode() === 'none') {
       const boxes: Array<{ x: number; y: number }> = [];
       for (let y = 0; y < state.grid.length; y++) {
@@ -624,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
   async function handleHint(): Promise<void> {
     setMessage('AI 计算中...', 'info');
+    state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
     const hint = getSmartHint(state.grid as string[][], state.player, state.goals);
     if (!hint) { setMessage('无解或超时', 'error'); return; }
     if (hint.type === 'stuck') { setMessage(hint.message, 'error'); return; }
@@ -1365,6 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 启动 ────────────────────────────────────────────────────────────────
   loadLevel(startupLevelIndex);
+  state.stats.sessions = (state.stats.sessions ?? 0) + 1;
 
   // 新手教程（仅首次进入）
   if (!isTutorialDone()) {
