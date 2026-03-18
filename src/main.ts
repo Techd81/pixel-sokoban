@@ -740,7 +740,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (_isSolving) { setMessage('AI 正在运算中，请稍候', 'info'); return; }
     setMessage('生成随机关卡...', 'info');
     _isSolving = true;
-    void generateLevelAsync({ cols: 8, rows: 7, boxCount: 2, seed: Date.now() }).then(level => {
+    // 根据玩家技能等级动态调整关卡参数
+    const profile = analyzePlayer(state.records);
+    const params = profile.skillLevel === 'beginner'
+      ? { cols: 7, rows: 6, boxCount: 1 }
+      : profile.skillLevel === 'intermediate'
+      ? { cols: 8, rows: 7, boxCount: 2 }
+      : profile.skillLevel === 'advanced'
+      ? { cols: 9, rows: 8, boxCount: 3 }
+      : { cols: 10, rows: 9, boxCount: 4 };
+    void generateLevelAsync({ ...params, seed: Date.now() }).then(level => {
       _isSolving = false;
       if (!level) { setMessage('生成失败，请重试', 'error'); return; }
       // 临时加入关卡列表并跳转
@@ -748,7 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.assign(level, { _temp: true }) as typeof LEVELS[0]
       );
       loadLevel(LEVELS.length - 1);
-      setMessage(`随机关卡已生成 (${level.map[0].length}×${level.map.length})`, 'win');
+      setMessage(`[${profile.skillLevel}] 随机关卡已生成 (${level.map[0].length}×${level.map.length})`, 'win');
     });
   }
 
