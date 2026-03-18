@@ -80,14 +80,16 @@ export async function validateLevelSolvable(
       if (c === TILE.PLAYER || c === TILE.PLAYER_ON_GOAL) player = { x, y };
     }
   return new Promise(resolve => {
-    const timer = setTimeout(() => resolve({ solvable: false }), timeoutMs);
+    let resolved = false;
+    const done = (val: { solvable: boolean; steps?: number }) => { if (!resolved) { resolved = true; resolve(val); } };
+    const timer = setTimeout(() => done({ solvable: false }), timeoutMs);
     try {
       const result = aiBfsSolve(grid, player, goals);
       clearTimeout(timer);
-      resolve(result ? { solvable: true, steps: result.steps.length } : { solvable: false });
+      done(result ? { solvable: true, steps: result.steps.length } : { solvable: false });
     } catch {
       clearTimeout(timer);
-      resolve({ solvable: false });
+      done({ solvable: false });
     }
   });
 }
