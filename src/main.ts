@@ -1129,12 +1129,22 @@ document.addEventListener('DOMContentLoaded', () => {
     sm.id = 'inlineSettingsModal';
     sm.className = 'modal';
     sm.addEventListener('click', (e) => { if (e.target === sm) sm.remove(); });
-    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
+    sm.innerHTML = `<div class="modal-card" style="max-width:360px"><p class="eyebrow">SETTINGS</p><h2>设置</h2><div style="display:flex;flex-direction:column;gap:12px;margin:12px 0"><label style="display:flex;justify-content:space-between;align-items:center"><span>触觉反馈（移动端）</span><input type="checkbox" id="stHaptic"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>低特效模式</span><input type="checkbox" id="stLowFx"></label><label style="display:flex;justify-content:space-between;align-items:center"><span>色盲模式</span><select id="stCbMode" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f;padding:2px 6px;border-radius:4px"><option value="none">关闭</option><option value="deuteranopia">红绿色盲</option><option value="protanopia">红色盲</option><option value="tritanopia">蓝黄色盲</option><option value="monochrome">单色</option></select></label></div><div class="controls center"><button id="stClose">关闭</button></div></div>`;
     document.body.appendChild(sm);
     const hapticEl = document.getElementById('stHaptic') as HTMLInputElement | null;
     if (hapticEl) {
       hapticEl.checked = localStorage.getItem('sokoban_haptic') !== '0';
       hapticEl.addEventListener('change', () => localStorage.setItem('sokoban_haptic', hapticEl.checked ? '1' : '0'));
+    }
+    const lowFxEl = document.getElementById('stLowFx') as HTMLInputElement | null;
+    if (lowFxEl) {
+      lowFxEl.checked = document.body.classList.contains('low-fx');
+      lowFxEl.addEventListener('change', () => document.body.classList.toggle('low-fx', lowFxEl.checked));
+    }
+    const cbEl = document.getElementById('stCbMode') as HTMLSelectElement | null;
+    if (cbEl) {
+      cbEl.value = localStorage.getItem('sokoban_a11y_cbm') || 'none';
+      cbEl.addEventListener('change', () => { import('./accessibility').then(m => m.setColorBlindMode(cbEl.value as any)); });
     }
     document.getElementById('stClose')?.addEventListener('click', () => sm.remove());
   });
