@@ -24,7 +24,7 @@ import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
 import { emitGoalExplosion, emitPushSpark, emitCombo, emitWinBurst } from './particles';
 import { generateLevel, generateLevelAsync } from './generator';
 import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModal } from './share';
-import { SolverVisualizer } from './visualizer';
+import { solverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
 import { checkAchievements, showAchievementUnlock, injectAchievementStyles, ACHIEVEMENTS, getUnlocked } from './achievements';
@@ -75,7 +75,6 @@ const macroRecorder: MacroRecorder = new MacroRecorder(); // 宏录制
 const macroPlayer: MacroPlayer = new MacroPlayer(); // 宏回放
 const _timelineUI = new TimelineUI(); // 备用
 
-const solverViz = new SolverVisualizer();
 let _isSolving = false; // 防止solveAsync并发重复调用
 const LEVEL_RATING_KEY = 'pixelSokobanLevelRatings';
 let _ratingsCache: Record<number, number> | null = null;
@@ -1460,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!result) { setMessage('无解或超时', 'error'); return; }
     // 可视化解法路径（从当前状态模拟每步构建SolveVizStep）
     if (board) {
-      solverViz.attach(board);
+      solverVisualizer.attach(board);
       // 模拟玩家和箱子位置
       let px = state.player.x, py = state.player.y;
       const bxArr: Array<[number, number]> = [];
@@ -1477,9 +1476,9 @@ document.addEventListener('DOMContentLoaded', () => {
         px = nx; py = ny;
         vizSteps.push({ playerPos:{x:px,y:py}, boxPositions:simBoxes.map(([x,y])=>({x,y})), pushCount:0, isBoxPush:isPush });
       }
-      solverViz.loadSteps(vizSteps);
-      solverViz.startPlayback(400);
-      setTimeout(() => solverViz.detach(), result.steps.length * 400 + 1000);
+      solverVisualizer.loadSteps(vizSteps);
+      solverVisualizer.startPlayback(400);
+      setTimeout(() => solverVisualizer.detach(), result.steps.length * 400 + 1000);
     }
     showSolutionModal(result.steps);
   });
