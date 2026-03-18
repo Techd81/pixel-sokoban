@@ -490,9 +490,11 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       const challengeCleared = state.moves <= level.parMoves;
       const playback = state.playback !== "none";
       if (!playback) {
-        updateRecord({ moves: state.moves, rank, challengeCleared, timeMs: state.timer.elapsedMs });
+        const { isNewBest } = updateRecord({ moves: state.moves, rank, challengeCleared, timeMs: state.timer.elapsedMs });
+        emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared, playback, mode: state.playback, isNewBest });
+      } else {
+        emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared, playback, mode: state.playback, isNewBest: false });
       }
-      emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared, playback, mode: state.playback });
     }
     emit("update");
     return;

@@ -498,12 +498,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 通关时清除自适应提示定时器
     if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
     _adaptiveHintShown = true;
-    const detail = (e as CustomEvent).detail as { playback?: boolean; mode?: string } | undefined;
+    const detail = (e as CustomEvent).detail as { playback?: boolean; mode?: string; isNewBest?: boolean } | undefined;
     const playback = detail?.playback ?? (getPlaybackMode() !== 'none');
+    const isNewBest = detail?.isNewBest ?? false;
 
     emitWinBurst();
     haptic('win');
     audioSystem.playSfx('win');
+    if (isNewBest) audioSystem.playSfx('clear'); // 新记录额外音效
     ghostRecorder.stop();
     ghostPlayer.stop();
 
