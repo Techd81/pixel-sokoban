@@ -17,7 +17,7 @@ import {
   getPlaybackMode,
   setPlaybackMode,
 } from './game';
-import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay, markProgressDirty, renderLevelPreview } from './ui';
+import { initDomRefs, render, renderProgress, setMessage, autoScaleBoard, updateTimerDisplay, markProgressDirty, renderLevelPreview, invalidateRenderCache } from './ui';
 import { audioSystem } from './audio';
 import { solveAsync } from './solver';
 import { ghostRecorder, ghostPlayer, loadGhostRecord } from './ghost';
@@ -377,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameEvents.addEventListener('levelLoaded', () => {
     closeWinModal();
+    invalidateRenderCache(); // 换关时重置渲染缓存
     render();
     renderProgress();
     autoScaleBoard();

@@ -51,11 +51,19 @@ export function updateTimerDisplay(): void {
 let _lastGridCols = 0;
 let _lastGridRows = 0;
 
+let _lastMoves = -1, _lastPushes = -1, _lastLevelIdx = -1, _lastBestMoves = '', _lastBestRank = '';
+
+export function invalidateRenderCache(): void {
+  _lastMoves = -1; _lastPushes = -1; _lastLevelIdx = -1;
+  _lastBestMoves = ''; _lastBestRank = '';
+}
+
 export function render(): void {
-  // 统计数值——无论 board/grid 状态如何都要更新
+  // 统计数值——只在值变化时更新 DOM（减少不必要的重绘）
   const cfg = getLevelConfig(state.levelIndex);
   const par = cfg?.parMoves ?? 0;
-  if (els.moveCount) {
+  if (els.moveCount && state.moves !== _lastMoves) {
+    _lastMoves = state.moves;
     els.moveCount.textContent = String(state.moves);
     if (par > 0 && state.moves > 0) {
       els.moveCount.style.color = state.moves <= par ? 'var(--goal)' : state.moves <= par * 1.5 ? 'var(--accent)' : 'var(--danger)';
@@ -63,13 +71,21 @@ export function render(): void {
       els.moveCount.style.color = '';
     }
   }
-  if (els.pushCount)  els.pushCount.textContent  = String(state.pushes);
-  if (els.levelLabel) els.levelLabel.textContent = `${state.levelIndex + 1} / ${LEVELS.length}`;
+  if (els.pushCount && state.pushes !== _lastPushes) {
+    _lastPushes = state.pushes;
+    els.pushCount.textContent = String(state.pushes);
+  }
+  if (els.levelLabel && state.levelIndex !== _lastLevelIdx) {
+    _lastLevelIdx = state.levelIndex;
+    els.levelLabel.textContent = `${state.levelIndex + 1} / ${LEVELS.length}`;
+    if (els.parMoves && cfg) els.parMoves.textContent = String(par || '-');
+    const rec = getRecord(state.levelIndex);
+    const bm = formatBest(rec);
+    const br = rec?.bestRank ?? '';
+    if (els.bestMoves && bm !== _lastBestMoves) { _lastBestMoves = bm; els.bestMoves.textContent = bm; }
+    if (els.bestRank && br !== _lastBestRank) { _lastBestRank = br; els.bestRank.textContent = br; }
+  }
   if (els.timeDisplay) els.timeDisplay.textContent = formatMs(getElapsedTimeMs());
-  if (els.parMoves && cfg) els.parMoves.textContent = String(par || '-');
-  const rec = getRecord(state.levelIndex);
-  if (els.bestMoves) els.bestMoves.textContent = formatBest(rec);
-  if (els.bestRank)  els.bestRank.textContent  = rec?.bestRank ?? '';
   renderProgress();
 
   const board = els.board;
