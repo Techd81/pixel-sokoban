@@ -466,6 +466,10 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       });
     }
     updateCombo(true);
+    // 更新活动日志
+    const todayP = new Date();
+    const dayOfYearP = Math.floor((todayP.getTime() - new Date(todayP.getFullYear(), 0, 0).getTime()) / 86400000);
+    state.stats.activityLog[dayOfYearP] = (state.stats.activityLog[dayOfYearP] ?? 0) + 1;
     state.effects.deadlocks = getDeadlockedBoxes();
     emit("pushed", { from: { x: nextX, y: nextY }, to: { x: bx, y: by } });
     if (checkWin()) {
@@ -508,6 +512,10 @@ export function tryMove(dx: number, dy: number, facing: string): void {
   // 更新热力图（玩家到达位置 +1）
   if (!state.heatmap[nextY]) state.heatmap[nextY] = [];
   state.heatmap[nextY][nextX] = (state.heatmap[nextY][nextX] ?? 0) + 1;
+  // 更新活动日志（今日移动数）
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+  state.stats.activityLog[dayOfYear] = (state.stats.activityLog[dayOfYear] ?? 0) + 1;
   emit("moved", { x: nextX, y: nextY });
   emit("update");
 }
