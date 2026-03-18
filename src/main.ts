@@ -1346,18 +1346,20 @@ document.addEventListener('DOMContentLoaded', () => {
         grid.appendChild(header);
       }
       const cell = document.createElement('button');
+      const faved = isFavorite(idx);
       cell.className =
         'level-card' +
         (cleared ? ' is-cleared' : '') +
         (locked ? ' is-locked' : '') +
-        (idx === state.levelIndex ? ' is-current' : '');
+        (idx === state.levelIndex ? ' is-current' : '') +
+        (faved ? ' is-favorited' : '');
       cell.setAttribute('role', 'listitem');
       // 难度颜色左边框
       if (diff?.color) cell.style.borderLeftColor = diff.color;
       cell.innerHTML = `
         <div class="level-card-head">
           <div class="level-card-title">
-            <div class="level-index">L${idx + 1}</div>
+            <div class="level-index">L${idx + 1}${faved ? ' ⭐' : ''}</div>
             <strong class="level-name">${escapeHtml(lv.name)}</strong>
           </div>
           <div class="level-stars">${rec?.bestRank ?? ''}</div>
