@@ -31,7 +31,7 @@ import { checkAchievements, showAchievementUnlock, injectAchievementStyles } fro
 import { MacroRecorder } from './macro';
 import { addLeaderboardEntry } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
-import { initSkin } from './skins';
+import { initSkin, renderSkinSelector, SKINS } from './skins';
 import { createMinimapOverlay, renderMinimap } from './minimap';
 import { initHaptics, haptic } from './haptic';
 import { addJournalEntry } from './journal';
@@ -985,6 +985,29 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sfxPreviewBtn')?.addEventListener('click', () => {
     audioSystem.unlock();
     audioSystem.playSfx('push');
+  });
+
+  document.getElementById('skinsBtn')?.addEventListener('click', () => {
+    const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
+    let skinModal = document.getElementById('skinModal');
+    if (skinModal) { skinModal.remove(); return; }
+    skinModal = document.createElement('div');
+    skinModal.id = 'skinModal';
+    skinModal.className = 'modal';
+    skinModal.style.cssText = 'display:flex;align-items:center;justify-content:center';
+    const card = document.createElement('div');
+    card.className = 'modal-card';
+    card.style.maxWidth = '480px';
+    card.innerHTML = '<p class="eyebrow">SKINS</p><h2>角色皮肤</h2>';
+    renderSkinSelector(card, cleared);
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '关闭';
+    closeBtn.style.marginTop = '12px';
+    closeBtn.addEventListener('click', () => skinModal!.remove());
+    card.appendChild(closeBtn);
+    skinModal.appendChild(card);
+    skinModal.addEventListener('click', (e) => { if (e.target === skinModal) skinModal!.remove(); });
+    document.body.appendChild(skinModal);
   });
 
   document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
