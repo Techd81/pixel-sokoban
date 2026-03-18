@@ -536,6 +536,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     markProgressDirty();
     renderProgress();
+    // 更新最高通关关卡记录
+    if (state.levelIndex > state.stats.maxLevel) state.stats.maxLevel = state.levelIndex;
     // 皮肤解锁检查
     const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
     initSkin(newCleared);
