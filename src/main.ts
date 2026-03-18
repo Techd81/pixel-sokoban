@@ -1187,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('quickSaveBtn')?.addEventListener('click', () => {
-    saveGame(0, state, getLevelConfig(state.levelIndex).name);
+    saveGame(0, state as unknown as import('./types').GameState, getLevelConfig(state.levelIndex).name);
     notify('快速存档已保存', 'success');
   });
   document.getElementById('quickLoadBtn')?.addEventListener('click', () => {
