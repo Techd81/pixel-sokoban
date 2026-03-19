@@ -158,6 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (key === 'sfxVolume') audioSystem.setVolume('sfx', val as number);
     else if (key === 'bgmVolume') audioSystem.setVolume('bgm', val as number);
     else if (key === 'hapticEnabled') setHapticsEnabled(val as boolean);
+    else if (key === 'showTimer') {
+      const timeEl = document.getElementById('timeDisplay') || document.getElementById('time-display');
+      if (timeEl) timeEl.style.display = val ? '' : 'none';
+    }
+    else if (key === 'showPushCount') {
+      if (els.pushCount) (els.pushCount as HTMLElement).style.display = val ? '' : 'none';
+    }
   });
   // 音频可视化器（BGM频谱）
   const audioViz = new AudioVisualizer();
