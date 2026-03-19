@@ -170,6 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const timeEl = document.getElementById('timeDisplay') || document.getElementById('time-display');
       if (timeEl) timeEl.style.display = val ? '' : 'none';
     }
+    else if (key === 'bgmEnabled') {
+      if (val) { audioSystem.unlock(); audioSystem.startBgm(); }
+      else audioSystem.stopBgm();
+    }
+    else if (key === 'bgmTrack') {
+      audioSystem.setBgmTrack(val as number);
+    }
     else if (key === 'animationSpeed') {
       const spd = val === 'slow' ? 400 : val === 'fast' ? 80 : 200;
       document.documentElement.style.setProperty('--transition-speed', spd + 'ms');
