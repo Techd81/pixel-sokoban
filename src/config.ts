@@ -48,7 +48,7 @@ const DEFAULTS: GameConfig = {
   undoLimit: -1,
   showTimer: true,
   showPushCount: true,
-  autoNextLevel: false,
+  autoNextLevel: true,
   confirmRestart: false,
   colorBlindMode: 'none',
   highContrast: false,
