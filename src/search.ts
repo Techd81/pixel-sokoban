@@ -32,13 +32,14 @@ function countBoxes(level: Level): number {
 export function searchLevels(
   filter: SearchFilter,
   records: Record<number, { bestMoves?: number } | null> = {},
-  favorites: Set<number> = new Set()
+  favorites: Set<number> = new Set(),
+  diffCache?: import('./difficulty').DifficultyPrediction[]
 ): SearchResult[] {
   const results: SearchResult[] = [];
 
   LEVELS.forEach((level, i) => {
     const boxCount = countBoxes(level);
-    const diff = predictDifficulty(level);
+    const diff = diffCache?.[i] ?? predictDifficulty(level);
     const cleared = !!(records[i]?.bestMoves && records[i]!.bestMoves! > 0);
 
     // 过滤条件

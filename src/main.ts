@@ -1986,7 +1986,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     // 使用 searchLevels 获取匹配结果集合
-    const results = searchLevels({ query: q }, state.records);
+    const results = searchLevels({ query: q }, state.records, new Set(getFavorites()), _diffCache);
     const matchedIndices = new Set(results.map(r => r.index));
     document.querySelectorAll<HTMLElement>('.level-card').forEach((cell, idx) => {
       // 卡片顺序与 LEVELS 顺序一致
