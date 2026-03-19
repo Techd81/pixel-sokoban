@@ -100,6 +100,8 @@ export function renderConfigPanel(container: HTMLElement): void {
         <label>主音量 <input type="range" min="0" max="1" step="0.05" value="${_config.masterVolume}" data-cfg="masterVolume"></label>
         <label>音效 <input type="range" min="0" max="1" step="0.05" value="${_config.sfxVolume}" data-cfg="sfxVolume"></label>
         <label>BGM <input type="range" min="0" max="1" step="0.05" value="${_config.bgmVolume}" data-cfg="bgmVolume"></label>
+        <label><input type="checkbox" ${_config.bgmEnabled ? 'checked' : ''} data-cfg="bgmEnabled"> 启用BGM</label>
+        <label>BGM音轨 <select data-cfg="bgmTrack" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f"><option value="0" ${_config.bgmTrack===0?'selected':''}>明快</option><option value="1" ${_config.bgmTrack===1?'selected':''}>忧郁</option><option value="2" ${_config.bgmTrack===2?'selected':''}>激昂</option><option value="3" ${_config.bgmTrack===3?'selected':''}>赛博</option></select></label>
       </div>
       <div class="config-section">
         <h4 style="color:#ff79c6;margin:0 0 6px">🎮 游戏性</h4>
@@ -128,7 +130,8 @@ export function renderConfigPanel(container: HTMLElement): void {
     const handler = () => {
       const key = el.dataset.cfg as keyof GameConfig;
       const val = el.type === 'checkbox' ? el.checked :
-        el.type === 'range' ? parseFloat(el.value) : el.value;
+        el.type === 'range' ? parseFloat(el.value) :
+        (el.tagName === 'SELECT' && (key === 'bgmTrack')) ? Number(el.value) : el.value;
       setConfig(key, val as GameConfig[typeof key]);
     };
     el.addEventListener('input', handler);
