@@ -129,7 +129,9 @@ export function render(): void {
     (state.effects.deadlocks ?? []).map((p: Pos) => `${p.x},${p.y}`)
   );
   // 只在有死锁时才建 Set（大多数情况无死锁）
-  const hasDeadlocks = (state.effects.deadlocks?.length ?? 0) > 0;
+  // 支持 showDeadlocks 配置
+  const showDeadlocksFlag = !document.body.classList.contains('no-deadlocks');
+  const hasDeadlocks = showDeadlocksFlag && (state.effects.deadlocks?.length ?? 0) > 0;
 
   let idx = 0;
   for (let y = 0; y < rows; y++) {

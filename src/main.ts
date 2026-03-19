@@ -162,6 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const timeEl = document.getElementById('timeDisplay') || document.getElementById('time-display');
       if (timeEl) timeEl.style.display = val ? '' : 'none';
     }
+    else if (key === 'showDeadlocks') {
+      document.body.classList.toggle('no-deadlocks', !val);
+    }
     else if (key === 'particlesEnabled') {
       document.body.classList.toggle('low-fx', !val);
       localStorage.setItem('pixelSokobanLowFx', val ? '0' : '1');
