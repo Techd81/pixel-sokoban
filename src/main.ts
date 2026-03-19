@@ -453,8 +453,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 重置 minimap（换关后重新创建）
     minimapOverlay?.remove();
     minimapOverlay = null;
-    // 宏录制自动随关卡切换停止
-    if (macroRecorder.isRecording) macroRecorder.cancel(); // 换关时重置渲染缓存
+    // 宏录制/回放随关卡切换停止
+    if (macroRecorder.isRecording) macroRecorder.cancel();
+    if (macroPlayer.isPlaying()) macroPlayer.stop();
     render();
     renderProgress();
     autoScaleBoard();
@@ -529,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isNewBest) audioSystem.playSfx('clear'); // 新记录额外音效
     ghostRecorder.stop();
     ghostPlayer.stop();
+    if (macroPlayer.isPlaying()) macroPlayer.stop(); // 通关时停止宏回放
 
     // 演示/回放不写入记录、不触发成就/回放保存
     if (playback) {
