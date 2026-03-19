@@ -20,21 +20,25 @@ const GHOST_STORAGE_PREFIX = 'sokoban_ghost_';
 
 // ─── 持久化 ───────────────────────────────────────────────────────────────────
 
+const _ghostCache = new Map<number, GhostRecord | null>();
+
 export function saveGhostRecord(record: GhostRecord): void {
   try {
-    const key = GHOST_STORAGE_PREFIX + record.levelIndex;
     const existing = loadGhostRecord(record.levelIndex);
-    // 只保存更好的记录
     if (!existing || record.totalMoves < existing.totalMoves) {
-      localStorage.setItem(key, JSON.stringify(record));
+      localStorage.setItem(GHOST_STORAGE_PREFIX + record.levelIndex, JSON.stringify(record));
+      _ghostCache.set(record.levelIndex, record); // 更新缓存
     }
   } catch { /* storage full, ignore */ }
 }
 
 export function loadGhostRecord(levelIndex: number): GhostRecord | null {
+  if (_ghostCache.has(levelIndex)) return _ghostCache.get(levelIndex)!;
   try {
     const raw = localStorage.getItem(GHOST_STORAGE_PREFIX + levelIndex);
-    return raw ? JSON.parse(raw) : null;
+    const rec = raw ? JSON.parse(raw) : null;
+    _ghostCache.set(levelIndex, rec);
+    return rec;
   } catch { return null; }
 }
 
