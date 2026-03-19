@@ -37,8 +37,10 @@ export function getAllNotes(): LevelNote[] {
 
 export function showNoteEditor(levelIndex: number, levelName: string): void {
   const existing = getNote(levelIndex);
-  let modal = document.getElementById('noteModal');
-  if (!modal) {
+  // 移除旧的 noteModal 重新创建，防止监听器堆积
+  document.getElementById('noteModal')?.remove();
+  let modal = null;
+  {
     modal = document.createElement('div');
     modal.id = 'noteModal';
     modal.style.cssText = [
