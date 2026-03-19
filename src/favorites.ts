@@ -40,7 +40,7 @@ export function loadLevelTags(): LevelTagsMap {
   try {
     const raw = localStorage.getItem(LEVEL_TAGS_KEY);
     _levelTagsCache = raw ? JSON.parse(raw) : {};
-    return _levelTagsCache;
+    return _levelTagsCache!;
   } catch { return {}; }
 }
 
