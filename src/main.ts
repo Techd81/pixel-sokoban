@@ -949,7 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateUndoLimitBtn(getUndoLimit());
 
   const handleUndo = (): void => {
-    if (state.history.length === 0) { setMessage('没有可撤销的操作', 'warn'); return; }
+    if (state.history.length === 0) { setMessage('没有可撤销的操作', 'warn'); haptic('fail'); return; }
     const limit = getUndoLimit();
     const used = getUndoUsed();
     if (limit >= 0 && used >= limit) {
