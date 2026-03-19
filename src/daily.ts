@@ -19,20 +19,28 @@ function hashDate(dateStr: string): number {
   return dateStr.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0);
 }
 
+let _dailyCache: DailyChallenge | null = null;
+let _dailyCacheDate = '';
+
 export function getDailyChallenge(): DailyChallenge {
   const date = todayStr();
+  // 今日缓存（跨日自动失效）
+  if (_dailyCache && _dailyCacheDate === date) return _dailyCache;
+  _dailyCacheDate = date;
   const idx = hashDate(date) % Math.min(LEVELS.length, 50);
   const saved = localStorage.getItem('sokoban_daily_' + date);
   let completed = false, completedMoves: number | undefined, completedTimeMs: number | undefined;
   if (saved) {
     try { const d = JSON.parse(saved); completed = d.completed; completedMoves = d.moves; completedTimeMs = d.timeMs; } catch { }
   }
-  return { date, levelIndex: idx, level: LEVELS[idx], completed, completedMoves, completedTimeMs };
+  _dailyCache = { date, levelIndex: idx, level: LEVELS[idx], completed, completedMoves, completedTimeMs };
+  return _dailyCache;
 }
 
 export function completeDailyChallenge(moves: number, timeMs: number): void {
   const date = todayStr();
   localStorage.setItem('sokoban_daily_' + date, JSON.stringify({ completed: true, moves, timeMs }));
+  _dailyCache = null; // 使缓存失效，下次重新读取
 }
 
 export function getDailyStreak(): number {
