@@ -118,16 +118,21 @@ export function injectAchievementStyles(): void {
 
 const UNLOCKED_KEY = 'sokoban_achievements_v2';
 
+let _unlockedCache: Set<string> | null = null;
+
 export function getUnlocked(): Set<string> {
+  if (_unlockedCache) return _unlockedCache;
   try {
     const raw = localStorage.getItem(UNLOCKED_KEY);
-    return new Set(raw ? JSON.parse(raw) : []);
+    _unlockedCache = new Set(raw ? JSON.parse(raw) : []);
+    return _unlockedCache;
   } catch { return new Set(); }
 }
 
 export function markUnlocked(id: string): void {
   const set = getUnlocked();
   set.add(id);
+  _unlockedCache = set; // 更新缓存
   try { localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...set])); } catch { }
 }
 
