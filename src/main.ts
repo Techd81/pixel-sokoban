@@ -852,7 +852,13 @@ document.addEventListener('DOMContentLoaded', () => {
       (LEVELS as typeof LEVELS & { _temp?: boolean }).push(
         Object.assign(level, { _temp: true }) as typeof LEVELS[0]
       );
-      loadLevel(LEVELS.length - 1);
+      // 更新缓存（新关卡没有预渲染）
+      const newIdx = LEVELS.length - 1;
+      _diffCache[newIdx] = predictDifficulty(level);
+      const previewC = document.createElement('canvas'); previewC.width=64; previewC.height=56;
+      renderLevelPreview(previewC, level.map);
+      _previewCache[newIdx] = previewC.toDataURL();
+      loadLevel(newIdx);
       setMessage(`[${profile.skillLevel}] 随机关卡已生成 (${level.map[0].length}×${level.map.length})`, 'win');
     });
   }
