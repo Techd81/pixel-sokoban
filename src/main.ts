@@ -49,7 +49,7 @@ import { sendWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
-import { WORLDS, getWorldForLevel, isWorldUnlocked, renderWorldMap } from './worlds';
+import { WORLDS, getWorldForLevel, isWorldUnlocked, renderWorldMap, getWorldProgress } from './worlds';
 import { getSmartHint } from './hint_engine';
 import { GestureRecognizer } from './gestures';
 import { notify, notifyWin, notifyAchievement } from './notify';
@@ -1836,7 +1836,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const header = document.createElement('div');
         header.className = 'world-header';
         header.style.cssText = `grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:8px 4px 4px;border-bottom:2px solid ${world.color}44;margin-top:8px`;
-        header.innerHTML = `<span style="font-size:1.2em">${world.emoji}</span><strong style="color:${world.color}">${world.name}</strong><span style="color:var(--muted);font-size:11px">${world.description}</span>${!worldUnlocked ? '<span style="color:var(--danger);font-size:11px">🔒 未解锁</span>' : ''}`;
+        const wp = getWorldProgress(world, state.records);
+        header.innerHTML = `<span style="font-size:1.2em">${world.emoji}</span><strong style="color:${world.color}">${world.name}</strong><span style="color:var(--muted);font-size:11px">${world.description}</span><span style="margin-left:auto;font-size:11px;color:${world.color}">${wp.cleared}/${wp.total}</span>${!worldUnlocked ? '<span style="color:var(--danger);font-size:11px">🔒 未解锁</span>' : ''}`;
         grid.appendChild(header);
       }
       const cell = document.createElement('button');
