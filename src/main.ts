@@ -1282,9 +1282,14 @@ document.addEventListener('DOMContentLoaded', () => {
     else setMessage(`[${skillLbls[ap.skillLevel]||''}] 继续加油，已有不错的进度！`, 'info');
   });
   document.getElementById('recommendBtn')?.addEventListener('click', () => {
+    const prof = analyzePlayer(state.records);
     const next = getNextRecommended(state.records, state.levelIndex);
-    if (next >= 0) { loadLevel(next); document.getElementById('statsModal')?.classList.add('hidden'); }
-    else setMessage('所有关卡已通关！', 'win');
+    const skillLbls2: Record<string,string> = { beginner:'新手', intermediate:'进阶', advanced:'高手', expert:'专家' };
+    if (next >= 0) {
+      loadLevel(next);
+      setMessage(`[${skillLbls2[prof.skillLevel]||''}] 已跳转推荐关卡 L${next+1}`, 'info');
+      document.getElementById('statsModal')?.classList.add('hidden');
+    } else setMessage('🎉 所有关卡已通关！', 'win');
   });
   document.getElementById('printBtn')?.addEventListener('click', () => {
     window.print();
