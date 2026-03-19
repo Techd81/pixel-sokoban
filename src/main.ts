@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (theme) state.stats.themesUsed.add(theme);
   });
   loadConfig(); // 加载游戏配置
+  // 应用已保存的配置（还原上次的设置状态）
+  const savedCfg = getConfig();
+  if (savedCfg.showDeadlocks === false) document.body.classList.add('no-deadlocks');
+  if (!savedCfg.particlesEnabled) document.body.classList.add('low-fx');
   onConfigChange((key, val) => {
     if (key === 'masterVolume') audioSystem.setVolume('master', val as number);
     else if (key === 'sfxVolume') audioSystem.setVolume('sfx', val as number);
