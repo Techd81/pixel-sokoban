@@ -141,7 +141,7 @@ export class RaceMode {
     // 重新定位玩家
     for (let y = 0; y < snap.length; y++)
       for (let x = 0; x < snap[y].length; x++)
-        if (snap[y][x] === 'player' || snap[y][x] === '+') p.player = { x, y };
+        if (snap[y][x] === '@' || snap[y][x] === '+') p.player = { x, y };
     p.moves = Math.max(0, p.moves - 1);
   }
 
