@@ -163,7 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (timeEl) timeEl.style.display = val ? '' : 'none';
     }
     else if (key === 'showPushCount') {
-      if (els.pushCount) (els.pushCount as HTMLElement).style.display = val ? '' : 'none';
+      const pushEl = document.getElementById('pushCount') || document.getElementById('push-count');
+      if (pushEl) pushEl.style.display = val ? '' : 'none';
     }
   });
   // 音频可视化器（BGM频谱）
