@@ -76,10 +76,13 @@ export class TimelineUI {
     this.stepLabel = this.container.querySelector('.tl-label');
     this.speedBtn = this.container.querySelector('.tl-speed');
 
+    let _seekTimer: ReturnType<typeof setTimeout> | null = null;
     this.scrubber?.addEventListener('input', () => {
       this.currentStep = Number(this.scrubber!.value);
       this.updateLabel();
-      this.onSeek?.(this.currentStep);
+      // 节流300ms：避免拖动时频繁触发seek(restartLevel+tryMove)
+      if (_seekTimer) clearTimeout(_seekTimer);
+      _seekTimer = setTimeout(() => { _seekTimer = null; this.onSeek?.(this.currentStep); }, 300);
     });
 
     this.playBtn?.addEventListener('click', () => this.togglePlay());
