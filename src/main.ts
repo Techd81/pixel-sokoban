@@ -873,12 +873,17 @@ document.addEventListener('DOMContentLoaded', () => {
     void generateLevelAsync({ ...params, seed: Date.now() }).then(level => {
       _isSolving = false;
       if (!level) { setMessage('生成失败，请重试', 'error'); return; }
-      // 临时加入关卡列表并跳转
-      (LEVELS as typeof LEVELS & { _temp?: boolean }).push(
-        Object.assign(level, { _temp: true }) as typeof LEVELS[0]
-      );
-      // 更新缓存（新关卡没有预渲染）
-      const newIdx = LEVELS.length - 1;
+      // 临时关卡：复用固定slot，避免LEVELS无限增长
+      const tempLevel = Object.assign(level, { _temp: true }) as typeof LEVELS[0];
+      let newIdx: number;
+      const existingTemp = LEVELS.findIndex((l: any) => l._temp && !(l as any)._fromEditor);
+      if (existingTemp >= 0) {
+        LEVELS[existingTemp] = tempLevel;
+        newIdx = existingTemp;
+      } else {
+        (LEVELS as typeof LEVELS & {_temp?:boolean}[]).push(tempLevel);
+        newIdx = LEVELS.length - 1;
+      }
       _diffCache[newIdx] = predictDifficulty(level);
       const previewC = document.createElement('canvas'); previewC.width=64; previewC.height=56;
       renderLevelPreview(previewC, level.map);
