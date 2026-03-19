@@ -160,8 +160,9 @@ export class AudioSystem {
         this.playTone({ frequency: f, type: pack.waveform, duration: 0.07 + pack.attackMs/1000, volume: 0.38, slideTo: f + 35 });
       },
       fail: () => {
-        this.playTone({ frequency: 180, type: 'sawtooth', duration: 0.11, volume: 0.14, slideTo: 110 });
-        this.playTone({ frequency: 90, type: 'square', duration: 0.06, volume: 0.08 });
+        const packF = getSoundPack();
+        this.playTone({ frequency: 180 * packF.failPitch, type: packF.waveform, duration: 0.11, volume: 0.14, slideTo: 110 * packF.failPitch });
+        this.playTone({ frequency: 90 * packF.failPitch, type: packF.waveform, duration: 0.06, volume: 0.08 });
       },
       push: () => {
         const pack2 = getSoundPack();
