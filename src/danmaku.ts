@@ -69,6 +69,7 @@ function loop(now: number): void {
 }
 
 export function sendDanmaku(text?: string): void {
+  if (document.body.classList.contains('low-fx')) return; // 低特效模式禁用弹幕
   ensureCanvas();
   if (!canvas) return;
   const msg = text || PRESET_MESSAGES[Math.floor(Math.random() * PRESET_MESSAGES.length)];
