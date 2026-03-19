@@ -592,11 +592,14 @@ export function initEditorModal(): EditorModalApi {
 
   // 批量测试：最小实现=对当前关卡重复 AI 验证
   document.getElementById('batchTestBtn')?.addEventListener('click', async () => {
+    if (_editorValidating) { setMessage('测试中，请稍候...', 'warn'); return; }
     const player = findPlayer(grid);
     const goals = collectGoals(grid);
     if (!player || goals.length === 0) { setMessage('请先放置玩家与目标点', 'warn'); return; }
+    _editorValidating = true;
     setMessage('批量测试（当前关卡）中...', 'info');
     const result = await solveAsync(grid as unknown as string[][], player, goals);
+    _editorValidating = false;
     setMessage(result ? `通过：${result.steps.length}步` : '失败：无解/超时', result ? 'win' : 'error');
   });
 
