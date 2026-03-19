@@ -231,7 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       ro.observe(container);
     } else {
-      window.addEventListener('resize', () => autoScaleBoard());
+      let _resizeTimer: ReturnType<typeof setTimeout> | null = null;
+      window.addEventListener('resize', () => {
+        if (_resizeTimer) clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(() => { _resizeTimer = null; autoScaleBoard(); }, 100);
+      });
     }
   };
   setupBoardAutoscale();
