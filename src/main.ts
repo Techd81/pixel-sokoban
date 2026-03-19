@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ghostPlayer.stop(); // 停止上一关的幽灵回放
     document.getElementById('ghost-overlay')?.remove();
     ghostRecorder.start(state.levelIndex);
-    if (ghostPlayer.load(state.levelIndex)) {
+    if (getConfig().ghostEnabled !== false && ghostPlayer.load(state.levelIndex)) {
       ghostPlayer.start((frame, _progress) => {
         // 显示幽灵位置（半透明覆盖层）
         let ghostEl = document.getElementById('ghost-overlay') as HTMLElement | null;
@@ -839,6 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let _hintCache: { levelIdx: number; moves: number; result: ReturnType<typeof getSmartHint> } | null = null;
 
   function handleHint(): void {
+    if (getConfig().hintEnabled === false) { setMessage('提示功能已关闭（可在高级配置中开启）', 'warn'); return; }
     setMessage('AI 计算中...', 'info');
     state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
     // 缓存：同一关卡同一步数复用上次结果

@@ -106,6 +106,7 @@ export function renderConfigPanel(container: HTMLElement): void {
         <label><input type="checkbox" ${_config.showTimer ? 'checked' : ''} data-cfg="showTimer"> 显示计时器</label>
         <label><input type="checkbox" ${_config.particlesEnabled ? 'checked' : ''} data-cfg="particlesEnabled"> 粒子特效</label>
         <label><input type="checkbox" ${_config.ghostEnabled ? 'checked' : ''} data-cfg="ghostEnabled"> 幽灵回放</label>
+        <label><input type="checkbox" ${_config.hintEnabled ? 'checked' : ''} data-cfg="hintEnabled"> AI提示</label>
         <label><input type="checkbox" ${_config.autoNextLevel ? 'checked' : ''} data-cfg="autoNextLevel"> 自动下一关</label>
         <label><input type="checkbox" ${_config.confirmRestart ? 'checked' : ''} data-cfg="confirmRestart"> 重开需确认</label>
       </div>
