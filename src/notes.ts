@@ -9,11 +9,15 @@ export interface LevelNote {
   updatedAt: number;
 }
 
+let _notesCache: Record<number, LevelNote> | null = null;
+
 function loadNotes(): Record<number, LevelNote> {
-  try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'); } catch { return {}; }
+  if (_notesCache) return _notesCache;
+  try { _notesCache = JSON.parse(localStorage.getItem(NOTES_KEY) || '{}'); return _notesCache!; } catch { return {}; }
 }
 
 function saveNotes(notes: Record<number, LevelNote>): void {
+  _notesCache = notes; // 更新缓存
   try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch { }
 }
 
