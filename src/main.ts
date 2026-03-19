@@ -162,6 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const timeEl = document.getElementById('timeDisplay') || document.getElementById('time-display');
       if (timeEl) timeEl.style.display = val ? '' : 'none';
     }
+    else if (key === 'particlesEnabled') {
+      document.body.classList.toggle('low-fx', !val);
+      localStorage.setItem('pixelSokobanLowFx', val ? '0' : '1');
+    }
     else if (key === 'showPushCount') {
       const pushEl = document.getElementById('pushCount') || document.getElementById('push-count');
       if (pushEl) pushEl.style.display = val ? '' : 'none';
