@@ -281,6 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (winRankEl) winRankEl.textContent = rank ?? '通关';
     if (winChallengeEl) {
       winChallengeEl.textContent = challengeCleared ? `达成 ${level.parMoves} 步挑战` : `未达成 ${level.parMoves} 步挑战`;
+      // 完美通关（步数等于parMoves）高亮
+      if (state.moves === level.parMoves) {
+        winChallengeEl.style.color = '#ffd166';
+        winChallengeEl.style.fontWeight = 'bold';
+        winChallengeEl.textContent = '✨ PERFECT！' + level.parMoves + ' 步完美通关！';
+      } else {
+        winChallengeEl.style.color = '';
+        winChallengeEl.style.fontWeight = '';
+      }
     }
     if (winBestEl) {
       const prevBest = record?.bestMoves;
