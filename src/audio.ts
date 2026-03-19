@@ -164,13 +164,14 @@ export class AudioSystem {
         this.playTone({ frequency: 90, type: 'square', duration: 0.06, volume: 0.08 });
       },
       push: () => {
-        this.playTone({ frequency: 120, type: 'square', duration: 0.05, volume: 0.12 });
+        const pack2 = getSoundPack();
+        this.playTone({ frequency: 120 * pack2.pushPitch, type: pack2.waveform, duration: 0.05, volume: 0.12 });
         this.playSequence([
-          { frequency: 220, duration: 0.06, volume: 0.15, type: 'square' },
-          { frequency: 300, duration: 0.07, volume: 0.13, type: 'triangle' },
+          { frequency: 220 * pack2.pushPitch, duration: 0.06, volume: 0.15, type: pack2.waveform },
+          { frequency: 300 * pack2.pushPitch, duration: 0.07, volume: 0.13, type: 'triangle' },
         ]);
       },
-      undo: () => this.playTone({ frequency: 220, type: 'triangle', duration: 0.12, volume: 0.15, slideTo: 180 }),
+      undo: () => { const pack3 = getSoundPack(); this.playTone({ frequency: 220 * pack3.undoPitch, type: pack3.waveform, duration: 0.12, volume: 0.15, slideTo: 180 * pack3.undoPitch }); },
       clear: () => this.playSequence([
         { frequency: 261.63, duration: 0.10, volume: 0.16, type: 'triangle' },
         { frequency: 329.63, duration: 0.10, volume: 0.16, type: 'triangle' },
