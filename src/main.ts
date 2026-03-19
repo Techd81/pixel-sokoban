@@ -633,7 +633,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── AI 教练建议 ─────────────────────────────────────────────────────
     const coachPanel = document.getElementById('coachPanel');
     if (coachPanel) {
-      const advices = getCoachAdvice(state.records, state.levelIndex, []);
+      const recentMoves = Object.entries(state.records)
+        .filter(([,r]) => r?.bestMoves)
+        .sort(([a],[b]) => Number(b) - Number(a))
+        .slice(0, 5)
+        .map(([,r]) => r!.bestMoves);
+      const advices = getCoachAdvice(state.records, state.levelIndex, recentMoves);
       renderCoachPanel(coachPanel, advices);
     }
 
