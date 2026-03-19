@@ -13,11 +13,15 @@ export interface LeaderboardEntry {
 const LB_KEY = 'sokoban_leaderboard';
 const MAX_PER_LEVEL = 10;
 
+let _lbCache: LeaderboardEntry[] | null = null;
+
 export function loadLeaderboard(): LeaderboardEntry[] {
-  try { return JSON.parse(localStorage.getItem(LB_KEY) || '[]'); } catch { return []; }
+  if (_lbCache) return _lbCache;
+  try { _lbCache = JSON.parse(localStorage.getItem(LB_KEY) || '[]'); return _lbCache!; } catch { return []; }
 }
 
 export function saveLeaderboard(entries: LeaderboardEntry[]): void {
+  _lbCache = entries; // 更新缓存
   try { localStorage.setItem(LB_KEY, JSON.stringify(entries)); } catch { }
 }
 
