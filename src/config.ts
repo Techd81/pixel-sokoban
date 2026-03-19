@@ -106,7 +106,6 @@ export function renderConfigPanel(container: HTMLElement): void {
         <label><input type="checkbox" ${_config.showTimer ? 'checked' : ''} data-cfg="showTimer"> 显示计时器</label>
         <label><input type="checkbox" ${_config.particlesEnabled ? 'checked' : ''} data-cfg="particlesEnabled"> 粒子特效</label>
         <label><input type="checkbox" ${_config.showDeadlocks ? 'checked' : ''} data-cfg="showDeadlocks"> 显示死锁高亮</label>
-        <label><input type="checkbox" ${_config.showTimer ? 'checked' : ''} data-cfg="showTimer"> 显示计时器</label>
         <label><input type="checkbox" ${_config.showPushCount ? 'checked' : ''} data-cfg="showPushCount"> 显示推箱数</label>
         <label><input type="checkbox" ${_config.ghostEnabled ? 'checked' : ''} data-cfg="ghostEnabled"> 幽灵回放</label>
         <label><input type="checkbox" ${_config.hapticEnabled ? 'checked' : ''} data-cfg="hapticEnabled"> 触觉反馈</label>
