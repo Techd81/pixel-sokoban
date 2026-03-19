@@ -95,6 +95,8 @@ export class RaceMode {
     else if (k === KEYS_P2.down)  this.movePlayer(this.state.p2,  0,  1, 'down');
     else if (k === KEYS_P2.left)  this.movePlayer(this.state.p2, -1,  0, 'left');
     else if (k === KEYS_P2.right) this.movePlayer(this.state.p2,  1,  0, 'right');
+    else if (k === KEYS_P1.undo) this.undoPlayer(this.state.p1);
+    else if (k === KEYS_P2.undo) this.undoPlayer(this.state.p2);
     this.onUpdate?.();
   }
 
@@ -130,6 +132,17 @@ export class RaceMode {
         this.onWin?.(p.id);
       }
     }
+  }
+
+  private undoPlayer(p: RacePlayer): void {
+    if (p.history.length === 0 || p.won) return;
+    const snap = p.history.pop()!;
+    p.grid = snap;
+    // 重新定位玩家
+    for (let y = 0; y < snap.length; y++)
+      for (let x = 0; x < snap[y].length; x++)
+        if (snap[y][x] === 'player' || snap[y][x] === '+') p.player = { x, y };
+    p.moves = Math.max(0, p.moves - 1);
   }
 
   stop(): void {
