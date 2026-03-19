@@ -157,6 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedCfg = getConfig();
   if (savedCfg.showDeadlocks === false) document.body.classList.add('no-deadlocks');
   if (!savedCfg.particlesEnabled) document.body.classList.add('low-fx');
+  if (savedCfg.animationSpeed && savedCfg.animationSpeed !== 'normal') {
+    const spd = savedCfg.animationSpeed === 'slow' ? 400 : 80;
+    document.documentElement.style.setProperty('--transition-speed', spd + 'ms');
+  }
   onConfigChange((key, val) => {
     if (key === 'masterVolume') audioSystem.setVolume('master', val as number);
     else if (key === 'sfxVolume') audioSystem.setVolume('sfx', val as number);
@@ -165,6 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (key === 'showTimer') {
       const timeEl = document.getElementById('timeDisplay') || document.getElementById('time-display');
       if (timeEl) timeEl.style.display = val ? '' : 'none';
+    }
+    else if (key === 'animationSpeed') {
+      const spd = val === 'slow' ? 400 : val === 'fast' ? 80 : 200;
+      document.documentElement.style.setProperty('--transition-speed', spd + 'ms');
     }
     else if (key === 'showDeadlocks') {
       document.body.classList.toggle('no-deadlocks', !val);

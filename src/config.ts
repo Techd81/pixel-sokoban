@@ -114,6 +114,14 @@ export function renderConfigPanel(container: HTMLElement): void {
         <label><input type="checkbox" ${_config.autoNextLevel ? 'checked' : ''} data-cfg="autoNextLevel"> 自动下一关</label>
         <label><input type="checkbox" ${_config.confirmRestart ? 'checked' : ''} data-cfg="confirmRestart"> 重开需确认</label>
       </div>
+      <div class="config-section">
+        <h4 style="color:#50fa7b;margin:0 0 6px">🎬 动画</h4>
+        <label>速度 <select data-cfg="animationSpeed" style="background:#261d34;color:#f6f1ff;border:1px solid #56406f">
+          <option value="slow" ${_config.animationSpeed==='slow'?'selected':''}>慢</option>
+          <option value="normal" ${_config.animationSpeed==='normal'?'selected':''}>正常</option>
+          <option value="fast" ${_config.animationSpeed==='fast'?'selected':''}>快</option>
+        </select></label>
+      </div>
       <button id="resetConfigBtn" style="background:#ff5555;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer">重置默认</button>
     </div>
   `;
