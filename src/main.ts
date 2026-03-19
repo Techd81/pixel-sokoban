@@ -395,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let minimapOverlay: HTMLCanvasElement | null = null;
   let _adaptiveHintShown = false; // 每关只自动提示一次
   let _adaptiveHintTimer: ReturnType<typeof setTimeout> | null = null;
+  let _clearStreak = 0; // 连续通关连击计数
 
   gameEvents.addEventListener('update', () => {
     render();
@@ -635,6 +636,11 @@ document.addEventListener('DOMContentLoaded', () => {
     markProgressDirty();
     invalidateRenderCache(); // 通关后bestMoves/bestRank更新，强制刷新缓存
     renderProgress();
+    // 连续通关连击
+    _clearStreak++;
+    if (_clearStreak >= 3) {
+      notify(`🔥 连续通关 ${_clearStreak} 关！`, { type:'achievement', duration:3000 });
+    }
     if (state.levelIndex > state.stats.maxLevel) state.stats.maxLevel = state.levelIndex;
     // 皮肤解锁检查
     const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
@@ -1082,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 按钮事件绑定 ────────────────────────────────────────────────────────
   document.getElementById('undoBtn')?.addEventListener('click', () => handleUndo());
-  document.getElementById('restartBtn')?.addEventListener('click', () => restartLevel());
+  document.getElementById('restartBtn')?.addEventListener('click', () => { _clearStreak = 0; restartLevel(); });
   document.getElementById('hintBtn')?.addEventListener('click', () => handleHint());
   document.getElementById('prevBtn')?.addEventListener('click',
     () => loadLevel(Math.max(state.levelIndex - 1, 0)));
