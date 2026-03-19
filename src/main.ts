@@ -583,9 +583,10 @@ document.addEventListener('DOMContentLoaded', () => {
       isNewRecord: prevBest === 0 || state.moves < prevBest,
     });
 
-    // 检查成就
-    const cleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
-    const stars3 = Object.values(state.records).filter((r: any) => r?.bestRank === '★★★').length;
+    // 检查成就（缓存Object.values避免重复创建数组）
+    const _recVals = Object.values(state.records);
+    const cleared = _recVals.filter((r: any) => r?.bestMoves > 0).length;
+    const stars3 = _recVals.filter((r: any) => r?.bestRank === '★★★').length;
     // 幽灵对比：本次是否超越幽灵记录
     const ghostRec = loadGhostRecord(state.levelIndex);
     const beatGhost = ghostRec && ghostRec.totalMoves > 0 && state.moves < ghostRec.totalMoves ? 1 : 0;
@@ -652,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (state.levelIndex > state.stats.maxLevel) state.stats.maxLevel = state.levelIndex;
     // 皮肤解锁检查
-    const newCleared = Object.values(state.records).filter((r: any) => r?.bestMoves > 0).length;
+    const newCleared = _recVals.filter((r: any) => r?.bestMoves > 0).length;
     initSkin(newCleared);
     // 持久化 stats
     // 序列化 Set 类型为数组
