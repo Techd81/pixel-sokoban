@@ -112,12 +112,14 @@ export function renderConfigPanel(container: HTMLElement): void {
     </div>
   `;
   container.querySelectorAll<HTMLInputElement>('[data-cfg]').forEach(el => {
-    el.addEventListener('change', () => {
+    const handler = () => {
       const key = el.dataset.cfg as keyof GameConfig;
       const val = el.type === 'checkbox' ? el.checked :
         el.type === 'range' ? parseFloat(el.value) : el.value;
       setConfig(key, val as GameConfig[typeof key]);
-    });
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
   });
   container.querySelector('#resetConfigBtn')?.addEventListener('click', () => {
     resetConfig();
