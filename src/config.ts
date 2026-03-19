@@ -105,6 +105,9 @@ export function renderConfigPanel(container: HTMLElement): void {
         <h4 style="color:#ff79c6;margin:0 0 6px">🎮 游戏性</h4>
         <label><input type="checkbox" ${_config.showTimer ? 'checked' : ''} data-cfg="showTimer"> 显示计时器</label>
         <label><input type="checkbox" ${_config.particlesEnabled ? 'checked' : ''} data-cfg="particlesEnabled"> 粒子特效</label>
+        <label><input type="checkbox" ${_config.showDeadlocks ? 'checked' : ''} data-cfg="showDeadlocks"> 显示死锁高亮</label>
+        <label><input type="checkbox" ${_config.showTimer ? 'checked' : ''} data-cfg="showTimer"> 显示计时器</label>
+        <label><input type="checkbox" ${_config.showPushCount ? 'checked' : ''} data-cfg="showPushCount"> 显示推箱数</label>
         <label><input type="checkbox" ${_config.ghostEnabled ? 'checked' : ''} data-cfg="ghostEnabled"> 幽灵回放</label>
         <label><input type="checkbox" ${_config.hintEnabled ? 'checked' : ''} data-cfg="hintEnabled"> AI提示</label>
         <label><input type="checkbox" ${_config.autoNextLevel ? 'checked' : ''} data-cfg="autoNextLevel"> 自动下一关</label>
