@@ -33,14 +33,19 @@ export function saveTags(tags: LevelTag[]): void {
 // levelTags: { [levelIndex]: string[] (tag ids) }
 type LevelTagsMap = Record<number, string[]>;
 
+let _levelTagsCache: LevelTagsMap | null = null;
+
 export function loadLevelTags(): LevelTagsMap {
+  if (_levelTagsCache) return _levelTagsCache;
   try {
     const raw = localStorage.getItem(LEVEL_TAGS_KEY);
-    return raw ? JSON.parse(raw) : {};
+    _levelTagsCache = raw ? JSON.parse(raw) : {};
+    return _levelTagsCache;
   } catch { return {}; }
 }
 
 export function saveLevelTags(map: LevelTagsMap): void {
+  _levelTagsCache = map; // 更新缓存
   try { localStorage.setItem(LEVEL_TAGS_KEY, JSON.stringify(map)); } catch { }
 }
 
