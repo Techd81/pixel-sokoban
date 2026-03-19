@@ -161,6 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const spd = savedCfg.animationSpeed === 'slow' ? 400 : 80;
     document.documentElement.style.setProperty('--transition-speed', spd + 'ms');
   }
+  // 启动时应用音量配置
+  audioSystem.setVolume('master', savedCfg.masterVolume ?? 0.8);
+  audioSystem.setVolume('sfx', savedCfg.sfxVolume ?? 0.8);
+  audioSystem.setVolume('bgm', savedCfg.bgmVolume ?? 0.5);
   onConfigChange((key, val) => {
     if (key === 'masterVolume') audioSystem.setVolume('master', val as number);
     else if (key === 'sfxVolume') audioSystem.setVolume('sfx', val as number);
