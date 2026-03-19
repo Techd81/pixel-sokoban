@@ -557,17 +557,20 @@ export function initEditorModal(): EditorModalApi {
   });
 
   // AI 验证
+  let _editorValidating = false;
   document.getElementById('editorAiBtn')?.addEventListener('click', async () => {
+    if (_editorValidating) { setMessage('验证中，请稍候...', 'warn'); return; }
     const player = findPlayer(grid);
     const goals = collectGoals(grid);
     if (!player) { setMessage('缺少玩家', 'warn'); return; }
     if (goals.length === 0) { setMessage('缺少目标点', 'warn'); return; }
-    // 先做快速静态验证
     const lv = buildLevelFromGrid(grid);
     const validation = validateLevel(lv);
     if (!validation.valid) { setMessage('地图无效: ' + validation.errors.join('; '), 'error'); return; }
     setMessage('AI 验证中...', 'info');
+    _editorValidating = true;
     const result = await solveAsync(grid as unknown as string[][], player, goals);
+    _editorValidating = false;
     if (!result) { setMessage('无解或超时', 'error'); return; }
     setMessage(`可解：${result.steps.length}步 · ${validation.stats.mapSize}`, 'win');
   });
