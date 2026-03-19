@@ -1103,7 +1103,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── 按钮事件绑定 ────────────────────────────────────────────────────────
   document.getElementById('undoBtn')?.addEventListener('click', () => handleUndo());
-  document.getElementById('restartBtn')?.addEventListener('click', () => { _clearStreak = 0; restartLevel(); });
+  document.getElementById('restartBtn')?.addEventListener('click', () => {
+    if (getConfig().confirmRestart && state.moves > 0 && !state.won) {
+      if (!confirm('确定要重开本关吗？')) return;
+    }
+    _clearStreak = 0; restartLevel();
+  });
   document.getElementById('hintBtn')?.addEventListener('click', () => handleHint());
   document.getElementById('prevBtn')?.addEventListener('click',
     () => loadLevel(Math.max(state.levelIndex - 1, 0)));

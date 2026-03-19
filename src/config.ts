@@ -107,6 +107,7 @@ export function renderConfigPanel(container: HTMLElement): void {
         <label><input type="checkbox" ${_config.particlesEnabled ? 'checked' : ''} data-cfg="particlesEnabled"> 粒子特效</label>
         <label><input type="checkbox" ${_config.ghostEnabled ? 'checked' : ''} data-cfg="ghostEnabled"> 幽灵回放</label>
         <label><input type="checkbox" ${_config.autoNextLevel ? 'checked' : ''} data-cfg="autoNextLevel"> 自动下一关</label>
+        <label><input type="checkbox" ${_config.confirmRestart ? 'checked' : ''} data-cfg="confirmRestart"> 重开需确认</label>
       </div>
       <button id="resetConfigBtn" style="background:#ff5555;color:#fff;border:none;padding:6px 12px;border-radius:4px;cursor:pointer">重置默认</button>
     </div>
