@@ -418,6 +418,13 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMinimap(minimapOverlay, state.grid as string[][], state.player, state.goals);
     }
     // 自适应提示：步数超阈值时自动建议（每关只提示一次）
+    // 步数远超最佳记录时建议重开
+    if (!state.won && getPlaybackMode() === 'none' && state.moves > 0) {
+      const rec = state.records?.[state.levelIndex];
+      if (rec?.bestMoves && state.moves > rec.bestMoves * 3 && state.moves % 10 === 0) {
+        setMessage(`步数(${state.moves})已超最佳记录(${rec.bestMoves})3倍，考虑按R重开？`, 'warn');
+      }
+    }
     if (!state.won && getPlaybackMode() === 'none' && state.moves > 0 && !_adaptiveHintShown && !_adaptiveHintTimer) {
       const cfg2 = getLevelConfig(state.levelIndex);
       if (cfg2) {
