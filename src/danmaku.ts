@@ -85,11 +85,18 @@ export function sendDanmaku(text?: string): void {
   if (!rafId) { lastTime = performance.now(); rafId = requestAnimationFrame(loop); }
 }
 
+const _winTimers: ReturnType<typeof setTimeout>[] = [];
+
 export function sendWinDanmaku(rank: string): void {
+  _winTimers.forEach(t => clearTimeout(t)); _winTimers.length = 0;
   const count = rank === '★★★' ? 8 : rank === '★★' ? 5 : 3;
   for (let i = 0; i < count; i++) {
-    setTimeout(() => sendDanmaku(), i * 200);
+    _winTimers.push(setTimeout(() => sendDanmaku(), i * 200));
   }
+}
+
+export function cancelWinDanmaku(): void {
+  _winTimers.forEach(t => clearTimeout(t)); _winTimers.length = 0;
 }
 
 export function clearDanmaku(): void {

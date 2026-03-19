@@ -45,7 +45,7 @@ import { loadConfig, getConfig, setConfig, renderConfigPanel, onConfigChange } f
 import { AudioVisualizer } from './visualizer_audio';
 import { renderStatsHeatmap } from './heatmap';
 import { downloadShareCard } from './sharecard';
-import { sendWinDanmaku } from './danmaku';
+import { sendWinDanmaku, cancelWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
@@ -490,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 停止AI演示和回放
     if (getPlaybackMode() === 'demo') stopAIDemo();
     if (getPlaybackMode() === 'replay') stopReplay();
+    cancelWinDanmaku(); // 换关时取消弹幕
     _adaptiveHintShown = false; // 重置自适应提示标志
     if (_adaptiveHintTimer) { clearTimeout(_adaptiveHintTimer); _adaptiveHintTimer = null; }
     invalidateRenderCache();
