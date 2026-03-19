@@ -1235,10 +1235,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
   document.getElementById('adaptiveBtn')?.addEventListener('click', () => {
-    void analyzePlayer(state.records);
+    const ap = analyzePlayer(state.records);
+    const skillLbls: Record<string,string> = { beginner:'新手', intermediate:'进阶', advanced:'高手', expert:'专家' };
     const next = getNextRecommended(state.records, state.levelIndex);
-    if (next >= 0) setMessage(`建议挑战：L${next + 1} ${LEVELS[next].name}`, 'info');
-    else setMessage('继续加油，已有不错的进度！', 'info');
+    if (next >= 0) setMessage(`[${skillLbls[ap.skillLevel]||''}] 建议挑战：L${next + 1} ${LEVELS[next].name}`, 'info');
+    else setMessage(`[${skillLbls[ap.skillLevel]||''}] 继续加油，已有不错的进度！`, 'info');
   });
   document.getElementById('recommendBtn')?.addEventListener('click', () => {
     const next = getNextRecommended(state.records, state.levelIndex);
