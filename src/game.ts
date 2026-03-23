@@ -418,7 +418,7 @@ export function updateCombo(isPush: boolean): void {
 function checkWin(): boolean {
   return state.goals.every(g => {
     const cell = getCell(g.x, g.y);
-    return cell === TILE.BOX_ON_GOAL || cell === TILE.PLAYER_ON_GOAL;
+    return cell === TILE.BOX_ON_GOAL;
   });
 }
 
