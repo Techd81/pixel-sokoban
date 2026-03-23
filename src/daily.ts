@@ -11,8 +11,15 @@ export interface DailyChallenge {
   completedTimeMs?: number;
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate(new Date());
 }
 
 function hashDate(dateStr: string): number {
@@ -49,7 +56,7 @@ export function getDailyStreak(): number {
   for (let i = 0; i < 365; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const s = d.toISOString().slice(0, 10);
+    const s = formatLocalDate(d);
     const saved = localStorage.getItem('sokoban_daily_' + s);
     if (!saved) break;
     try { if (JSON.parse(saved).completed) streak++; else break; } catch { break; }
