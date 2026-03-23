@@ -2,7 +2,7 @@
 // 验证关卡合法性：箱子/目标数匹配、可达性、无死锁初始状态
 import type { Level } from './types';
 import { TILE } from './types';
-import { aiBfsSolve } from './solver';
+import { solveAsync } from './solver';
 
 export interface ValidationResult {
   valid: boolean;
@@ -79,20 +79,18 @@ export async function validateLevelSolvable(
       if (c === TILE.GOAL || c === TILE.BOX_ON_GOAL || c === TILE.PLAYER_ON_GOAL) goals.push({ x, y });
       if (c === TILE.PLAYER || c === TILE.PLAYER_ON_GOAL) player = { x, y };
     }
-  return new Promise(resolve => {
-    let resolved = false;
-    const done = (val: { solvable: boolean; steps?: number }) => { if (!resolved) { resolved = true; resolve(val); } };
-    const timer = setTimeout(() => done({ solvable: false }), timeoutMs);
-    try {
-      const result = aiBfsSolve(grid, player, goals);
-      clearTimeout(timer);
-      done(result ? { solvable: true, steps: result.steps.length } : { solvable: false });
-    } catch {
-      clearTimeout(timer);
-      done({ solvable: false });
-    }
-  });
+  try {
+    const result = await Promise.race<SolveResultOrNull>([
+      solveAsync(grid as string[][], player, goals),
+      new Promise<null>(resolve => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
+    return result ? { solvable: true, steps: result.steps.length } : { solvable: false };
+  } catch {
+    return { solvable: false };
+  }
 }
+
+type SolveResultOrNull = Awaited<ReturnType<typeof solveAsync>>;
 
 export function renderValidationResult(
   container: HTMLElement,
