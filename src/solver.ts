@@ -23,6 +23,14 @@ const DIRS: Array<{ dx: number; dy: number; facing: string }> = [
   { dx:  1, dy:  0, facing: 'right' },
 ];
 
+function getGridCols(grid: ArrayLike<{ length: number }>): number {
+  let cols = 0;
+  for (let i = 0; i < grid.length; i++) {
+    cols = Math.max(cols, grid[i]?.length ?? 0);
+  }
+  return cols;
+}
+
 // ─── 状态编码（数值化，避免每次 sort 字符串） ────────────────────────────────────
 
 /**
@@ -107,7 +115,7 @@ export function aiBfsSolve(
   goals: Pos[],
   maxNodes = 800_000
 ): SolverResult | null {
-  const cols = grid[0]?.length ?? 0;
+  const cols = getGridCols(grid);
 
   const initBoxes: Array<[number, number]> = [];
   for (let y = 0; y < grid.length; y++) {
@@ -215,7 +223,7 @@ export function solveAsync(
   maxNodes = 800_000
 ): Promise<SolverResult | null> {
   return new Promise<SolverResult | null>(resolve => {
-    const cols = grid[0]?.length ?? 0;
+    const cols = getGridCols(grid);
 
     const initBoxes: Array<[number, number]> = [];
     for (let y = 0; y < grid.length; y++) {
