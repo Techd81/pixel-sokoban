@@ -50,7 +50,7 @@ import { createStatsPanel, destroyStatsPanel } from './stats_panel';
 import { speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
 import { WORLDS, getWorldForLevel, isWorldUnlocked, renderWorldMap, getWorldProgress } from './worlds';
-import { getSmartHint } from './hint_engine';
+import { buildHintResult, type HintResult } from './hint_engine';
 import { GestureRecognizer } from './gestures';
 import { notify, notifyWin, notifyAchievement } from './notify';
 import { initAccessibility } from './accessibility';
@@ -778,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'n': loadLevel(Math.min(state.levelIndex + 1, LEVELS.length - 1)); break;
       case 'h': case 'H':
         if (!canInteractive) break;
-        handleHint(); break;
+        void handleHint(); break;
       case 'g': case 'G':
         if (!canInteractive) break;
         handleGenerate(); break;
@@ -868,33 +868,53 @@ document.addEventListener('DOMContentLoaded', () => {
   bindDirButtons('.dpad button[data-dir]');
 
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
-  let _hintCache: { levelIdx: number; moves: number; result: ReturnType<typeof getSmartHint> } | null = null;
+  let _hintCache: { levelIdx: number; moves: number; result: HintResult } | null = null;
 
-  function handleHint(): void {
-    if (getConfig().hintEnabled === false) { setMessage('提示功能已关闭（可在高级配置中开启）', 'warn'); return; }
-    setMessage('AI 计算中...', 'info');
-    state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
-    // 缓存：同一关卡同一步数复用上次结果
-    if (_hintCache && _hintCache.levelIdx === state.levelIndex && _hintCache.moves === state.moves) {
-      const hint = _hintCache.result;
-      if (!hint) { setMessage('无解或超时', 'error'); return; }
-      if (hint.type === 'stuck') { setMessage(hint.message, 'error'); return; }
-      const msg = hint.type === 'nearWin'
-        ? `${hint.arrow} ${hint.message}（置信度 ${Math.round(hint.confidence * 100)}%）`
-        : `提示：向 ${hint.arrow} ${hint.type === 'push' ? '推箱子' : '移动'}${hint.stepsToWin > 0 ? `（剩 ${hint.stepsToWin} 步）` : ''}`;
-      setMessage(msg, 'info');
-      state.ai.hintArrow = hint.arrow;
-      return;
-    }
-    const hint = getSmartHint(state.grid as string[][], state.player, state.goals);
-    _hintCache = { levelIdx: state.levelIndex, moves: state.moves, result: hint };
-    if (!hint) { setMessage('无解或超时', 'error'); return; }
+  function showHintResult(hint: HintResult): void {
+    state.ai.hintArrow = hint.type === 'stuck' ? null : hint.arrow;
+    state.ai.hintBox = hint.targetBox;
     if (hint.type === 'stuck') { setMessage(hint.message, 'error'); return; }
     const msg = hint.type === 'nearWin'
       ? `${hint.arrow} ${hint.message}（置信度 ${Math.round(hint.confidence * 100)}%）`
       : `提示：向 ${hint.arrow} ${hint.type === 'push' ? '推箱子' : '移动'}${hint.stepsToWin > 0 ? `（剩 ${hint.stepsToWin} 步）` : ''}`;
     setMessage(msg, 'info');
-    state.ai.hintArrow = hint.arrow;
+  }
+
+  async function handleHint(): Promise<void> {
+    if (getConfig().hintEnabled === false) { setMessage('提示功能已关闭（可在高级配置中开启）', 'warn'); return; }
+    if (_isSolving) { setMessage('AI 正在计算中...', 'info'); return; }
+    state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
+    // 缓存：同一关卡同一步数复用上次结果
+    if (_hintCache && _hintCache.levelIdx === state.levelIndex && _hintCache.moves === state.moves) {
+      showHintResult(_hintCache.result);
+      return;
+    }
+    const board = document.getElementById('board');
+    const requestLevelIdx = state.levelIndex;
+    const requestMoves = state.moves;
+    const requestPlayer = { ...state.player };
+    const gridSnapshot = state.grid.map(row => [...row]);
+    const goalsSnapshot = state.goals.map(goal => ({ ...goal }));
+
+    _isSolving = true;
+    board?.classList.add('ai-solving');
+    setMessage('AI 计算中...', 'info');
+    const result = await solveAsync(gridSnapshot as string[][], requestPlayer, goalsSnapshot);
+    _isSolving = false;
+    board?.classList.remove('ai-solving');
+
+    if (
+      state.levelIndex !== requestLevelIdx ||
+      state.moves !== requestMoves ||
+      state.player.x !== requestPlayer.x ||
+      state.player.y !== requestPlayer.y
+    ) {
+      return;
+    }
+
+    const hint = buildHintResult(gridSnapshot as string[][], requestPlayer, goalsSnapshot, result);
+    _hintCache = { levelIdx: requestLevelIdx, moves: requestMoves, result: hint };
+    showHintResult(hint);
   }
 
   // ─── 程序化关卡生成 ──────────────────────────────────────────────────────
@@ -1150,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     _clearStreak = 0; restartLevel();
   });
-  document.getElementById('hintBtn')?.addEventListener('click', () => handleHint());
+  document.getElementById('hintBtn')?.addEventListener('click', () => { void handleHint(); });
   document.getElementById('prevBtn')?.addEventListener('click',
     () => loadLevel(Math.max(state.levelIndex - 1, 0)));
   document.getElementById('nextBtn')?.addEventListener('click',
@@ -1961,7 +1981,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeMenu();
             if (btn.dataset.action === 'fav') { const f = toggleFavorite(idx); notify(f ? '⭐ 已收藏' : '取消收藏', 'info'); renderLevelSelectGrid(); }
             else if (btn.dataset.action === 'replay') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => document.getElementById('timelineBtn')?.click(), 200); }
-            else if (btn.dataset.action === 'hint') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => handleHint(), 300); }
+            else if (btn.dataset.action === 'hint') { loadLevel(idx); document.getElementById('levelSelect')?.classList.add('hidden'); setTimeout(() => { void handleHint(); }, 300); }
           });
         });
         document.body.appendChild(menu);
