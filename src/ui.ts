@@ -58,6 +58,14 @@ export function invalidateRenderCache(): void {
   _lastBestMoves = ''; _lastBestRank = '';
 }
 
+function getMaxCols(rows: ArrayLike<{ length: number }>): number {
+  let cols = 0;
+  for (let i = 0; i < rows.length; i++) {
+    cols = Math.max(cols, rows[i]?.length ?? 0);
+  }
+  return cols;
+}
+
 export function render(): void {
   // 统计数值——只在值变化时更新 DOM（减少不必要的重绘）
   const cfg = getLevelConfig(state.levelIndex);
@@ -103,7 +111,7 @@ export function render(): void {
 
   const grid   = state.grid;
   const rows   = grid.length;
-  const cols   = rows > 0 ? grid[0].length : 0;
+  const cols   = getMaxCols(grid);
   if (rows === 0 || cols === 0) return;
 
   // grid 布局尺寸（只在尺寸变化时更新，避免每帧触发 layout）
@@ -137,7 +145,7 @@ export function render(): void {
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const cell = board.children[idx++] as HTMLElement;
-      const tile = grid[y][x];
+      const tile = (grid[y]?.[x] ?? TILE.WALL) as typeof TILE[keyof typeof TILE];
       const isPlayer =
         tile === TILE.PLAYER || tile === TILE.PLAYER_ON_GOAL ||
         (px === x && py === y);
@@ -225,7 +233,7 @@ export function renderLevelPreview(
   if (!ctx) return;
 
   const rows = map.length;
-  const cols = map[0]?.length ?? 0;
+  const cols = getMaxCols(map);
   if (rows === 0 || cols === 0) return;
 
   const W = canvas.width;
@@ -295,7 +303,7 @@ export function autoScaleBoard(): void {
   if (!board) return;
 
   const rows = state.grid.length;
-  const cols = rows > 0 ? state.grid[0].length : 0;
+  const cols = getMaxCols(state.grid);
   if (rows === 0 || cols === 0) return;
 
   const container = board.parentElement as HTMLElement | null;
