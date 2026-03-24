@@ -34,7 +34,11 @@ export function exportRecords(records: Records, format: ExportFormat = 'json'): 
 
   switch (format) {
     case 'json':
-      content = JSON.stringify({ exportedAt: new Date().toISOString(), records: rows }, null, 2);
+      content = JSON.stringify({
+        exportedAt: new Date().toISOString(),
+        version: 2,
+        levels: records,
+      }, null, 2);
       filename += '.json'; mime = 'application/json';
       break;
 
@@ -97,6 +101,8 @@ export function importRecordsFromJSON(jsonStr: string): Records | null {
         bestRank: (['★★★','★★','★'].includes(r.bestRank as string) ? r.bestRank as import('./types').Rank : null),
         bestTimeMs: (r.bestTimeMs as number) ?? 0,
         challengeCleared: !!(r.challengeCleared),
+        noHintCleared: !!(r.noHintCleared),
+        completedAt: typeof r.completedAt === 'number' ? r.completedAt : undefined,
       };
     }
     return Object.keys(result).length > 0 ? result : null;
