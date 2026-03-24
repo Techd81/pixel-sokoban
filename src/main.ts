@@ -2093,10 +2093,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof savedStats.maxCombo === 'number') state.stats.maxCombo = savedStats.maxCombo;
     if (typeof savedStats.maxLevel === 'number') state.stats.maxLevel = savedStats.maxLevel;
     if (typeof savedStats.totalMoves === 'number') state.stats.totalMoves = savedStats.totalMoves;
+    if (typeof savedStats.hintCount === 'number') state.stats.hintCount = savedStats.hintCount;
+    if (typeof savedStats.sessions === 'number') state.stats.sessions = savedStats.sessions;
+    if (typeof savedStats.taPlayed === 'boolean') state.stats.taPlayed = savedStats.taPlayed;
+    if (typeof savedStats.replayPlayed === 'boolean') state.stats.replayPlayed = savedStats.replayPlayed;
+    if (typeof savedStats.randomPlayed === 'boolean') state.stats.randomPlayed = savedStats.randomPlayed;
+    if (Array.isArray(savedStats.themesUsed)) state.stats.themesUsed = new Set(savedStats.themesUsed as string[]);
   }
 
   loadLevel(startupLevelIndex);
   state.stats.sessions = (state.stats.sessions ?? 0) + 1;
+  saveStats({ ...state.stats, themesUsed: [...state.stats.themesUsed] } as unknown as Record<string, unknown>);
 
   // 新手教程（仅首次进入）
   if (!isTutorialDone()) {
