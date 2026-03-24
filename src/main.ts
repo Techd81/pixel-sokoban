@@ -107,6 +107,10 @@ function saveLevelRating(levelIndex: number, rating: number): void {
   }
 }
 
+function persistStatsSnapshot(): void {
+  saveStats({ ...state.stats, themesUsed: [...state.stats.themesUsed] } as unknown as Record<string, unknown>);
+}
+
 // ─── 获取棋盘格大小 ──────────────────────────────────────────────────────────
 function getTileSize(): number {
   const board = document.getElementById('board');
@@ -152,7 +156,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 监听主题切换，更新themesUsed统计
   document.addEventListener('theme-changed', (e) => {
     const theme = (e as CustomEvent).detail?.theme as string;
-    if (theme) state.stats.themesUsed.add(theme);
+    if (theme) {
+      state.stats.themesUsed.add(theme);
+      persistStatsSnapshot();
+    }
   });
   loadConfig(); // 加载游戏配置
   // 应用已保存的配置（还原上次的设置状态）
@@ -444,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
   gameEvents.addEventListener('update', () => {
     render();
     if (state.combo.count > state.stats.maxCombo) state.stats.maxCombo = state.combo.count;
+    persistStatsSnapshot();
     if (!state.won && getPlaybackMode() === 'none') {
       const boxes: Array<{ x: number; y: number }> = [];
       for (let y = 0; y < state.grid.length; y++) {
@@ -695,9 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newCleared = _recVals.filter((r: any) => r?.bestMoves > 0).length;
     initSkin(newCleared);
     // 持久化 stats
-    // 序列化 Set 类型为数组
-    const statsToSave = { ...state.stats, themesUsed: [...state.stats.themesUsed] };
-    saveStats(statsToSave as unknown as Record<string, unknown>);
+    persistStatsSnapshot();
     const record = state.records?.[state.levelIndex];
     notifyWin(getLevelConfig(state.levelIndex).name, state.moves, record?.bestRank ?? '');
     openWinModal(record?.bestRank ?? '通关', !!record?.challengeCleared);
@@ -896,6 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (getConfig().hintEnabled === false) { setMessage('提示功能已关闭（可在高级配置中开启）', 'warn'); return; }
     if (_isSolving) { setMessage('AI 正在计算中...', 'info'); return; }
     state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
+    persistStatsSnapshot();
     // 缓存：同一关卡同一步数复用上次结果
     const currentStateKey = getHintStateKey(state.grid as string[][], state.player);
     if (_hintCache && _hintCache.levelIdx === state.levelIndex && _hintCache.stateKey === currentStateKey) {
@@ -1055,6 +1062,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!data) { setMessage('暂无回放记录', 'info'); return; }
     if (!data.steps?.length) { setMessage('回放为空：请重新通关生成录像', 'warn'); return; }
     state.stats.replayPlayed = true;
+    persistStatsSnapshot();
 
     // 如果正在演示，先停止
     stopAIDemo();
@@ -1092,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 如果正在回放，先停止
     stopReplay();
     state.stats.taPlayed = true;
+    persistStatsSnapshot();
 
     const btn = document.getElementById('aiDemoBtn') as HTMLButtonElement | null;
     const board = document.getElementById('board');
@@ -1196,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const idx = pool[Math.floor(Math.random() * pool.length)];
     loadLevel(idx);
     state.stats.randomPlayed = true;
+    persistStatsSnapshot();
     setMessage(`🎲 随机挑战：第${idx + 1}关「${LEVELS[idx].name}」`, 'info');
   });
   document.getElementById('undoLimitBtn')?.addEventListener('click', () => {
@@ -2103,7 +2113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadLevel(startupLevelIndex);
   state.stats.sessions = (state.stats.sessions ?? 0) + 1;
-  saveStats({ ...state.stats, themesUsed: [...state.stats.themesUsed] } as unknown as Record<string, unknown>);
+  persistStatsSnapshot();
 
   // 新手教程（仅首次进入）
   if (!isTutorialDone()) {
