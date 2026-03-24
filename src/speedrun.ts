@@ -66,10 +66,11 @@ export class SpeedrunTimer {
     return split;
   }
 
-  finish(clearedCount: number): SpeedrunPB {
+  finish(): SpeedrunPB {
     this.active = false;
     const totalTimeMs = Math.round(performance.now() - this.startMs);
     const totalMoves = this.splits.reduce((n, s) => n + s.moves, 0);
+    const clearedCount = this.splits.length;
     const score = clearedCount * 100 + Math.max(0, Math.floor((300000 - totalTimeMs) / 100));
     const pb: SpeedrunPB = {
       splits: this.splits, totalTimeMs, totalMoves,

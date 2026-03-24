@@ -49,7 +49,7 @@ import { renderStatsHeatmap } from './heatmap';
 import { downloadShareCard } from './sharecard';
 import { sendWinDanmaku, cancelWinDanmaku } from './danmaku';
 import { createStatsPanel, destroyStatsPanel } from './stats_panel';
-import { speedrunTimer } from './speedrun';
+import { loadSpeedrunPB, speedrunTimer } from './speedrun';
 import { predictDifficulty } from './difficulty';
 import { WORLDS, getWorldForLevel, isWorldUnlocked, renderWorldMap, getWorldProgress } from './worlds';
 import { buildHintResult, type HintResult } from './hint_engine';
@@ -637,10 +637,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // 幽灵对比：本次是否超越幽灵记录
     const ghostRec = loadGhostRecord(state.levelIndex);
     const beatGhost = ghostRec && ghostRec.totalMoves > 0 && state.moves < ghostRec.totalMoves ? 1 : 0;
+    let speedrunCleared = loadSpeedrunPB()?.clearedCount ?? 0;
+
+    // ── 速通：记录本关分段 ──────────────────────────────────────────────
+    if (speedrunTimer.isActive()) {
+      const split = speedrunTimer.split(LEVELS[state.levelIndex], state.levelIndex, state.moves);
+      speedrunCleared = Math.max(speedrunCleared, speedrunTimer.getSplits().length);
+      const srHUD = document.getElementById('srHUD');
+      if (srHUD && split) {
+        const delta = split.delta < 0 ? `<span style="color:#50fa7b">-${Math.abs(split.delta/1000).toFixed(2)}s</span>` : `<span style="color:#ff6b6b">+${(split.delta/1000).toFixed(2)}s</span>`;
+        srHUD.insertAdjacentHTML('beforeend', `<div style="font-size:0.8em;padding:2px 8px;border-bottom:1px solid #333">${split.levelName}: ${(split.timeMs/1000).toFixed(2)}s (${state.moves}步) ${delta}</div>`);
+      }
+    }
+
     const achStats = {
       cleared,
       stars3,
-      ta_cleared: state.stats.taPlayed ? 1 : 0,
+      ta_cleared: speedrunCleared,
       no_hint_clears: state.stats.hintCount === 0 ? cleared : 0,
       max_combo: state.stats.maxCombo,
       beat_ghost: beatGhost,
@@ -667,16 +680,6 @@ document.addEventListener('DOMContentLoaded', () => {
       totalTimeMs: state.timer.elapsedMs,
       recordedAt: Date.now(),
     });
-
-    // ── 速通：记录本关分段 ──────────────────────────────────────────────
-    if (speedrunTimer.isActive()) {
-      const split = speedrunTimer.split(LEVELS[state.levelIndex], state.levelIndex, state.moves);
-      const srHUD = document.getElementById('srHUD');
-      if (srHUD && split) {
-        const delta = split.delta < 0 ? `<span style="color:#50fa7b">-${Math.abs(split.delta/1000).toFixed(2)}s</span>` : `<span style="color:#ff6b6b">+${(split.delta/1000).toFixed(2)}s</span>`;
-        srHUD.insertAdjacentHTML('beforeend', `<div style="font-size:0.8em;padding:2px 8px;border-bottom:1px solid #333">${split.levelName}: ${(split.timeMs/1000).toFixed(2)}s (${state.moves}步) ${delta}</div>`);
-      }
-    }
 
     // ── AI 教练建议 ─────────────────────────────────────────────────────
     const coachPanel = document.getElementById('coachPanel');
@@ -1099,8 +1102,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (_isSolving) return; // 防止并发
     // 如果正在回放，先停止
     stopReplay();
-    state.stats.taPlayed = true;
-    persistStatsSnapshot();
 
     const btn = document.getElementById('aiDemoBtn') as HTMLButtonElement | null;
     const board = document.getElementById('board');
@@ -1732,7 +1733,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── 速通模式按钮 ────────────────────────────────────────────────────────
   document.getElementById('timeAttackBtn')?.addEventListener('click', () => {
     if (speedrunTimer.isActive()) {
-      const result = speedrunTimer.finish(Object.values(state.records).filter(r => r && r.bestMoves > 0).length);
+      const result = speedrunTimer.finish();
       const srHUD = document.getElementById('srHUD');
       if (srHUD) {
         srHUD.innerHTML = `<div style="padding:6px 12px;color:#ffd166;font-weight:bold">速通完成！总计: ${(result.totalTimeMs/1000).toFixed(2)}s / ${result.totalMoves}步</div>` + srHUD.innerHTML;
@@ -1741,6 +1742,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       setMessage(`速通完成！${(result.totalTimeMs/1000).toFixed(2)}s`, 'win');
     } else {
+      state.stats.taPlayed = true;
+      persistStatsSnapshot();
       speedrunTimer.start();
       const srHUD = document.getElementById('srHUD');
       if (srHUD) {
