@@ -65,6 +65,7 @@ interface ExtGameState extends Omit<GameState, 'history' | 'recording' | 'facing
   stats: {
     maxCombo: number;
     hintCount: number;
+    levelHintCount: number;
     themesUsed: Set<string>;
     maxLevel: number;
     taPlayed: boolean;
@@ -120,6 +121,7 @@ export const state: ExtGameState = {
   stats: {
     maxCombo: 0,
     hintCount: 0,
+    levelHintCount: 0,
     themesUsed: new Set<string>(),
     maxLevel: 0,
     taPlayed: false,
@@ -162,7 +164,7 @@ export function formatMs(ms: number): string {
 }
 
 export function updateRecord(
-  result: { moves: number; timeMs: number; rank: Rank; challenge?: boolean; challengeCleared?: boolean }
+  result: { moves: number; timeMs: number; rank: Rank; challenge?: boolean; challengeCleared?: boolean; noHintCleared?: boolean }
 ): { record: LevelRecord; isNewBest: boolean } {
   const existing = getRecord();
   const shouldReplace = !existing || result.moves < existing.bestMoves;
@@ -178,6 +180,7 @@ export function updateRecord(
     bestTimeMs,
     bestRank,
     challengeCleared: result.challengeCleared ?? result.challenge ?? existing?.challengeCleared ?? false,
+    noHintCleared: existing?.noHintCleared || result.noHintCleared || false,
     completedAt: newCompletedAt,
   } as LevelRecord;
   saveRecords(state.records);
@@ -277,6 +280,7 @@ export function loadLevel(index: number): void {
   state.heatmap = [];  // 重置热力图
   undoUsed = 0;
   state.stats.undoUsed = 0;
+  state.stats.levelHintCount = 0;
   // 重置 AI 状态
   state.ai.hintArrow = null;
   state.ai.hintBox = null;
@@ -492,7 +496,13 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       const challengeCleared = state.moves <= level.parMoves;
       const playback = state.playback !== "none";
       if (!playback) {
-        const { isNewBest } = updateRecord({ moves: state.moves, rank, challengeCleared, timeMs: state.timer.elapsedMs });
+        const { isNewBest } = updateRecord({
+          moves: state.moves,
+          rank,
+          challengeCleared,
+          timeMs: state.timer.elapsedMs,
+          noHintCleared: (state.stats.levelHintCount ?? 0) === 0,
+        });
         emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared, playback, mode: state.playback, isNewBest });
       } else {
         emit("won", { moves: state.moves, pushes: state.pushes, rank, challengeCleared, playback, mode: state.playback, isNewBest: false });

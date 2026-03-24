@@ -31,6 +31,7 @@ export interface LevelRecord {
   bestTimeMs: number;
   bestRank: Rank;
   challengeCleared: boolean;
+  noHintCleared?: boolean;
   completedAt?: number;
 }
 

@@ -634,6 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const _recVals = Object.values(state.records);
     const cleared = _recVals.filter((r: any) => r?.bestMoves > 0).length;
     const stars3 = _recVals.filter((r: any) => r?.bestRank === '★★★').length;
+    const noHintClears = _recVals.filter((r: any) => r?.noHintCleared).length;
     // 幽灵对比：本次是否超越幽灵记录
     const ghostRec = loadGhostRecord(state.levelIndex);
     const beatGhost = ghostRec && ghostRec.totalMoves > 0 && state.moves < ghostRec.totalMoves ? 1 : 0;
@@ -654,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cleared,
       stars3,
       ta_cleared: speedrunCleared,
-      no_hint_clears: state.stats.hintCount === 0 ? cleared : 0,
+      no_hint_clears: noHintClears,
       max_combo: state.stats.maxCombo,
       beat_ghost: beatGhost,
       shared: Number(localStorage.getItem('sokoban_shared_count') ?? 0),
@@ -905,6 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (getConfig().hintEnabled === false) { setMessage('提示功能已关闭（可在高级配置中开启）', 'warn'); return; }
     if (_isSolving) { setMessage('AI 正在计算中...', 'info'); return; }
     state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
+    state.stats.levelHintCount = (state.stats.levelHintCount ?? 0) + 1;
     persistStatsSnapshot();
     // 缓存：同一关卡同一步数复用上次结果
     const currentStateKey = getHintStateKey(state.grid as string[][], state.player);
@@ -1315,6 +1317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.stats.maxLevel = 0;
     state.stats.totalMoves = 0;
     state.stats.hintCount = 0;
+    state.stats.levelHintCount = 0;
     state.stats.undoUsed = 0;
     state.stats.taPlayed = false;
     state.stats.replayPlayed = false;
