@@ -1741,6 +1741,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const ensureSpeedrunHudLive = (): HTMLElement | null => {
+    const srHUD = document.getElementById('srHUD');
+    if (!srHUD) return null;
+    let live = document.getElementById('speedrunHudLive');
+    if (!live) {
+      live = document.createElement('div');
+      live.id = 'speedrunHudLive';
+      srHUD.prepend(live);
+    }
+    return live;
+  };
+
+  const renderSpeedrunHudLive = (): void => {
+    if (!speedrunTimer.isActive()) return;
+    const live = ensureSpeedrunHudLive();
+    if (!live) return;
+    speedrunTimer.renderHUD(live, LEVELS[state.levelIndex], state.levelIndex);
+  };
+
   // ─── 速通模式按钮 ────────────────────────────────────────────────────────
   document.getElementById('timeAttackBtn')?.addEventListener('click', () => {
     if (speedrunTimer.isActive()) {
@@ -1758,8 +1777,9 @@ document.addEventListener('DOMContentLoaded', () => {
       speedrunTimer.start();
       const srHUD = document.getElementById('srHUD');
       if (srHUD) {
-        srHUD.innerHTML = '<div style="padding:4px 12px;color:#8be9fd;font-weight:bold">速通模式进行中...</div>';
+        srHUD.innerHTML = '';
         srHUD.classList.remove('hidden');
+        renderSpeedrunHudLive();
         autoScaleBoard();
       }
       setMessage('速通模式已开始！完成关卡记录分段', 'info');
@@ -2137,5 +2157,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 计时显示每100ms刷新一次，不依赖玩家移动
   setInterval(() => {
     if (!state.won && !isPaused()) updateTimerDisplay();
+    renderSpeedrunHudLive();
   }, 100);
 });
