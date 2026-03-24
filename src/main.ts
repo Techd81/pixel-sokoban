@@ -1290,12 +1290,55 @@ document.addEventListener('DOMContentLoaded', () => {
     createStatsPanel(document.body, state.records, state.heatmap, state.stats, 1);
   });
 
+  const renderStatsModalContent = (): void => {
+    const summary = document.getElementById('statsSummary');
+    const chart = document.getElementById('statsChart');
+    const playerNameEl = document.getElementById('playerNameDisplay');
+    const records = Object.values(state.records);
+    const cleared = records.filter((r: any) => r?.bestMoves > 0).length;
+    const challenged = records.filter((r: any) => r?.challengeCleared).length;
+    const stars3 = records.filter((r: any) => r?.bestRank === '★★★').length;
+    const noHintClears = records.filter((r: any) => r?.noHintCleared).length;
+    const streak = getDailyStreak();
+
+    if (playerNameEl) playerNameEl.textContent = loadPlayerName();
+    if (summary) {
+      summary.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+          <div class="stats-kpi"><span>已通关</span><strong>${cleared}/${LEVELS.length}</strong></div>
+          <div class="stats-kpi"><span>挑战达成</span><strong>${challenged}</strong></div>
+          <div class="stats-kpi"><span>三星关卡</span><strong>${stars3}</strong></div>
+          <div class="stats-kpi"><span>无提示通关</span><strong>${noHintClears}</strong></div>
+          <div class="stats-kpi"><span>总步数</span><strong>${state.stats.totalMoves}</strong></div>
+          <div class="stats-kpi"><span>游戏场次</span><strong>${state.stats.sessions}</strong></div>
+        </div>
+      `;
+    }
+    if (chart) {
+      chart.innerHTML = `
+        <div style="display:grid;gap:8px;font-size:0.9em;color:#d6c8ef">
+          <div>最佳连击：<strong style="color:#50fa7b">x${state.stats.maxCombo}</strong></div>
+          <div>提示使用：<strong style="color:#8be9fd">${state.stats.hintCount}</strong></div>
+          <div>每日挑战连续：<strong style="color:#ffd166">${streak}</strong> 天</div>
+          <div>速通模式：<strong style="color:#ff79c6">${state.stats.taPlayed ? '已体验' : '未体验'}</strong></div>
+          <div style="color:#888">详细图表请使用“🌡 热力图”按钮。</div>
+        </div>
+      `;
+    }
+  };
+
   // ─── 统计面板按钮 ─────────────────────────────────────────────────────────
   document.getElementById('statsBtn')?.addEventListener('click', () => {
-    createStatsPanel(document.body, state.records, state.heatmap, state.stats, 0);
+    renderStatsModalContent();
+    document.getElementById('statsModal')?.classList.remove('hidden');
   });
 
   // statsModal 静态面板按钮绑定
+  document.getElementById('statsModal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('statsModal')) {
+      document.getElementById('statsModal')?.classList.add('hidden');
+    }
+  });
   document.getElementById('statsCloseBtn')?.addEventListener('click', () => {
     document.getElementById('statsModal')?.classList.add('hidden');
   });
