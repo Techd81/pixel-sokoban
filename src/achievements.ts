@@ -136,6 +136,11 @@ export function markUnlocked(id: string): void {
   try { localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...set])); } catch { }
 }
 
+export function resetUnlockedAchievements(): void {
+  _unlockedCache = new Set();
+  try { localStorage.removeItem(UNLOCKED_KEY); } catch { }
+}
+
 export interface AchievementStats {
   cleared: number;
   stars3: number;

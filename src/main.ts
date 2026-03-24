@@ -29,7 +29,7 @@ import { encodeLevelToUrl, decodeLevelFromUrl, checkUrlLevelParam, showShareModa
 import { solverVisualizer } from './visualizer';
 import { saveReplay, loadReplay, TimelineUI } from './timeline';
 import { analyzePlayer, getNextRecommended, getAdaptiveHintDelay } from './adaptive';
-import { checkAchievements, showAchievementUnlock, injectAchievementStyles, ACHIEVEMENTS, getUnlocked } from './achievements';
+import { checkAchievements, showAchievementUnlock, injectAchievementStyles, ACHIEVEMENTS, getUnlocked, resetUnlockedAchievements } from './achievements';
 import { MacroRecorder, MacroPlayer, getMacrosForLevel } from './macro';
 import { addLeaderboardEntry, getTopEntries, renderLeaderboard } from './leaderboard';
 import { getComboLabel, getComboColor } from './combo';
@@ -1367,6 +1367,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.stats.randomPlayed = false;
     state.stats.sessions = 0;
     state.stats.themesUsed = new Set<string>();
+    resetUnlockedAchievements();
     persistStatsSnapshot();
     markProgressDirty();
     renderProgress();
