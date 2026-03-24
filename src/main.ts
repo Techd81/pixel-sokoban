@@ -868,7 +868,19 @@ document.addEventListener('DOMContentLoaded', () => {
   bindDirButtons('.dpad button[data-dir]');
 
   // ─── AI 提示 ─────────────────────────────────────────────────────────────
-  let _hintCache: { levelIdx: number; moves: number; result: HintResult } | null = null;
+  let _hintCache: { levelIdx: number; stateKey: string; result: HintResult } | null = null;
+
+  function getHintStateKey(grid: string[][], player: { x: number; y: number }): string {
+    const boxes: string[] = [];
+    for (let y = 0; y < grid.length; y++) {
+      for (let x = 0; x < (grid[y]?.length ?? 0); x++) {
+        const cell = grid[y][x];
+        if (cell === '$' || cell === '*') boxes.push(`${x},${y}`);
+      }
+    }
+    boxes.sort();
+    return `${player.x},${player.y}|${boxes.join(';')}`;
+  }
 
   function showHintResult(hint: HintResult): void {
     state.ai.hintArrow = hint.type === 'stuck' ? null : hint.arrow;
@@ -885,16 +897,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (_isSolving) { setMessage('AI 正在计算中...', 'info'); return; }
     state.stats.hintCount = (state.stats.hintCount ?? 0) + 1;
     // 缓存：同一关卡同一步数复用上次结果
-    if (_hintCache && _hintCache.levelIdx === state.levelIndex && _hintCache.moves === state.moves) {
+    const currentStateKey = getHintStateKey(state.grid as string[][], state.player);
+    if (_hintCache && _hintCache.levelIdx === state.levelIndex && _hintCache.stateKey === currentStateKey) {
       showHintResult(_hintCache.result);
       return;
     }
     const board = document.getElementById('board');
     const requestLevelIdx = state.levelIndex;
-    const requestMoves = state.moves;
     const requestPlayer = { ...state.player };
     const gridSnapshot = state.grid.map(row => [...row]);
     const goalsSnapshot = state.goals.map(goal => ({ ...goal }));
+    const requestStateKey = getHintStateKey(gridSnapshot as string[][], requestPlayer);
 
     _isSolving = true;
     board?.classList.add('ai-solving');
@@ -905,7 +918,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (
       state.levelIndex !== requestLevelIdx ||
-      state.moves !== requestMoves ||
+      getHintStateKey(state.grid as string[][], state.player) !== requestStateKey ||
       state.player.x !== requestPlayer.x ||
       state.player.y !== requestPlayer.y
     ) {
@@ -913,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const hint = buildHintResult(gridSnapshot as string[][], requestPlayer, goalsSnapshot, result);
-    _hintCache = { levelIdx: requestLevelIdx, moves: requestMoves, result: hint };
+    _hintCache = { levelIdx: requestLevelIdx, stateKey: requestStateKey, result: hint };
     showHintResult(hint);
   }
 
