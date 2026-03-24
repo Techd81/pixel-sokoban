@@ -443,8 +443,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameEvents.addEventListener('update', () => {
     render();
-    // 更新总步数统计
-    state.stats.totalMoves = state.moves;
     if (state.combo.count > state.stats.maxCombo) state.stats.maxCombo = state.combo.count;
     if (!state.won && getPlaybackMode() === 'none') {
       const boxes: Array<{ x: number; y: number }> = [];

@@ -476,6 +476,7 @@ export function tryMove(dx: number, dy: number, facing: string): void {
         isPush: true,
         timestamp: Math.round(getElapsedTimeMs()),
       });
+      state.stats.totalMoves = (state.stats.totalMoves ?? 0) + 1;
     }
     updateCombo(true);
     state.ai.hintArrow = null; // 推箱子后清除提示箭头
@@ -520,6 +521,7 @@ export function tryMove(dx: number, dy: number, facing: string): void {
       isPush: false,
       timestamp: Math.round(getElapsedTimeMs()),
     });
+    state.stats.totalMoves = (state.stats.totalMoves ?? 0) + 1;
   }
   updateCombo(false);
   state.ai.hintArrow = null; // 移动后清除提示箭头
