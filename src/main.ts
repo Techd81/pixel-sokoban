@@ -2,6 +2,8 @@ import { LEVELS } from './levels';
 import {
   state,
   loadLevel,
+  startTimer,
+  stopTimer,
   tryMove,
   undo,
   restartLevel,
@@ -1820,8 +1822,37 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('quickLoadBtn')?.addEventListener('click', () => {
     const slot = loadGame(0);
     if (!slot) { setMessage('没有存档', 'warn'); return; }
-    // 恢复存档：加载关卡并恢复网格
+    // 恢复存档：先走标准关卡装载，再覆盖运行时状态
     loadLevel(slot.levelIndex);
+    state.grid = slot.grid.map(row => [...row]);
+    state.goals = [];
+    for (let y = 0; y < state.grid.length; y++) {
+      for (let x = 0; x < state.grid[y].length; x++) {
+        const cell = state.grid[y][x];
+        if (cell === '.' || cell === '*' || cell === '+') state.goals.push({ x, y });
+        if (cell === '@' || cell === '+') state.player = { x, y };
+      }
+    }
+    state.moves = slot.moves;
+    state.pushes = slot.pushes ?? 0;
+    state.facing = slot.facing ?? 'down';
+    state.stepFrame = slot.stepFrame ?? 0;
+    state.history = [];
+    state.recording = [];
+    state.won = false;
+    state.paused = false;
+    state.effects = { goalFlash: null, cratePulse: null, shake: false, prevPlayer: null, prevBoxes: null, deadlocks: null };
+    state.playerMoved = false;
+    state.ai.hintArrow = null;
+    state.ai.hintBox = null;
+    state.timer.elapsedMs = slot.timeMs ?? 0;
+    stopTimer();
+    if (slot.moves > 0) startTimer();
+    invalidateRenderCache();
+    markProgressDirty();
+    render();
+    renderProgress();
+    autoScaleBoard();
     setMessage(`已读取存档：第${slot.levelIndex + 1}关 (${slot.moves}步 ${new Date(slot.savedAt).toLocaleString('zh-CN')})`, 'info');
   });
   document.getElementById('exportSaveBtn')?.addEventListener('click', () => {

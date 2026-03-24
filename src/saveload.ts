@@ -9,6 +9,9 @@ export interface SaveSlot {
   levelIndex: number;
   levelName: string;
   moves: number;
+  pushes: number;
+  facing: string;
+  stepFrame: number;
   timeMs: number;
   savedAt: number;
   grid: string[][];
@@ -35,6 +38,9 @@ export function saveGame(slot: number, state: GameState, levelName: string): Sav
     levelIndex: state.levelIndex,
     levelName,
     moves: state.moves,
+    pushes: state.pushes,
+    facing: state.facing,
+    stepFrame: state.stepFrame,
     timeMs: state.timer.elapsedMs,
     savedAt: Date.now(),
     grid: state.grid.map(row => [...row]),
