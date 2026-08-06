@@ -65,8 +65,8 @@ npm run preview    # 预览生产构建
 关卡可解性校验（开发用）：
 
 ```bash
-python test_quick.py
-python test_quick2.py
+python tools/test_quick.py
+python tools/test_quick2.py
 ```
 
 ## 🛠 技术栈
@@ -93,8 +93,10 @@ python test_quick2.py
 ├── public/               # 静态资源（图标、manifest、Service Worker）
 ├── style.css             # 像素艺术全局样式
 ├── vite.config.ts        # 构建配置（按功能自动分包）
-├── test_quick.py         # 关卡可解性校验脚本
-└── LICENSE               # MIT 开源协议
+├── tools/                 # 开发辅助脚本
+│   ├── test_quick.py       # 关卡可解性校验脚本
+│   └── test_quick2.py      # 关卡可解性校验脚本（扩展关卡）
+└── LICENSE               # MIT 协议
 ```
 
 ## 📄 开源协议

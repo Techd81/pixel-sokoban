@@ -15,7 +15,7 @@ npm run build     # type-check (tsc) then production build to dist/
 npm run preview   # serve the production build from dist/
 ```
 
-There is no test framework; use `python test_quick.py` / `python test_quick2.py` for ad-hoc solver sanity checks on levels.
+There is no test framework; use `python tools/test_quick.py` / `python tools/test_quick2.py` for ad-hoc solver sanity checks on levels.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ Key modules:
 
 ## Adding a New Level
 
-Append an entry to the `LEVELS` array in `src/levels.ts`, then validate solvability with `python test_quick.py`. Every `$` must have a matching `.`.
+Append an entry to the `LEVELS` array in `src/levels.ts`, then validate solvability with `python tools/test_quick.py`. Every `$` must have a matching `.`.
 
 ## Coding Style
 

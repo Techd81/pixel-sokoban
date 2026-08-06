@@ -15,7 +15,7 @@ Key paths:
 - `npm run dev` starts the Vite dev server at `http://localhost:3000` with auto-open
 - `npm run build` runs `tsc` then `vite build` to produce `dist/`
 - `npm run preview` serves the production build from `dist/`
-- `python test_quick.py` / `python test_quick2.py` run ad-hoc solver sanity checks for levels
+- `python tools/test_quick.py` / `python tools/test_quick2.py` run ad-hoc solver sanity checks for levels
 
 ## Coding Style & Naming Conventions
 Use TypeScript ES modules with named imports/exports. Match existing formatting: 2-space indentation, semicolons, and single quotes. File names in `src/` use `snake_case.ts` (for example, `ai_coach.ts`, `stats_panel.ts`); follow that for new modules. Keep functions and variables in `lowerCamelCase`, constants in `UPPER_SNAKE_CASE`.
