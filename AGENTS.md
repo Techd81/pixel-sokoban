@@ -1,13 +1,13 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This repo is a Vite + TypeScript single-page game. Source lives in `src/` with `src/main.ts` as the entry and feature modules like `ai_coach.ts`, `stats_panel.ts`, and `sharecard.ts`. Static assets live at the repo root alongside the app shell. `dist/` is build output.
+This repo is a Vite + TypeScript single-page game. Source lives in `src/` with `src/main.ts` as the entry and feature modules like `ai_coach.ts`, `stats_panel.ts`, and `sharecard.ts`. Static PWA assets live in `public/`. `dist/` is build output.
 
 Key paths:
 - `src/` TypeScript modules (ESM)
 - `index.html` app shell, `<script type="module" src="./src/main.ts">`
 - `style.css` global styles and pixel-art UI
-- `manifest.json`, `sw.js`, `icon-*.svg` PWA assets
+- `public/` PWA assets (`manifest.json`, `sw.js`, `icon-*.svg`)
 - `dist/` generated build (do not edit)
 
 ## Build, Test, and Development Commands

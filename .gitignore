@@ -1,4 +1,27 @@
-.claude/
-*.lock
+# 依赖
 node_modules/
+
+# 构建产物
 dist/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+
+# 编辑器与 IDE
+.vscode/
+.idea/
+*.swp
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# AI 工具
+.claude/
+.rtk/

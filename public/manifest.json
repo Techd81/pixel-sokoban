@@ -1,7 +1,7 @@
 {
   "name": "像素推箱子",
   "short_name": "推箱子",
-  "description": "经典像素风推箱子游戏，30关挑战，支持AI演示与关卡编辑器",
+  "description": "经典像素风推箱子游戏，70关挑战，支持AI演示、关卡编辑器与PWA离线",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#17121f",
